@@ -1,0 +1,84 @@
+{
+  "v": 1,
+  "organization": {
+    "ID": "6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d"
+  },
+  "app": {
+    "ID": "8bff10cc-db43-4bee-81dd-93457b4513e6",
+    "code": "axonic",
+    "name": "axonic.io",
+    "platform": "WEB"
+  },
+  "environments": [
+    {
+      "code": "production",
+      "pattern": "YXhvbmljLmlv",
+      "deploymentID": "khGIVjDxxvy7dPN4lmAtV3",
+      "hash": "1392568836159292875"
+    }
+  ],
+  "policyScope": {
+    "defaultScope": "ccpa",
+    "variable": "scope_tag",
+    "scopes": {
+      "AT": "gdpr",
+      "BE": "gdpr",
+      "BG": "gdpr",
+      "BR": "brazil",
+      "CY": "gdpr",
+      "CZ": "gdpr",
+      "DE": "gdpr",
+      "DK": "gdpr",
+      "EE": "gdpr",
+      "ES": "gdpr",
+      "FI": "gdpr",
+      "FR": "gdpr",
+      "GB": "gdpr",
+      "GF": "gdpr",
+      "GP": "gdpr",
+      "GR": "gdpr",
+      "HR": "gdpr",
+      "HU": "gdpr",
+      "IE": "gdpr",
+      "IS": "gdpr",
+      "IT": "gdpr",
+      "LI": "gdpr",
+      "LT": "gdpr",
+      "LU": "gdpr",
+      "LV": "gdpr",
+      "MQ": "gdpr",
+      "MT": "gdpr",
+      "NL": "gdpr",
+      "NO": "gdpr",
+      "PL": "gdpr",
+      "PT": "gdpr",
+      "RE": "gdpr",
+      "RO": "gdpr",
+      "SE": "gdpr",
+      "SI": "gdpr",
+      "SK": "gdpr",
+      "US-CA": "ccpa",
+      "YT": "gdpr"
+    }
+  },
+  "identities": {
+    "axonic_cookie": {
+      "type": "dataLayer",
+      "variable": "huid"
+    }
+  },
+  "scripts": [
+    "https://cdn.b10s.io/transom/route/semaphore/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/semaphore.js"
+  ],
+  "services": {
+    "astrolabe": "https://cdn.b10s.io/astrolabe/",
+    "lanyard": "https://cdn.b10s.io/transom/route/lanyard/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/",
+    "shoreline": "https://shoreline.dev.b10s.io/shoreline/",
+    "supercargo": "https://supercargo.dev.b10s.io/supercargo/config/1/",
+    "transom": "https://cdn.b10s.io/transom/"
+  },
+  "options": {
+    "localStorage": 1,
+    "migration": 1
+  }
+}

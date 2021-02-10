@@ -1,0 +1,366 @@
+{
+  "v": 1,
+  "language": "en-US",
+  "organization": {
+    "ID": "6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d"
+  },
+  "app": {
+    "ID": "8bff10cc-db43-4bee-81dd-93457b4513e6",
+    "code": "axonic",
+    "name": "axonic.io",
+    "platform": "WEB"
+  },
+  "environments": [
+    {
+      "code": "production",
+      "deploymentID": "khGIVjDxxvy7dPN4lmAtV3",
+      "hash": "1392568836159292875"
+    }
+  ],
+  "policyScope": {
+    "code": "ccpa",
+    "defaultScope": "ccpa",
+    "variable": "scope_tag"
+  },
+  "identities": {
+    "axonic_cookie": {
+      "type": "dataLayer",
+      "variable": "huid"
+    }
+  },
+  "environment": {
+    "code": "production",
+    "hash": "1392568836159292875"
+  },
+  "deployment": {
+    "ID": "khGIVjDxxvy7dPN4lmAtV3",
+    "code": "axonic_dep",
+    "version": 2
+  },
+  "privacyPolicy": {
+    "ID": "kMpTQyyoCuB9k6SUDg0Mab",
+    "code": "axonic_pp",
+    "version": 1,
+    "url": "axonic.io/pp"
+  },
+  "termsOfService": {
+    "ID": "sQ5c0k4y4gzNA0fM7qw5jg",
+    "code": "axonic_tos",
+    "version": 1,
+    "url": "axonic.io/tos"
+  },
+  "rights": [
+    {
+      "ID": "08c0cb42-55ee-452f-8679-19937b001667",
+      "code": "portability",
+      "name": "Portability",
+      "description": "Right to have all data provided to you."
+    },
+    {
+      "ID": "6e15f661-b5ec-49c5-9d58-63842da9c0c1",
+      "code": "rtbf",
+      "name": "Data Deletion",
+      "description": "Right to be forgotten."
+    }
+  ],
+  "regulations": [
+    "ccpa"
+  ],
+  "purposes": [
+    {
+      "ID": "69cddc24-450b-4f8f-a068-9847077f63e5",
+      "code": "productresearch",
+      "name": "Product Research",
+      "description": "We will use data collected about you to perform critical product enhancements.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "78110258-0f5d-4b30-9b85-8d15bb3eb71b",
+      "code": "analytics",
+      "name": "Analytics",
+      "description": "We perform analytics on your data to get smarter.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "7e4b3c8a-0bd2-409a-b2c8-6532a5859a03",
+      "code": "datasales",
+      "name": "Data Sales",
+      "description": "We will sell your personal data to other institutions. ",
+      "legalBasis": "consent-optout",
+      "allowsOptOut": true,
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "80956f7a-9f57-4fb9-807d-b7f530d5a2a0",
+      "code": "personalization",
+      "name": "Personalization",
+      "description": "We use this data to give you personalized experiences across various properties you engage with.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "b68ba725-3848-4e4e-bea0-7851c8a9b9f5",
+      "code": "identitymanagement",
+      "name": "Identity Mangement",
+      "description": "We use various data to associate you to multiple different device identifiers which we believe belong to you.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "322e10f9-e747-42ca-83e3-5ff62a043f49",
+      "code": "send_emails",
+      "name": "Marketing Email",
+      "description": "We will reach out to you via email to provide you offers on great deals and new products.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    },
+    {
+      "ID": "322e10f9-e747-42ca-83e3-5ff62a043f49",
+      "code": "send_emails",
+      "name": "Marketing Email",
+      "description": "We will reach out to you via email to provide you offers on great deals and new products.",
+      "legalBasis": "disclosure",
+      "requiresPrivacyPolicy": true
+    }
+  ],
+  "theme": {
+    "code": "ketch_black",
+    "name": "Ketch Black",
+    "attributes": {
+      "body_background_color": "#222222",
+      "body_description_color": "#ffffff",
+      "body_description_font_family": "Roboto",
+      "body_description_font_weight": "normal",
+      "body_description_size": "16px",
+      "body_heading_color": "#ffffff",
+      "body_heading_font_family": "Roboto",
+      "body_heading_font_weight": "bold",
+      "body_heading_size": "20px",
+      "checkbox_background_color": "#383838",
+      "checkbox_border_color": "#ffffff",
+      "confirmation_button_background_color": "#4866da",
+      "confirmation_button_disabled_opacity": "0.3",
+      "confirmation_button_text_color": "#222222",
+      "confirmation_button_text_font_family": "Roboto",
+      "confirmation_button_text_font_weight": "bold",
+      "confirmation_button_text_size": "16px",
+      "consent_accent_color": "#222222",
+      "consent_background_color": "#383838",
+      "consent_description_color": "#ffffff",
+      "consent_description_font_family": "Roboto",
+      "consent_description_font_weight": "normal",
+      "consent_description_size": "14px",
+      "consent_expand_color": "#383838",
+      "error_text_color": "#993232",
+      "footer_background_color": "#383838",
+      "footer_description_color": "#ffffff",
+      "footer_description_font_family": "Roboto",
+      "footer_description_font_weight": "normal",
+      "footer_description_size": "16px",
+      "footer_heading_color": "#ffffff",
+      "footer_heading_font_family": "Roboto",
+      "footer_heading_font_weight": "Medium",
+      "footer_heading_size": "20px",
+      "footer_text_color": "#ffffff",
+      "footer_text_font_family": "Roboto",
+      "footer_text_font_weight": "normal",
+      "footer_text_size": "14px",
+      "header_background_color": "#222222",
+      "header_description_color": "#ffffff",
+      "header_description_font_family": "Roboto",
+      "header_description_font_weight": "normal",
+      "header_description_size": "16px",
+      "header_heading_color": "#ffffff",
+      "header_heading_font_family": "Roboto",
+      "header_heading_font_weight": "normal",
+      "header_heading_size": "34px",
+      "hyperlink_text_color": "#ffffff",
+      "hyperlink_text_font_family": "Roboto",
+      "hyperlink_text_font_weight": "bold",
+      "input_background_color": "#e8e8e8",
+      "input_description_color": "#858585",
+      "input_description_font_family": "Roboto",
+      "input_description_font_weight": "normal",
+      "input_description_size": "12px",
+      "input_placeholder_color": "#858585",
+      "input_placeholder_font_family": "Roboto",
+      "input_placeholder_font_weight": "normal",
+      "input_placeholder_size": "16px",
+      "input_text_color": "#222222",
+      "input_text_font_family": "Roboto",
+      "input_text_font_weight": "normal",
+      "input_text_size": "16px",
+      "modal_close_button_background": "#ffffff",
+      "strip_background_color": "#222222",
+      "strip_button_background_color": "#f6f7fd",
+      "strip_button_text_color": "#222222",
+      "strip_button_text_font_family": "Roboto",
+      "strip_button_text_font_weight": "bold",
+      "strip_button_text_size": "16px",
+      "strip_description_color": "#ffffff",
+      "strip_description_font_family": "Roboto",
+      "strip_description_font_weight": "normal",
+      "strip_description_size": "16px",
+      "switch_background_color_off": "#222222",
+      "switch_background_color_on": "#ffffff",
+      "switch_foreground_color_off": "#ffffff",
+      "switch_foreground_color_on": "#222222"
+    }
+  },
+  "experiences": {
+    "consent_basic": {
+      "code": "axonic_lite",
+      "version": 1,
+      "type": 2,
+      "orientationCode": "bottom",
+      "components": [
+        {
+          "code": "policy_document",
+          "fields": [
+            {
+              "code": "policy_pp",
+              "value": "By using this site you agree to our [Privacy Policy](privacyPolicy)\n",
+              "type": "section_description"
+            }
+          ],
+          "section": 3
+        },
+        {
+          "code": "confirmation",
+          "fields": [
+            {
+              "code": "confirmation_confirm",
+              "value": "Submit",
+              "type": "button"
+            }
+          ],
+          "section": 3
+        }
+      ],
+      "orientation": {
+        "code": "bottom",
+        "name": "Bottom",
+        "description": "Renders on bottom of screen.",
+        "layoutID": "banner",
+        "layout": {
+          "code": "banner",
+          "name": "Banner",
+          "description": "Template that renders on the top or bottom of the screen."
+        }
+      }
+    },
+    "consent_full": null,
+    "preference": {
+      "code": "axonic_pref",
+      "version": 2,
+      "type": 3,
+      "orientationCode": "center",
+      "components": [
+        {
+          "code": "intro",
+          "fields": [
+            {
+              "code": "intro_header",
+              "value": "Your Privacy",
+              "type": "form_header"
+            },
+            {
+              "code": "intro_description",
+              "value": "If You're Not Paying for It; You're the Product",
+              "type": "form_description"
+            }
+          ],
+          "section": 1
+        },
+        {
+          "code": "consent",
+          "fields": [
+            {
+              "code": "consent_header",
+              "value": "Consent",
+              "type": "section_header"
+            },
+            {
+              "code": "processing_activities_list",
+              "type": "processing_activities_list"
+            }
+          ],
+          "settings": {
+            "consent_expanded": 2
+          },
+          "section": 2
+        },
+        {
+          "code": "rights_invocation",
+          "fields": [
+            {
+              "code": "rights_header",
+              "value": "Rights",
+              "type": "section_header"
+            },
+            {
+              "code": "rights_description",
+              "value": "You have the right to give us the bird.",
+              "type": "section_description"
+            },
+            {
+              "code": "rights_email",
+              "type": "text_input"
+            },
+            {
+              "code": "rights_list",
+              "type": "rights_list"
+            }
+          ],
+          "section": 2
+        },
+        {
+          "code": "policy_document",
+          "fields": [
+            {
+              "code": "policy_pp",
+              "value": "By using this site you agree to our [Privacy Policy](termsOfService)\n",
+              "type": "section_description"
+            }
+          ],
+          "section": 3
+        },
+        {
+          "code": "confirmation",
+          "fields": [
+            {
+              "code": "confirmation_confirm",
+              "value": "Submit",
+              "type": "button"
+            }
+          ],
+          "section": 3
+        }
+      ],
+      "orientation": {
+        "code": "center",
+        "name": "Center",
+        "description": "Renders on center of screen.",
+        "layoutID": "lightbox",
+        "layout": {
+          "code": "lightbox",
+          "name": "Lightbox",
+          "description": "Template that renders in of the screen."
+        }
+      }
+    }
+  },
+  "services": {
+    "astrolabe": "https://cdn.b10s.io/astrolabe/",
+    "lanyard": "https://cdn.b10s.io/transom/route/lanyard/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/",
+    "shoreline": "https://shoreline.dev.b10s.io/shoreline/",
+    "supercargo": "https://supercargo.dev.b10s.io/supercargo/config/1/",
+    "transom": "https://cdn.b10s.io/transom/"
+  },
+  "options": {
+    "localStorage": 1,
+    "migration": 1
+  }
+}
