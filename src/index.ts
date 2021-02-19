@@ -173,8 +173,15 @@ function push(a: any): void {
 }
 
 function getGlobal(): CommandEntry[] {
+  let variableName = constants.VARIABLE_NAME;
+
   // @ts-ignore
-  const v = window[constants.VARIABLE_NAME] = window[constants.VARIABLE_NAME] || [];
+  if (window[constants.SEMAPHORE]) {
+    variableName = constants.SEMAPHORE;
+  }
+
+  // @ts-ignore
+  const v = window[variableName] = window[variableName] || [];
   v.push = push;
   return v;
 }

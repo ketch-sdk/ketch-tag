@@ -10,3 +10,4 @@ rollup.config.js
 tsconfig.json
 tsfmt.json
 winch.yml
+test-reports
