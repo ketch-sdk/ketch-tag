@@ -1005,7 +1005,20 @@ export class Ketch {
   onInvokeRight(data: InvokeRightsEvent): Promise<void> {
     log.debug('onInvokeRights', data);
 
-    return this.getIdentities().then(identities => this.invokeRight(identities, data));
+    return Promise.all([this.getConfig(), this.getIdentities()]).then(
+      ([config, identities]) => {
+        const rn = new ResourceName({
+          service: '',
+          tenant: '',
+          organization: config.organization?.code,
+          resource: 'id',
+          info: ['email', data.rightsEmail]
+        });
+        identities.push(rn.toString())
+
+        return this.invokeRight(identities, data);
+      }
+    );
   }
 
   /**
