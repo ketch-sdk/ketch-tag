@@ -10,6 +10,7 @@ import parameters from "./internal/parameters";
 import {ResourceName} from "@ketch-com/resourcename-js";
 import {getCookie, setCookie} from "./internal/cookie";
 import {OID} from "@ketch-com/oid-js";
+import {Plugin} from "./internal/plugin";
 import * as scripts from "./internal/scripts";
 const log = loglevel.getLogger('ketch');
 
@@ -83,6 +84,11 @@ export class Ketch {
   _hideExperience: Function[];
 
   /**
+   * invokeRights is the list of functions registered with onInvokeRight
+   */
+  _invokeRights: Callback[];
+
+  /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
    * provided.
    *
@@ -100,8 +106,59 @@ export class Ketch {
     this._appDivs = [];
     this._showExperience = [];
     this._hideExperience = [];
+    this._invokeRights = [];
   }
 
+  /**
+   * Registers a plugin
+   *
+   * @param plugin The plugin to register
+   */
+  registerPlugin(plugin: Plugin): void {
+    if (plugin.onInit) {
+      plugin.onInit(this._config);
+    }
+
+    if (plugin.onEnvironment) {
+      this.onEnvironment((env) => plugin.onEnvironment(this._config, env));
+    }
+
+    if (plugin.onGeoIP) {
+      this.onGeoIP((ipInfo) => plugin.onGeoIP(this._config, ipInfo));
+    }
+
+    if (plugin.onIdentities) {
+      this.onIdentities((identities) => plugin.onIdentities(this._config, identities));
+    }
+
+    if (plugin.onPolicyScope) {
+      this.onPolicyScope((policyScope) => plugin.onPolicyScope(this._config, policyScope));
+    }
+
+    if (plugin.onRegionInfo) {
+      this.onRegionInfo((region) => plugin.onRegionInfo(this._config, region));
+    }
+
+    if (plugin.onShowExperience) {
+      this.onShowExperience(() => plugin.onShowExperience(this._config));
+    }
+
+    if (plugin.onHideExperience) {
+      this.onHideExperience(() => plugin.onHideExperience(this._config));
+    }
+
+    if (plugin.onConsent) {
+      this.onConsent((consent) => plugin.onConsent(this._config, consent));
+    }
+
+    if (plugin.onInvokeRight) {
+      this.onInvokeRight((request) => plugin.onInvokeRight(this._config, request));
+    }
+  }
+
+  /**
+   * Returns the configuration.
+   */
   getConfig(): Promise<ketchapi.Configuration> {
     return Promise.resolve(this._config);
   }
@@ -294,6 +351,15 @@ export class Ketch {
    */
   onConsent(callback: Callback) {
     this._consent.subscribe(callback);
+  }
+
+  /**
+   * Registers a callback for right invocations.
+
+   * @param callback
+   */
+  onInvokeRight(callback: Callback) {
+    this._invokeRights.push(callback);
   }
 
   /**
@@ -969,6 +1035,10 @@ export class Ketch {
       user: user
     };
 
+    for (let callback of this._invokeRights) {
+      callback(request);
+    }
+
     return ketchapi.invokeRight(request);
   }
 
@@ -993,7 +1063,9 @@ export class Ketch {
    *
    * @param data
    */
-  onUpdateConsent(data: UpdateConsentEvent): Promise<any> {
+  handleUpdateConsent(data: UpdateConsentEvent): Promise<any> {
+    log.debug('handleUpdateConsent', data);
+
     return this.setConsent(data.consent);
   }
 
@@ -1002,8 +1074,8 @@ export class Ketch {
    *
    * @param data
    */
-  onInvokeRight(data: InvokeRightsEvent): Promise<void> {
-    log.debug('onInvokeRights', data);
+  handleInvokeRight(data: InvokeRightsEvent): Promise<void> {
+    log.debug('handleInvokeRight', data);
 
     return this.getIdentities().then(identities => this.invokeRight(identities, data));
   }
@@ -1011,7 +1083,9 @@ export class Ketch {
   /**
    * Called when Lanyard tells us the user has closed the dialog.
    */
-  onCloseDialog(): Promise<void> {
+  handleCloseDialog(): Promise<void> {
+    log.debug('handleCloseDialog');
+
     // Send message back to Lanyard to confirm closing
     window.postMessage(
       {
@@ -1061,13 +1135,13 @@ export class Ketch {
     // Call the handler
     switch (e.data.type) {
       case constants.UPDATE_CONSENT:
-        return this.onUpdateConsent(e.data);
+        return this.handleUpdateConsent(e.data);
 
       case constants.INVOKE_RIGHTS:
-        return this.onInvokeRight(e.data);
+        return this.handleInvokeRight(e.data);
 
       case constants.CLOSE:
-        return this.onCloseDialog();
+        return this.handleCloseDialog();
     }
 
     return Promise.resolve();
