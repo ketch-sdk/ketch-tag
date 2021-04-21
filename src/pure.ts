@@ -1,6 +1,13 @@
 import * as ketchapi from "@ketch-sdk/ketch-web-api";
 import Future from "./internal/future";
-import {AppDiv, Callback, ConsentStatus, InvokeRightsEvent, UpdateConsentEvent} from "./internal/types";
+import {
+  AppDiv,
+  Callback,
+  ConsentStatus,
+  InvokeRightsEvent, ShowConsent,
+  ShowPreferences,
+  Plugin
+} from "./internal/types";
 import constants from "./internal/constants";
 import dataLayer from "./internal/datalayer";
 import isEmpty from "./internal/isEmpty";
@@ -10,8 +17,6 @@ import parameters from "./internal/parameters";
 import {ResourceName} from "@ketch-com/resourcename-js";
 import {getCookie, setCookie} from "./internal/cookie";
 import {OID} from "@ketch-com/oid-js";
-import {Plugin} from "./internal/plugin";
-import * as scripts from "./internal/scripts";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
@@ -89,6 +94,16 @@ export class Ketch {
   _invokeRights: Callback[];
 
   /**
+   * showPreferences is the function registered with onShowPreferences
+   */
+  _showPreferences?: ShowPreferences;
+
+  /**
+   * showConsent is the function registered with onShowConsent
+   */
+  _showConsent?: ShowConsent;
+
+  /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
    * provided.
    *
@@ -107,6 +122,8 @@ export class Ketch {
     this._showExperience = [];
     this._hideExperience = [];
     this._invokeRights = [];
+    this._showPreferences = undefined;
+    this._showConsent = undefined;
   }
 
   /**
@@ -221,7 +238,11 @@ export class Ketch {
         return {} as ConsentStatus;
       }
 
-      return this.loadExperience(consent, this.selectExperience());
+      if (this._showConsent) {
+        this._showConsent(this, this._config, consent, this.selectExperience());
+      }
+
+      return consent;
     });
   }
 
@@ -237,7 +258,7 @@ export class Ketch {
    *
    * @param c
    */
-  triggerPermitChangedEvent(c: ConsentStatus) {
+  triggerPermitChangedEvent(c: ConsentStatus): void {
     log.info('triggerPermitChangedEvent');
 
     const permitChangedEvent: {[key: string]: any} = {
@@ -349,7 +370,7 @@ export class Ketch {
    *
    * @param callback
    */
-  onConsent(callback: Callback) {
+  onConsent(callback: Callback): void {
     this._consent.subscribe(callback);
   }
 
@@ -358,7 +379,7 @@ export class Ketch {
 
    * @param callback
    */
-  onInvokeRight(callback: Callback) {
+  onInvokeRight(callback: Callback): void {
     this._invokeRights.push(callback);
   }
 
@@ -560,7 +581,7 @@ export class Ketch {
    *
    * @param callback
    */
-  onEnvironment(callback: Callback) {
+  onEnvironment(callback: Callback): void {
     this._environment.subscribe(callback);
   }
 
@@ -624,7 +645,7 @@ export class Ketch {
    *
    * @param callback
    */
-  onGeoIP(callback: Callback) {
+  onGeoIP(callback: Callback): void {
     this._geoip.subscribe(callback);
   }
 
@@ -818,7 +839,7 @@ export class Ketch {
    *
    * @param ps
    */
-  pushPolicyScope(ps: string) {
+  pushPolicyScope(ps: string): void {
     log.info('pushPolicyScope', ps);
 
     const PolicyScopeEvent = {
@@ -826,7 +847,7 @@ export class Ketch {
       policyScopeCode: ps,
     }
 
-    return dataLayer().push(PolicyScopeEvent)
+    dataLayer().push(PolicyScopeEvent)
   }
 
   /**
@@ -987,10 +1008,14 @@ export class Ketch {
     return c.then(c => {
       // if no preference experience configured do not show
       if (!this._config.experiences?.preference) {
-        return
+        return c;
       }
 
-      return this.loadExperience(c, constants.PREFERENCE);
+      if (this._showPreferences) {
+        this._showPreferences(this, this._config, c);
+      }
+
+      return c;
     });
   }
 
@@ -1059,176 +1084,20 @@ export class Ketch {
   }
 
   /**
-   * Called when Lanyard tells us the user has updated consent.
+   * onShowPreferences registers a function to handle showing preferences
    *
-   * @param data
+   * @param callback
    */
-  handleUpdateConsent(data: UpdateConsentEvent): Promise<any> {
-    log.debug('handleUpdateConsent', data);
-
-    return this.setConsent(data.consent);
+  onShowPreferences(callback: ShowPreferences): void {
+    this._showPreferences = callback;
   }
 
   /**
-   * Called when Lanyard tells us the user has invoked rights.
+   * onShowConsent registers a function to handle showing consent
    *
-   * @param data
+   * @param callback
    */
-  handleInvokeRight(data: InvokeRightsEvent): Promise<void> {
-    log.debug('handleInvokeRight', data);
-
-    return this.getIdentities().then(identities => this.invokeRight(identities, data));
-  }
-
-  /**
-   * Called when Lanyard tells us the user has closed the dialog.
-   */
-  handleCloseDialog(): Promise<void> {
-    log.debug('handleCloseDialog');
-
-    // Send message back to Lanyard to confirm closing
-    window.postMessage(
-      {
-        type: constants.CLOSE_MODAL,
-        to: constants.LANYARD,
-        from: constants.SEMAPHORE,
-      },
-      origin
-    );
-
-    for (const appDiv of this._appDivs) {
-      const div = document.getElementById(appDiv.id)
-      if (div) {
-        div.style.zIndex = appDiv.zIndex;
-      }
-    }
-    this._appDivs = []
-
-    // Call functions registered using onHideExperience
-    this._hideExperience.forEach(func => {
-      func();
-    });
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Event handler from Lanyard.
-   *
-   * @param e
-   */
-  handleEvent(e: MessageEvent): Promise<any> {
-    // Check for things that would disqualify this event
-    if (
-      e.origin !== origin ||
-      !e.data ||
-      e.data.from !== constants.LANYARD ||
-      e.data.to !== constants.SEMAPHORE ||
-      !(e.data.type === constants.UPDATE_CONSENT || e.data.type === constants.INVOKE_RIGHTS || e.data.type === constants.CLOSE)
-    ) {
-      log.debug('skipping', e);
-      return Promise.resolve();
-    }
-
-    log.debug('message received', e.data.type);
-
-    // Call the handler
-    switch (e.data.type) {
-      case constants.UPDATE_CONSENT:
-        return this.handleUpdateConsent(e.data);
-
-      case constants.INVOKE_RIGHTS:
-        return this.handleInvokeRight(e.data);
-
-      case constants.CLOSE:
-        return this.handleCloseDialog();
-    }
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Loaded is called when the Lanyard module is loaded
-   *
-   * @param consent
-   * @param experience
-   */
-  loaded(consent: ConsentStatus, experience: string): Promise<any> {
-    log.debug('loaded', consent, experience);
-
-    if (this._config.options?.appDivs) {
-      const appDivList = this._config.options.appDivs.split(",")
-      for (const divID of appDivList) {
-        const div = document.getElementById(divID)
-        if (div) {
-          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
-          div.style.zIndex = "-1";
-        }
-      }
-    }
-
-    // Call functions registered using onShowExperience
-    this._showExperience.forEach(func => {
-      func();
-    });
-
-    // Send off the message to Lanyard to show the modal
-    window.postMessage(
-      {
-        type: constants.SHOW_MODAL,
-        config: this._config,
-        consent,
-        experience,
-        to: constants.LANYARD,
-        from: constants.SEMAPHORE,
-      },
-      origin
-    );
-
-    // Add an event listener for messages from Lanyard.
-    window.addEventListener('message', this.handleEvent, false);
-    return Promise.resolve();
-  }
-
-  /**
-   * Load the experience and setup the listeners to receive messages back from the experience manager.
-   *
-   * @param consent
-   * @param experience
-   */
-  loadExperience(consent: ConsentStatus, experience: string): Promise<any> {
-    log.debug('load', consent, experience);
-
-    // Check to see if we already have the lanyard root (and then by definition
-    // have already loaded the script. If so, bypass loading the script a second
-    // time.
-    let elem = document.getElementById(constants.LANYARD_ROOT);
-    if (elem) {
-      return this.loaded(consent, experience);
-    }
-
-    // No element found, so create the root div.
-    elem = document.createElement('div');
-    elem.id = constants.LANYARD_ROOT;
-    const parentNode = window.document.body;
-    parentNode.insertBefore(elem, parentNode.firstChild);
-
-    // Load the bundle.
-    let url = this._config.services ? this._config.services[constants.LANYARD] : '';
-
-    return scripts
-      .load(url)
-      .then(
-        // Wait lanyard script parsed and executed after load
-        // TODO: implement via messaging
-        () =>
-          new Promise((resolve) => {
-            setTimeout(resolve, 50);
-          })
-      )
-      .then(() => this.loaded(consent, experience))
-      .catch(() => {
-        log.error('could not load lanyard bundle');
-      });
+  onShowConsent(callback: ShowConsent): void {
+    this._showConsent = callback;
   }
 }
