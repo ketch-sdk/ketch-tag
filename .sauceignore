@@ -1,0 +1,8 @@
+# Remove this to have node_modules uploaded with code
+node_modules/
+.git/
+.github/
+.DS_Store
+.idea/
+.gitignore
+.npmrc
