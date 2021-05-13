@@ -13,9 +13,11 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
     steps:
     - uses: actions/checkout@v2.3.4
-    - uses: actions/cache@v2.1.4
+    - uses: actions/cache@v2.1.5
       with:
         path: ~/.npm
         key: v2-node-dep-${{ hashFiles('package-lock.json') }}
@@ -26,3 +28,8 @@ jobs:
         echo "@ketch-com:registry=https://registry.npmjs.com/" >> .npmrc
         echo "always-auth=true" >> .npmrc
     - uses: winchci/actions-node@v14
+    - name: Saucectl Docker and Cloud
+      uses: saucelabs/saucectl-run-action@v1
+      with:
+        testing-environment: ""
+        concurrency: 10

@@ -1,0 +1,30 @@
+apiVersion: v1alpha
+kind: playwright
+defaults:
+  mode: sauce
+sauce:
+  region: us-west-1
+  concurrency: 2 # Controls how many suites are executed at the same time.
+  metadata:
+    name: Ketch tag
+    build: Release $CI_COMMIT_SHORT_SHA
+    # public: team
+docker:
+  # image: saucelabs/stt-playwright-node:v1.10.3
+  fileTransfer: copy
+playwright:
+  version: 1.10.0
+rootDir: ./
+suites:
+ - name: "Chromium in sauce"
+   mode: sauce
+   platformName: "Windows 10"
+   testMatch: '**/*.test.js'
+   params:
+     browserName: "chromium"
+artifacts:
+  download:
+  when: always
+  match:
+    - console.log
+  directory: ./artifacts/

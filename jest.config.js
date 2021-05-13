@@ -74,7 +74,7 @@ module.exports = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  // preset: null,
+  preset: "jest-playwright-preset",
 
   // Run tests from one or more projects
   // projects: null,
@@ -124,7 +124,11 @@ module.exports = {
   testEnvironment: 'jest-environment-jsdom',
 
   // Options that will be passed to the testEnvironment
-  // testEnvironmentOptions: {},
+  testEnvironmentOptions: {
+    'jest-playwright': {
+      
+    }
+  },
 
   // Adds a location field to test results
   // testLocationInResults: false,
