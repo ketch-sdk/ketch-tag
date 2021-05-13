@@ -8,43 +8,23 @@ sauce:
   metadata:
     name: Ketch tag
     build: Release $CI_COMMIT_SHORT_SHA
-    public: team
+    # public: team
 docker:
+  # image: saucelabs/stt-playwright-node:v1.10.3
   fileTransfer: copy
 playwright:
   version: 1.10.0
-image:
-  base: saucelabs/stt-playwright-jest-node
-  version: latest
 rootDir: ./
-files:
-  - test/
 suites:
-#  - name: "Firefox using global mode"
-#    platformName: "Windows 10"
-#    testMatch: '**/*.test.js'
-#    params:
-#      browserName: "firefox"
-#  - name: "Chromium in docker"
-#    mode: docker
-#    testMatch: '**/*.test.js'
-#    params:
-#      browserName: "chromium"
-  - name: "Chromium in sauce"
-    mode: sauce
-    platformName: "Windows 10"
-    testMatch: '**/*.test.js'
-    params:
-      browserName: "chromium"
-  - name: "Webkit in sauce"
-    mode: sauce
-    platformName: "Windows 10"
-    testMatch: '**/*.test.js'
-    params:
-      browserName: "webkit"
+ - name: "Chromium in sauce"
+   mode: sauce
+   platformName: "Windows 10"
+   testMatch: '**/*.test.js'
+   params:
+     browserName: "chromium"
 artifacts:
   download:
-    when: always
-    match:
-      - console.log
-    directory: ./artifacts/
+  when: always
+  match:
+    - console.log
+  directory: ./artifacts/
