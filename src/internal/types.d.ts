@@ -2,29 +2,33 @@ import * as ketchapi from "@ketch-sdk/ketch-web-api";
 
 export declare type Callback = (arg0: any)=>void;
 
-export type ConsentStatus = {[key: string]: boolean};
+export type Status = {[key: string]: boolean};
+
+export type Consent = {
+  purposes: Status;
+  vendors: Status;
+}
 
 export interface Plugin {
-  onInit: (host: Ketch, config: ketchapi.Configuration) => void;
-  onEnvironment: (host: Ketch, config: ketchapi.Configuration, env: ketchapi.Environment) => void;
-  onGeoIP: (host: Ketch, config: ketchapi.Configuration, ipInfo: ketchapi.IPInfo) => void;
-  onIdentities: (host: Ketch, config: ketchapi.Configuration, identities: string[]) => void;
-  onPolicyScope: (host: Ketch, config: ketchapi.Configuration, policyScope: string) => void;
-  onRegionInfo: (host: Ketch, config: ketchapi.Configuration, region: string) => void;
+  init: (host: Ketch, config: ketchapi.Configuration) => void;
+  environmentLoaded: (host: Ketch, config: ketchapi.Configuration, env: ketchapi.Environment) => void;
+  geoIPLoaded: (host: Ketch, config: ketchapi.Configuration, ipInfo: ketchapi.IPInfo) => void;
+  identitiesLoaded: (host: Ketch, config: ketchapi.Configuration, identities: string[]) => void;
+  jurisdictionLoaded: (host: Ketch, config: ketchapi.Configuration, policyScope: string) => void;
+  regionInfoLoaded: (host: Ketch, config: ketchapi.Configuration, region: string) => void;
 
-  onShowExperience: (host: Ketch, config: ketchapi.Configuration /* , TODO */) => void;
-  onHideExperience: (host: Ketch, config: ketchapi.Configuration /* , TODO */) => void;
+  consentChanged: (host: Ketch, config: ketchapi.Configuration, consent: Consent) => void;
+  rightInvoked: (host: Ketch, config: ketchapi.Configuration, request: ketchapi.InvokeRightRequest) => void;
 
-  onConsent: (host: Ketch, config: ketchapi.Configuration, consent: ConsentStatus) => void;
-  onInvokeRight: (host: Ketch, config: ketchapi.Configuration, request: ketchapi.InvokeRightRequest) => void;
-
-  showPreferences: ShowPreferences;
-  showConsent: ShowConsent;
+  showPreferenceExperience: ShowPreferenceExperience;
+  closePreferenceExperience: () => void;
+  showConsentExperience: ShowConsentExperience;
+  closeConsentExperience: () => void;
 }
 
 export interface Ketch {
   getConfig(): Promise<ketchapi.Configuration>;
-  getConsent(): Promise<ConsentStatus>;
+  getConsent(): Promise<Consent>;
   getEnvironment(): Promise<ketchapi.Environment>;
   getGeoIP(): Promise<ketchapi.IPInfo>;
   getIdentities(): Promise<string[]>;
@@ -34,7 +38,8 @@ export interface Ketch {
 
   hasConsent(): boolean;
 
-  invokeRight(identities: string[], eventData: InvokeRightsEvent): Promise<void>;
+  changeConsent(consent: Consent): Promise<void>;)
+  invokeRight(eventData: InvokeRightsEvent): Promise<void>;
 
   onConsent(callback: Callback): void;
   onEnvironment(callback: Callback): void;
@@ -44,31 +49,28 @@ export interface Ketch {
   onInvokeRight(callback: Callback): void;
   onPolicyScope(callback: Callback): void;
   onRegionInfo(callback: Callback): void;
-  onShowConsent(callback: ShowConsent): void;
-  onShowExperience(callback: Function): void;
-  onShowPreferences(callback: ShowPreferences): void;
+  onShowConsentExperience(callback: ShowConsentExperience): void;
+  onShowPreferenceExperience(callback: ShowPreferenceExperience): void;
+  onCloseConsentExperience(callback: Callback): void;
+  onClosePreferenceExperience(callback: Callback): void;
 
   registerPlugin(plugin: Plugin): void;
 
-  setConsent(c: ConsentStatus): Promise<ConsentStatus>;
+  setConsent(c: Consent): Promise<Consent>;
   setEnvironment(env: ketchapi.Environment): Promise<ketchapi.Environment>;
   setGeoIP(g: ketchapi.IPInfo): Promise<ketchapi.IPInfo>;
   setIdentities(id: string[]): Promise<string[]>;
   setPolicyScope(ps: string): Promise<string>;
   setRegionInfo(info: string): Promise<string>;
 
-  shouldShowConsent(c: ConsentStatus): boolean;
+  shouldShowConsent(c: Consent): boolean;
 
-  showConsent(): Promise<ConsentStatus>;
-  showPreferences(): Promise<ConsentStatus>;
+  showConsentExperience(): Promise<Consent>;
+  showPreferenceExperience(): Promise<Consent>;
 }
 
-export type ShowPreferences = (host: Ketch, config: ketchapi.Configuration, consents: ConsentStatus) => void;
-export type ShowConsent = (host: Ketch, config: ketchapi.Configuration, consents: ConsentStatus, experienceHint: string) => void;
-
-export type UpdateConsentEvent = {
-  consent: ConsentStatus;
-}
+export type ShowPreferenceExperience = (host: Ketch, config: ketchapi.Configuration, consents: Consent) => void;
+export type ShowConsentExperience = (host: Ketch, config: ketchapi.Configuration, consents: Consent, experienceHint: string) => void;
 
 export type InvokeRightsEvent = {
   right: string;
