@@ -126,18 +126,19 @@ export class Ketch {
     this._showConsent = undefined;
   }
 
+  // TODO review this
   /**
    * Registers a plugin
    *
    * @param plugin The plugin to register
    */
   registerPlugin(plugin: Plugin): void {
-    if (plugin.onInit) {
-      plugin.onInit(this._config);
+    if (plugin.Init) {
+      plugin.Init(this._config);
     }
 
-    if (plugin.onEnvironment) {
-      this.onEnvironment((env) => plugin.onEnvironment(this._config, env));
+    if (plugin.EnvironmentLoaded) {
+      this.onEnvironment((env) => plugin.EnvironmentLoaded(this._config, env));
     }
 
     if (plugin.onGeoIP) {
@@ -164,7 +165,7 @@ export class Ketch {
       this.onHideExperience(() => plugin.onHideExperience(this._config));
     }
 
-    if (plugin.onConsent) {
+    if (plugin.consentChanged) {
       this.onConsent((consent) => plugin.onConsent(this._config, consent));
     }
 
