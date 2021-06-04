@@ -82,8 +82,8 @@ function getAction(action: string): Function | undefined {
     case 'setIdentities': return ketch?.setIdentities;
     case 'setPolicyScope': return ketch?.setPolicyScope;
     case 'setRegionInfo': return ketch?.setRegionInfo;
-    case 'showConsent': return ketch?.showConsent;
-    case 'showPreferences': return ketch?.showPreferences;
+    case 'showConsent': return ketch?.showConsentExperience;
+    case 'showPreferences': return ketch?.showPreferenceExperience;
   }
 
   return undefined;

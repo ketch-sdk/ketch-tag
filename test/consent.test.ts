@@ -428,7 +428,7 @@ describe('consent', () => {
       const c = {datasales: true};
 
       expect(ketch.setConsent(c)).resolves.toBe(c);
-      expect(ketch.showConsent()).resolves.toBe(c);
+      expect(ketch.showConsentExperience()).resolves.toBe(c);
     });
   });
 });

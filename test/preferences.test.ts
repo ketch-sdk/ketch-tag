@@ -12,13 +12,13 @@ describe('preferences', () => {
         }
       } as any) as Configuration);
 
-      expect(ketch.showPreferences()).resolves.toBeUndefined();
+      expect(ketch.showPreferenceExperience()).resolves.toBeUndefined();
     });
 
     it('does not show experience', () => {
       const ketch = new Ketch({} as Configuration);
 
-      expect(ketch.showPreferences()).resolves.toBeUndefined();
+      expect(ketch.showPreferenceExperience()).resolves.toBeUndefined();
     });
   });
 });

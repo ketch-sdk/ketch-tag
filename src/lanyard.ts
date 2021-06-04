@@ -124,6 +124,9 @@ export class LanyardPlugin {
       }
     }
 
+    // update isExperienceDisplayed flag when experience displayed
+    this._isExperienceDisplayed = true
+
     // Call functions registered using onShowExperience
     this._showExperience.forEach(func => {
       func();
@@ -171,7 +174,7 @@ export class LanyardPlugin {
     parentNode.insertBefore(elem, parentNode.firstChild);
 
     // Load the bundle.
-    let url = this._config.services ? this._config.services[constants.LANYARD] : '';
+    const url = this._config.services ? this._config.services[constants.LANYARD] : '';
 
     return scripts
       .load(url)

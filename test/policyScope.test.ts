@@ -40,7 +40,7 @@ describe('policyScope', () => {
 
       mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
 
-      return expect(ketch.loadPolicyScope()).rejects.toBe(errors.noPolicyScopeError);
+      return expect(ketch.loadPolicyScope()).rejects.toBe(errors.noJurisdictionError);
     });
 
     it('loads from dataLayer', () => {

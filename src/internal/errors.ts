@@ -6,7 +6,7 @@ export default {
   noIdentitiesError: new Error('no identities'),
   noPurposesError: new Error('no purposes'),
   noEnvironmentError: new Error('no environment'),
-  noPolicyScopeError: new Error('no policy scope'),
+  noJurisdictionError: new Error('no jurisdiction'),
   notImplementedError: new Error('not implemented'),
   timedOutError: (ms: number): Error => new Error(`Timed out in ${ms} ms.`),
   itemNotFoundError: new Error('item not found')
