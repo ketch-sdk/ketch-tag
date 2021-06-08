@@ -47,6 +47,10 @@ describe('identity', () => {
             type: 'window',
             variable: 'window.foo1',
           },
+          f2: {
+            type: 'window',
+            variable: 'window.foo2()',
+          },
         }
       };
       const ketch = new Ketch((config as any) as Configuration);

@@ -31,6 +31,8 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
   const k = new Ketch(boot);
 
+  k.pollIdentity([1000, 2000, 4000, 8000])
+
   return Promise.all([k.detectEnvironment(), k.loadJurisdiction()])
     .then(([env, jurisdiction]) => {
       if (!env.hash) {
@@ -79,11 +81,6 @@ export class Ketch {
   _appDivs: AppDiv[];
 
   /**
-   * showExperience is the list of functions registered with onShowExperience
-   */
-  _showExperience: Function[];
-
-  /**
    * hideExperience is the list of functions registered with onHideExperience
    */
   _hideExperience: Function[];
@@ -96,12 +93,12 @@ export class Ketch {
   /**
    * showPreferenceExperience is the function registered with onShowPreferenceExperience
    */
-  _showPreferences?: ShowPreferenceExperience;
+  _showPreferenceExperience?: ShowPreferenceExperience;
 
   /**
    * showConsentExperience is the function registered with onShowConsentExperience
    */
-  _showConsent?: ShowConsentExperience;
+  _showConsentExperience?: ShowConsentExperience;
 
   /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
@@ -130,11 +127,10 @@ export class Ketch {
     this._regionInfo = new Future<string>('regionInfo');
     this._origin = window.location.protocol + '//' + window.location.host;
     this._appDivs = [];
-    this._showExperience = [];
     this._hideExperience = [];
     this._invokeRights = [];
-    this._showPreferences = undefined;
-    this._showConsent = undefined;
+    this._showPreferenceExperience = undefined;
+    this._showConsentExperience = undefined;
   }
 
   /**
@@ -175,10 +171,6 @@ export class Ketch {
       this.onShowPreferenceExperience(() => plugin.showPreferenceExperience??(this, this._config));
     }
 
-    if (plugin.hideExperience) {
-      this.onHideExperience(() => plugin.hideExperience??(this, this._config));
-    }
-
     if (plugin.consentChanged) {
       this.onConsent((consent) => plugin.consentChanged??(this, this._config, consent));
     }
@@ -202,8 +194,8 @@ export class Ketch {
    */
   shouldShowConsent(c: Consent): boolean {
     if (this._config.experiences?.consent && this._config.purposes) {
-      for (const pa of this._config.purposes) {
-        if (c[pa.code] === undefined) {
+      for (const p of this._config.purposes) {
+        if (c.purposes[p.code] === undefined) {
           log.debug('shouldShowConsent', true);
           return true;
         }
@@ -253,8 +245,8 @@ export class Ketch {
         return {} as Consent;
       }
 
-      if (this._showConsent) {
-        this._showConsent(this, this._config, consent, this.selectExperience());
+      if (this._showConsentExperience) {
+        this._showConsentExperience(this, this._config, consent, this.selectExperience());
       }
 
       return consent;
@@ -282,7 +274,7 @@ export class Ketch {
     }
 
     for (const purposeCode in c) {
-      permitChangedEvent[purposeCode] = c[purposeCode]
+      permitChangedEvent[purposeCode] = c.purposes[purposeCode]
     }
 
     dataLayer().push(permitChangedEvent)
@@ -297,7 +289,7 @@ export class Ketch {
     // check for new identifiers for tags that may fire after consent collected
     this.pollIdentity([4000, 8000])
 
-    return this.setConsent(consent).then(hide);
+    return this.setConsent(consent)
   }
 
   /**
@@ -319,7 +311,7 @@ export class Ketch {
       for (const key in existingConsent) {
         if (Object.prototype.hasOwnProperty.call(existingConsent, key) &&
           !Object.prototype.hasOwnProperty.call(c, key)) {
-          c[key] = existingConsent[key];
+          c.purposes[key] = existingConsent.purposes[key];
         }
       }
     }
@@ -359,12 +351,12 @@ export class Ketch {
           // requiresOptIn => false
           // else => true
           if (this._config.purposes) {
-            for (const pa of this._config.purposes) {
-              if (c[pa.code] === undefined) {
-                if (pa.requiresOptIn) {
-                  c[pa.code] = false;
+            for (const p of this._config.purposes) {
+              if (c.purposes[p.code] === undefined) {
+                if (p.requiresOptIn) {
+                  c.purposes[p.code] = false;
                 } else {
-                  c[pa.code] = true;
+                  c.purposes[p.code] = true;
                 }
               }
             }
@@ -433,7 +425,7 @@ export class Ketch {
     log.debug('getConsent', identities);
 
     // If no identities or purposes defined, skip the call.
-    if (!identities || identities.length === 0) {
+    if (!identities || identities.size === 0) {
       return Promise.reject(errors.noIdentitiesError);
     }
     if (!this._config || !this._config.app || !this._config.organization || !this._config.environment ||
@@ -458,13 +450,13 @@ export class Ketch {
     }
 
     return ketchapi.getConsent(request).then((consent: ketchapi.GetConsentResponse) => {
-      const newConsent: Consent = {};
+      const newConsent: Consent = {purposes: {}, vendors: {}};
 
       if (this._config.purposes && consent.purposes) {
-        for (const pa of this._config.purposes) {
-          if (consent.purposes[pa.code] &&
-            consent.purposes[pa.code].allowed) {
-            newConsent[pa.code] = consent.purposes[pa.code].allowed === 'true';
+        for (const p of this._config.purposes) {
+          if (consent.purposes[p.code] &&
+            consent.purposes[p.code].allowed) {
+            newConsent.purposes[p.code] = consent.purposes[p.code].allowed === 'true';
           }
         }
       }
@@ -515,11 +507,11 @@ export class Ketch {
     }
 
     if (this._config.purposes && consent) {
-      for (const pa of this._config.purposes) {
-        if (consent[pa.code] !== undefined) {
-          request.purposes[pa.code] = {
-            allowed: consent[pa.code].toString(),
-            legalBasisCode: pa.legalBasisCode
+      for (const p of this._config.purposes) {
+        if (consent.purposes[p.code] !== undefined) {
+          request.purposes[p.code] = {
+            allowed: consent.purposes[p.code].toString(),
+            legalBasisCode: p.legalBasisCode
           };
         }
       }
@@ -709,12 +701,23 @@ export class Ketch {
   getProperty(p: string): string | null {
     const parts: string[] = p.split('.');
     let context: any = window;
+    let previousContext: any = null;
 
     while (parts.length > 0) {
       if (parts[0] === 'window') {
         parts.shift();
       } else if (typeof context === 'object') {
-        context = context[parts.shift() as string];
+        if (parts[0].slice(-2) === '()') {
+          previousContext = context
+          context = context[((parts.shift() as string).slice(0, -2))]
+        } else {
+          previousContext = context
+          context = context[parts.shift() as string];
+        }
+      } else if (typeof context === 'function') {
+        const newContext = context.call(previousContext)
+        previousContext = context
+        context = newContext
       } else {
         return null;
       }
@@ -1018,7 +1021,7 @@ export class Ketch {
   showPreferenceExperience(): Promise<Consent> {
     log.info('showPreference');
 
-    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({});
+    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}, vendors: {}});
 
     return c.then(c => {
       // if no preference experience configured do not show
@@ -1026,8 +1029,8 @@ export class Ketch {
         return c;
       }
 
-      if (this._showPreferences) {
-        this._showPreferences(this, this._config, c);
+      if (this._showPreferenceExperience) {
+        this._showPreferenceExperience(this, this._config, c);
       }
 
       return c;
@@ -1088,7 +1091,13 @@ export class Ketch {
     return ketchapi.invokeRight(request);
   }
 
-  experienceHidden(): void {
+  /**
+   * Signals that an experience has been hidden
+   *
+   * @param reason is a string representing the reason the experience was closed
+   * Values: setConsent, invokeRight, close
+   */
+  experienceClosed(reason: string): Promise<Consent> {
     for (const appDiv of this._appDivs) {
       const div = document.getElementById(appDiv.id)
       if (div) {
@@ -1107,7 +1116,20 @@ export class Ketch {
       func();
     });
 
-    return
+    if (reason !== "setConsent") {
+      return this.retrieveConsent().then((consent) => {
+        if (this._config.purposes) {
+          for (const p of this._config.purposes) {
+            if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
+              consent.purposes[p.code] = false;
+            }
+          }
+        }
+        return this.setConsent(consent);
+      })
+    }
+
+    return Promise.resolve({} as Consent)
   }
 
   /**
@@ -1124,7 +1146,7 @@ export class Ketch {
    * @param callback
    */
   onShowPreferenceExperience(callback: ShowPreferenceExperience): void {
-    this._showPreferences = callback;
+    this._showPreferenceExperience = callback;
   }
 
   /**
@@ -1133,7 +1155,7 @@ export class Ketch {
    * @param callback
    */
   onShowConsentExperience(callback: ShowConsentExperience): void {
-    this._showConsent = callback;
+    this._showConsentExperience = callback;
   }
 
   /**
@@ -1170,7 +1192,7 @@ export class Ketch {
             if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
               let newConsent = false
               for (const key in permitConsent) {
-                if (permitConsent[key] !== localConsent[key]) {
+                if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
                   // different consent values
                   newConsent = true
                   break

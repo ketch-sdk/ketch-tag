@@ -1,6 +1,6 @@
 import loglevel from './internal/logging';
 import errors from './internal/errors';
-import {Ketch, newFromBootstrap} from "./pure";
+import {Ketch, newFromBootstrap, Identipollty} from "./pure";
 import constants from "./internal/constants";
 import * as ketchapi from "@ketch-sdk/ketch-web-api";
 const log = loglevel.getLogger('index');
@@ -33,6 +33,8 @@ if (document.readyState === 'loading') {
 function init(): Promise<any> {
   log.trace('init');
   const p: Promise<any>[] = [];
+
+  pollIdentity([1000, 2000, 4000, 8000])
 
   while (getGlobal().length > 0) {
     const x = getGlobal().shift();
@@ -67,20 +69,19 @@ function getAction(action: string): Function | undefined {
     case 'getEnvironment': return ketch?.getEnvironment;
     case 'getGeoIP': return ketch?.getGeoIP;
     case 'getIdentities': return ketch?.getIdentities;
-    case 'getPolicyScope': return ketch?.getPolicyScope;
+    case 'getJurisdiction': return ketch?.getJurisdiction;
     case 'getRegionInfo': return ketch?.getRegionInfo;
     case 'onConsent': return ketch?.onConsent;
     case 'onEnvironment': return ketch?.onEnvironment;
     case 'onGeoIP': return ketch?.onGeoIP;
     case 'onHideExperience': return ketch?.onHideExperience;
     case 'onIdentities': return ketch?.onIdentities;
-    case 'onPolicyScope': return ketch?.onPolicyScope;
+    case 'onJurisdiction': return ketch?.onJurisdiction;
     case 'onRegionInfo': return ketch?.onRegionInfo;
-    case 'onShowExperience': return ketch?.onShowExperience;
     case 'setEnvironment': return ketch?.setEnvironment;
     case 'setGeoIP': return ketch?.setGeoIP;
     case 'setIdentities': return ketch?.setIdentities;
-    case 'setPolicyScope': return ketch?.setPolicyScope;
+    case 'setJurisdiction': return ketch?.setJurisdiction;
     case 'setRegionInfo': return ketch?.setRegionInfo;
     case 'showConsent': return ketch?.showConsentExperience;
     case 'showPreferences': return ketch?.showPreferenceExperience;
