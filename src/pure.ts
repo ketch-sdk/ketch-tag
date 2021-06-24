@@ -1176,6 +1176,14 @@ export class Ketch {
   }
 
   /**
+   * onShowExperience called after experience hidden
+   * Used to trigger external dependencies
+   */
+  onShowExperience(callback: Function): void {
+    this._showExperience.push(callback);
+  }
+
+  /**
    * onShowPreferenceExperience registers a function to handle showing preferences
    *
    * @param callback
