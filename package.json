@@ -22,8 +22,8 @@
   "dependencies": {
     "@ketch-com/oid-js": "^0.3.6",
     "@ketch-com/resourcename-js": "^0.2.6",
-    "@ketch-sdk/ketch-plugin": "^0.1.0",
-    "@ketch-sdk/ketch-web-api": "^0.1.13",
+    "@ketch-sdk/ketch-plugin": "^0.1.3",
+    "@ketch-sdk/ketch-web-api": "^0.1.18",
     "loglevel": "^1.7.1"
   },
   "devDependencies": {

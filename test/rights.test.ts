@@ -10,13 +10,13 @@ describe('gangplank', () => {
     organization: {
       code: 'org'
     },
-    app: {
+    property: {
       code: 'app'
     },
     environment: {
       code: 'env'
     },
-    policyScope: {
+    jurisdiction: {
       code: 'ps',
     },
     rights: [
@@ -52,9 +52,9 @@ describe('gangplank', () => {
       migration: "3",
     }
   };
-  const identities = [
-    'id1'
-  ];
+  const identities = {
+    'email': 'rights@email.com'
+  };
   const data = {
     right: 'portability',
     firstName: 'first',
@@ -71,21 +71,21 @@ describe('gangplank', () => {
       const mockInvokeRight = mocked(invokeRight);
       mockInvokeRight.mockResolvedValue();
 
-      return ketch.invokeRight(identities, data).then(() => {
-        const {app, policyScope, organization, environment} = config;
-        expect(app).not.toBeNull();
-        expect(policyScope).not.toBeNull();
+      return ketch.invokeRight(data).then(() => {
+        const {property, jurisdiction, organization, environment} = config;
+        expect(property).not.toBeNull();
+        expect(jurisdiction).not.toBeNull();
         expect(organization).not.toBeNull();
         expect(environment).not.toBeNull();
 
-        if (app && policyScope && organization && environment) {
+        if (property && jurisdiction && organization && environment) {
           expect(mockInvokeRight).toHaveBeenCalledWith({
-            applicationCode: app.code,
-            applicationEnvironmentCode: environment.code,
+            propertyCode: property.code,
+            environmentCode: environment.code,
             organizationCode: 'org',
             controllerCode: '',
             identities,
-            policyScopeCode: policyScope.code,
+            jurisdictionCode: jurisdiction.code,
             rightCodes: ['portability'],
             user: {
               first: 'first',

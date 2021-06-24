@@ -1,6 +1,6 @@
 import loglevel from './internal/logging';
 import errors from './internal/errors';
-import {Ketch, newFromBootstrap, Identipollty} from "./pure";
+import {Ketch, newFromBootstrap} from "./pure";
 import constants from "./internal/constants";
 import * as ketchapi from "@ketch-sdk/ketch-web-api";
 const log = loglevel.getLogger('index');

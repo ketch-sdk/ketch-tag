@@ -4,12 +4,12 @@ import {
   AppDiv,
   Callback,
   Consent,
+  Identities,
   InvokeRightsEvent,
   ShowConsentExperience,
   ShowPreferenceExperience,
   Plugin
 } from "@ketch-sdk/ketch-plugin/src";
-import constants from "./internal/constants";
 import dataLayer from "./internal/datalayer";
 import isEmpty from "./internal/isEmpty";
 import loglevel from "./internal/logging";
@@ -41,7 +41,7 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
       log.info('loadConfig', env, jurisdiction);
 
-      if (!k._config || !k._config.organization || !k._config.app || !jurisdiction) {
+      if (!k._config || !k._config.organization || !k._config.property || !jurisdiction) {
         throw errors.noJurisdictionError;
       }
 
@@ -51,11 +51,11 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
       const request: ketchapi.GetFullConfigurationRequest = {
         organizationCode: k._config.organization.code || '',
-        appCode: k._config.app.code || '',
-        envCode: env.code,
+        propertyCode: k._config.property.code || '',
+        environmentCode: env.code,
         hash: env.hash || '',
         languageCode: language || 'en',
-        policyScopeCode: jurisdiction,
+        jurisdictionCode: jurisdiction,
       };
 
       return ketchapi.getFullConfiguration(request).then(cfg => new Ketch(cfg));
@@ -70,7 +70,7 @@ export class Ketch {
   _consent: Future<Consent>;
   _environment: Future<ketchapi.Environment>;
   _geoip: Future<ketchapi.IPInfo>;
-  _identities: Future<Map<string,string>>;
+  _identities: Future<Identities>;
   _jurisdiction: Future<string>;
   _regionInfo: Future<string>;
   _origin: string;
@@ -84,6 +84,11 @@ export class Ketch {
    * hideExperience is the list of functions registered with onHideExperience
    */
   _hideExperience: Function[];
+
+  /**
+   * hideExperience is the list of functions registered with onHideExperience
+   */
+  _showExperience: Function[];
 
   /**
    * invokeRights is the list of functions registered with onInvokeRight
@@ -103,13 +108,12 @@ export class Ketch {
   /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
    */
-  _isExperienceDisplayed = false;
-
+  _isExperienceDisplayed?: boolean;
 
   /**
    * hasExperienceBeenDisplayed is a bool representing whether an experience has been shown in a session
    */
-  _hasExperienceBeenDisplayed = false;
+  _hasExperienceBeenDisplayed?: boolean;
 
   /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
@@ -122,12 +126,13 @@ export class Ketch {
     this._consent = new Future<Consent>('consent');
     this._environment = new Future<ketchapi.Environment>('environment');
     this._geoip = new Future('geoip');
-    this._identities = new Future<Map<string, string>>('identities');
+    this._identities = new Future<Identities>('identities');
     this._jurisdiction = new Future<string>('jurisdiction');
     this._regionInfo = new Future<string>('regionInfo');
     this._origin = window.location.protocol + '//' + window.location.host;
     this._appDivs = [];
     this._hideExperience = [];
+    this._showExperience = [];
     this._invokeRights = [];
     this._showPreferenceExperience = undefined;
     this._showConsentExperience = undefined;
@@ -211,20 +216,42 @@ export class Ketch {
    *
    * @param config
    */
-  selectExperience(): string {
+  selectExperience(): 'jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
           if (this._config.experiences?.consent?.experienceDefault == 2) {
-            log.debug('selectExperience', constants.CONSENT_MODAL);
-            return constants.CONSENT_MODAL;
+            log.debug('selectExperience', 'experiences.consent.modal');
+            return 'experiences.consent.modal';
           }
         }
       }
     }
 
-    log.debug('selectExperience', constants.CONSENT_BANNER);
-    return constants.CONSENT_BANNER;
+    log.debug('selectExperience', 'experiences.consent.banner');
+    return 'experiences.consent.banner';
+  }
+
+  willShowExperience(): void {
+    if (this._config.options?.appDivs) {
+      const appDivList = this._config.options.appDivs.split(",")
+      for (const divID of appDivList) {
+        const div = document.getElementById(divID)
+        if (div) {
+          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
+          div.style.zIndex = "-1";
+        }
+      }
+    }
+
+    // update isExperienceDisplayed flag when experience displayed
+    this._isExperienceDisplayed = true
+
+    // TODO
+    // Call functions registered using onShowExperience
+    this._showExperience.forEach(func => {
+      func();
+    });
   }
 
   /**
@@ -246,7 +273,8 @@ export class Ketch {
       }
 
       if (this._showConsentExperience) {
-        this._showConsentExperience(this, this._config, consent, this.selectExperience());
+        this.willShowExperience()
+        this._showConsentExperience(this, this._config, consent, {displayHint: this.selectExperience()});
       }
 
       return consent;
@@ -421,24 +449,24 @@ export class Ketch {
    *
    * @param identities
    */
-  fetchConsent(identities: Map<string,string>): Promise<Consent> {
+  fetchConsent(identities: Identities): Promise<Consent> {
     log.debug('getConsent', identities);
 
     // If no identities or purposes defined, skip the call.
-    if (!identities || identities.size === 0) {
+    if (!identities || Object.keys(identities).length === 0) {
       return Promise.reject(errors.noIdentitiesError);
     }
-    if (!this._config || !this._config.app || !this._config.organization || !this._config.environment ||
+    if (!this._config || !this._config.property || !this._config.organization || !this._config.environment ||
       !this._config.purposes || this._config.purposes.length === 0) {
       return Promise.reject(errors.noPurposesError);
     }
 
     const request: ketchapi.GetConsentRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
-      identityMap: identities,
+      identities: identities,
       purposes: {},
     };
 
@@ -450,7 +478,7 @@ export class Ketch {
     }
 
     return ketchapi.getConsent(request).then((consent: ketchapi.GetConsentResponse) => {
-      const newConsent: Consent = {purposes: {}, vendors: {}};
+      const newConsent: Consent = {purposes: {}};
 
       if (this._config.purposes && consent.purposes) {
         for (const p of this._config.purposes) {
@@ -459,6 +487,10 @@ export class Ketch {
             newConsent.purposes[p.code] = consent.purposes[p.code].allowed === 'true';
           }
         }
+      }
+
+      if (consent.vendors) {
+        newConsent.vendors = consent.vendors
       }
 
       return newConsent;
@@ -471,17 +503,17 @@ export class Ketch {
    * @param identities
    * @param consent
    */
-  updateConsent(identities: Map<string,string>, consent: Consent): Promise<void> {
+  updateConsent(identities: Identities, consent: Consent): Promise<void> {
     log.debug('updateConsent', identities, consent);
 
     // If no identities or purposes defined, skip the call.
-    if (!identities || identities.size === 0) {
+    if (!identities || Object.keys(identities).length === 0) {
       log.debug('updateConsent', 'skipping');
       return Promise.resolve();
     }
 
-    if (!this._config || !this._config.organization || !this._config.app || !this._config.environment ||
-      !this._config.policyScope || !this._config.purposes || this._config.purposes.length === 0) {
+    if (!this._config || !this._config.organization || !this._config.property || !this._config.environment ||
+      !this._config.jurisdiction || !this._config.purposes || this._config.purposes.length === 0) {
       log.debug('updateConsent', 'skipping');
       return Promise.resolve();
     }
@@ -493,13 +525,14 @@ export class Ketch {
 
     const request: ketchapi.SetConsentRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
-      identityMap: identities,
-      policyScopeCode: this._config.policyScope.code || '',
+      identities: identities,
+      jurisdictionCode: this._config.jurisdiction.code || '',
       purposes: {},
       migrationOption: DEFAULT_MIGRATION_OPTION,
+      vendors: consent.vendors
     };
 
     if (this._config.options) {
@@ -687,10 +720,10 @@ export class Ketch {
    *
    * @param id
    */
-  setIdentities(id: Map<string, string>): Promise<Map<string,string>> {
+  setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id);
 
-    return this._identities.setValue(id) as Promise<Map<string,string>>;
+    return this._identities.setValue(id) as Promise<Identities>;
   }
 
   /**
@@ -709,7 +742,7 @@ export class Ketch {
       } else if (typeof context === 'object') {
         if (parts[0].slice(-2) === '()') {
           previousContext = context
-          context = context[((parts.shift() as string).slice(0, -2))]
+          context = context[((parts[0] as string).slice(0, -2))]
         } else {
           previousContext = context
           context = context[parts.shift() as string];
@@ -718,6 +751,7 @@ export class Ketch {
         const newContext = context.call(previousContext)
         previousContext = context
         context = newContext
+        parts.shift()
       } else {
         return null;
       }
@@ -729,13 +763,13 @@ export class Ketch {
   /**
    * Collect identities.
    */
-  collectIdentities(): Promise<Map<string,string>> {
+  collectIdentities(): Promise<Identities> {
     log.info('collectIdentities');
 
     const configIDs = this._config.identities;
 
     if (!this._config || !this._config.organization || configIDs == null || isEmpty(configIDs)) {
-      return Promise.resolve(new Map<string,string>());
+      return Promise.resolve({});
     }
 
     const windowProperties: any[] = [];
@@ -818,11 +852,11 @@ export class Ketch {
       }
     }
 
-    const identities = new Map<string,string>();
+    const identities = {} as Identities
     return Promise.all(promises).then(items => {
-      for (const item in items) {
+      for (const item of items) {
         if (item.length === 2) {
-          identities.set(item[0], item[1])
+          identities[item[0]] = item[1]
         }
       }
       return identities
@@ -832,11 +866,11 @@ export class Ketch {
   /**
    * Get the identities.
    */
-  getIdentities(): Promise<Map<string, string>> {
+  getIdentities(): Promise<Identities> {
     log.info('getIdentities');
 
     if (this._identities.hasValue()) {
-      return this._identities.getValue() as Promise<Map<string, string>>;
+      return this._identities.getValue() as Promise<Identities>;
     } else {
       return this.collectIdentities().then(id => this.setIdentities(id));
     }
@@ -906,14 +940,14 @@ export class Ketch {
    * Get the policy scope from query, page or config.
    */
   loadJurisdiction(): Promise<string> {
-    log.info('loadJurisdiction', this._config.policyScope);
+    log.info('loadJurisdiction', this._config.jurisdiction);
 
     const jurisdictionOverride = parameters.get(parameters.POLICY_SCOPE, window.location.search);
     if (jurisdictionOverride) {
       return this.setJurisdiction(jurisdictionOverride);
     }
 
-    const ps: ketchapi.PolicyScopeInfo | undefined = this._config.policyScope;
+    const ps: ketchapi.JurisdictionInfo | undefined = this._config.jurisdiction;
     if (!ps) {
       return Promise.reject(errors.noJurisdictionError);
     }
@@ -1021,7 +1055,7 @@ export class Ketch {
   showPreferenceExperience(): Promise<Consent> {
     log.info('showPreference');
 
-    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}, vendors: {}});
+    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}});
 
     return c.then(c => {
       // if no preference experience configured do not show
@@ -1030,6 +1064,7 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
+        this.willShowExperience()
         this._showPreferenceExperience(this, this._config, c);
       }
 
@@ -1054,13 +1089,13 @@ export class Ketch {
 
     let identities = this._identities._value
     if (identities === undefined) {
-      identities = new Map<string, string>([])
+      identities = {} as Identities
     }
     // add email identity from rights form
-    identities.set("email", eventData.rightsEmail)
+    identities["email"] = eventData.rightsEmail
 
-    if (!this._config || !this._config.organization || !this._config.app || !this._config.environment ||
-      !this._config.policyScope || !this._config.rights || this._config.rights.length === 0) {
+    if (!this._config || !this._config.organization || !this._config.property || !this._config.environment ||
+      !this._config.jurisdiction || !this._config.rights || this._config.rights.length === 0) {
       return Promise.resolve();
     }
 
@@ -1075,11 +1110,11 @@ export class Ketch {
 
     const request: ketchapi.InvokeRightRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
-      identityMap: identities,
-      policyScopeCode: this._config.policyScope.code || '',
+      identities: identities,
+      jurisdictionCode: this._config.jurisdiction.code || '',
       rightCodes: [eventData.right],
       user: user
     };
@@ -1171,12 +1206,12 @@ export class Ketch {
       .then(([pageIdentities, previousIdentities]) => {
       // check if identity value the same
       if (pageIdentities.size === previousIdentities.size) {
-        for (const [key, val] of pageIdentities) {
-          if (val !== previousIdentities.get(key)) {
+        Object.keys(pageIdentities).forEach(key => {
+          if (pageIdentities[key] !== previousIdentities[key]) {
             // no change in identities so no action needed
             return
           }
-        }
+        })
       }
 
       // change in identities found so set new identities found on page and check for consent

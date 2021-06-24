@@ -7,21 +7,21 @@ import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration, getLocation, GetLocationResponse} from '@ketch-sdk/ketch-web-api';
 
-describe('policyScope', () => {
+describe('jurisdiction', () => {
   const mockParametersGet = mocked(parameters.get);
 
-  describe('getPolicyScope', () => {
+  describe('getJurisdiction', () => {
     it('returns the existing policy scope', () => {
       const ketch = new Ketch({} as Configuration);
 
       const ps = 'gdpr';
-      return ketch.setPolicyScope(ps).then(() => {
-        return expect(ketch.getPolicyScope()).resolves.toEqual(ps);
+      return ketch.setJurisdiction(ps).then(() => {
+        return expect(ketch.getJurisdiction()).resolves.toEqual(ps);
       });
     });
   });
 
-  describe('loadPolicyScope', () => {
+  describe('loadJurisdiction', () => {
     it('allows setting policy scope on query', () => {
       const ketch = new Ketch({} as Configuration);
 
@@ -30,7 +30,7 @@ describe('policyScope', () => {
         return '';
       });
 
-      return expect(ketch.loadPolicyScope()).resolves.toEqual('FOO');
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('FOO');
     });
 
     it('handles null regionInfo', () => {
@@ -40,12 +40,12 @@ describe('policyScope', () => {
 
       mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
 
-      return expect(ketch.loadPolicyScope()).rejects.toBe(errors.noJurisdictionError);
+      return expect(ketch.loadJurisdiction()).rejects.toBe(errors.noJurisdictionError);
     });
 
     it('loads from dataLayer', () => {
       const ketch = new Ketch({
-        policyScope: {
+        jurisdiction: {
           variable: 'foobar',
         },
       } as Configuration);
@@ -64,12 +64,12 @@ describe('policyScope', () => {
         foobar: 'ccpa',
       });
 
-      return expect(ketch.loadPolicyScope()).resolves.toEqual('ccpa');
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa');
     });
 
     it('locates specified policy scope', () => {
       const ketch = new Ketch(({
-        policyScope: {
+        jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
@@ -86,12 +86,12 @@ describe('policyScope', () => {
         }
       } as GetLocationResponse);
 
-      return expect(ketch.loadPolicyScope()).resolves.toEqual('ccpa');
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa');
     });
 
     it('defaults policy scope if not found', () => {
       const ketch = new Ketch(({
-        policyScope: {
+        jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
@@ -107,12 +107,12 @@ describe('policyScope', () => {
         }
       } as GetLocationResponse);
 
-      return expect(ketch.loadPolicyScope()).resolves.toEqual('default');
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('default');
     });
 
     it('defaults policy scope on reject', () => {
       const ketch = new Ketch(({
-        policyScope: {
+        jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
@@ -124,23 +124,23 @@ describe('policyScope', () => {
       const mockLoadRegionInfo = mocked(getLocation);
       mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
 
-      return expect(ketch.loadPolicyScope()).resolves.toEqual('default');
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('default');
     });
   });
 
-  describe('pushPolicyScope', () => {
-    it('pushes policyScope to dataLayer', () => {
+  describe('pushJurisdiction', () => {
+    it('pushes jurisdiction to dataLayer', () => {
       const ps = "US-CA"
 
       const ketch = new Ketch({} as Configuration);
 
-      ketch.pushPolicyScope(ps)
+      ketch.pushJurisdiction(ps)
       let dataLayerPS = "";
 
       // @ts-ignore
       for (const dl of window['dataLayer']) {
-        if (dl['event'] === 'ketchPolicyScope') {
-          dataLayerPS = dl['policyScopeCode']
+        if (dl['event'] === 'ketchJurisdiction') {
+          dataLayerPS = dl['jurisdictionCode']
         }
       }
       return expect(dataLayerPS).toEqual(ps)
