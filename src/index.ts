@@ -34,8 +34,6 @@ function init(): Promise<any> {
   log.trace('init');
   const p: Promise<any>[] = [];
 
-  pollIdentity([1000, 2000, 4000, 8000])
-
   while (getGlobal().length > 0) {
     const x = getGlobal().shift();
 
