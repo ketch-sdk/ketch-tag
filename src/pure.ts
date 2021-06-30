@@ -41,9 +41,6 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
     if (boot.services['lanyard']) {
       promises.push(load(boot.services['lanyard']))
     }
-    if (boot.services['tcf']) {
-      promises.push(load(boot.services['tcf']))
-    }
   }
 
   return Promise.all(promises)
