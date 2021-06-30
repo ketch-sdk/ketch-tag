@@ -17,6 +17,7 @@ import errors from "./internal/errors";
 import parameters from "./internal/parameters";
 import {getCookie, setCookie} from "./internal/cookie";
 import {OID} from "@ketch-com/oid-js";
+import {load} from "./internal/scripts";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
@@ -28,13 +29,27 @@ const DEFAULT_MIGRATION_OPTION = 0;
  */
 export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
   log.info('loadConfig');
+  const promises: Promise<any>[] = []
 
   const k = new Ketch(boot);
 
-  k.pollIdentity([1000, 2000, 4000, 8000])
+  promises.push(k.detectEnvironment())
+  promises.push(k.loadJurisdiction())
 
-  return Promise.all([k.detectEnvironment(), k.loadJurisdiction()])
+  // TODO hardcode for cutover
+  if (boot && boot.services) {
+    if (boot.services['lanyard']) {
+      promises.push(load(boot.services['lanyard']))
+    }
+    if (boot.services['tcf']) {
+      promises.push(load(boot.services['tcf']))
+    }
+  }
+
+  return Promise.all(promises)
     .then(([env, jurisdiction]) => {
+      k.pollIdentity([1000, 2000, 4000, 8000])
+
       if (!env.hash) {
         return Promise.reject(errors.noEnvironmentError);
       }

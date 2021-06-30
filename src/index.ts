@@ -84,6 +84,7 @@ function getAction(action: string): Function | undefined {
     case 'setRegionInfo': return ketch?.setRegionInfo;
     case 'showConsent': return ketch?.showConsentExperience;
     case 'showPreferences': return ketch?.showPreferenceExperience;
+    case 'registerPlugin': return ketch?.registerPlugin;
   }
 
   return undefined;
