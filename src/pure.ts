@@ -1,16 +1,23 @@
 import * as ketchapi from "@ketch-sdk/ketch-web-api";
 import Future from "./internal/future";
-import {AppDiv, Callback, ConsentStatus, InvokeRightsEvent, UpdateConsentEvent} from "./internal/types";
-import constants from "./internal/constants";
+import {
+  AppDiv,
+  Callback,
+  Consent,
+  Identities,
+  InvokeRightsEvent,
+  ShowConsentExperience,
+  ShowPreferenceExperience,
+  Plugin
+} from "@ketch-sdk/ketch-plugin/src";
 import dataLayer from "./internal/datalayer";
 import isEmpty from "./internal/isEmpty";
 import loglevel from "./internal/logging";
 import errors from "./internal/errors";
 import parameters from "./internal/parameters";
-import {ResourceName} from "@ketch-com/resourcename-js";
 import {getCookie, setCookie} from "./internal/cookie";
 import {OID} from "@ketch-com/oid-js";
-import * as scripts from "./internal/scripts";
+import {load} from "./internal/scripts";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
@@ -22,19 +29,32 @@ const DEFAULT_MIGRATION_OPTION = 0;
  */
 export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
   log.info('loadConfig');
+  const promises: Promise<any>[] = []
 
   const k = new Ketch(boot);
 
-  return Promise.all([k.detectEnvironment(), k.loadPolicyScope()])
-    .then(([env, policyScope]) => {
+  promises.push(k.detectEnvironment())
+  promises.push(k.loadJurisdiction())
+
+  // TODO hardcode for cutover
+  if (boot && boot.services) {
+    if (boot.services['lanyard']) {
+      promises.push(load(boot.services['lanyard']))
+    }
+  }
+
+  return Promise.all(promises)
+    .then(([env, jurisdiction]) => {
+      k.pollIdentity([1000, 2000, 4000, 8000])
+
       if (!env.hash) {
         return Promise.reject(errors.noEnvironmentError);
       }
 
-      log.info('loadConfig', env, policyScope);
+      log.info('loadConfig', env, jurisdiction);
 
-      if (!k._config || !k._config.organization || !k._config.app || !policyScope) {
-        throw errors.noPolicyScopeError;
+      if (!k._config || !k._config.organization || !k._config.property || !jurisdiction) {
+        throw errors.noJurisdictionError;
       }
 
       const language = parameters.get(parameters.LANGUAGE, window.location.search) || k._config.language;
@@ -43,11 +63,11 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
       const request: ketchapi.GetFullConfigurationRequest = {
         organizationCode: k._config.organization.code || '',
-        appCode: k._config.app.code || '',
-        envCode: env.code,
+        propertyCode: k._config.property.code || '',
+        environmentCode: env.code,
         hash: env.hash || '',
         languageCode: language || 'en',
-        policyScopeCode: policyScope,
+        jurisdictionCode: jurisdiction,
       };
 
       return ketchapi.getFullConfiguration(request).then(cfg => new Ketch(cfg));
@@ -59,11 +79,11 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
  */
 export class Ketch {
   _config: ketchapi.Configuration;
-  _consent: Future<ConsentStatus>;
+  _consent: Future<Consent>;
   _environment: Future<ketchapi.Environment>;
   _geoip: Future<ketchapi.IPInfo>;
-  _identities: Future<string[]>;
-  _policyScope: Future<string>;
+  _identities: Future<Identities>;
+  _jurisdiction: Future<string>;
   _regionInfo: Future<string>;
   _origin: string;
 
@@ -73,14 +93,39 @@ export class Ketch {
   _appDivs: AppDiv[];
 
   /**
-   * showExperience is the list of functions registered with onShowExperience
+   * hideExperience is the list of functions registered with onHideExperience
    */
-  _showExperience: Function[];
+  _hideExperience: Function[];
 
   /**
    * hideExperience is the list of functions registered with onHideExperience
    */
-  _hideExperience: Function[];
+  _showExperience: Function[];
+
+  /**
+   * invokeRights is the list of functions registered with onInvokeRight
+   */
+  _invokeRights: Callback[];
+
+  /**
+   * showPreferenceExperience is the function registered with onShowPreferenceExperience
+   */
+  _showPreferenceExperience?: ShowPreferenceExperience;
+
+  /**
+   * showConsentExperience is the function registered with onShowConsentExperience
+   */
+  _showConsentExperience?: ShowConsentExperience;
+
+  /**
+   * isExperienceDisplayed is a bool representing whether an experience is currently showing
+   */
+  _isExperienceDisplayed?: boolean;
+
+  /**
+   * hasExperienceBeenDisplayed is a bool representing whether an experience has been shown in a session
+   */
+  _hasExperienceBeenDisplayed?: boolean;
 
   /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
@@ -90,18 +135,71 @@ export class Ketch {
    */
   constructor(config: ketchapi.Configuration) {
     this._config = config;
-    this._consent = new Future<ConsentStatus>('consent');
+    this._consent = new Future<Consent>('consent');
     this._environment = new Future<ketchapi.Environment>('environment');
     this._geoip = new Future('geoip');
-    this._identities = new Future<string[]>('identities');
-    this._policyScope = new Future<string>('policyScope');
+    this._identities = new Future<Identities>('identities');
+    this._jurisdiction = new Future<string>('jurisdiction');
     this._regionInfo = new Future<string>('regionInfo');
     this._origin = window.location.protocol + '//' + window.location.host;
     this._appDivs = [];
-    this._showExperience = [];
     this._hideExperience = [];
+    this._showExperience = [];
+    this._invokeRights = [];
+    this._showPreferenceExperience = undefined;
+    this._showConsentExperience = undefined;
   }
 
+  /**
+   * Registers a plugin
+   *
+   * @param plugin The plugin to register
+   */
+  registerPlugin(plugin: Plugin): void {
+    if (plugin.init) {
+      plugin.init(this, this._config);
+    }
+
+    if (plugin.environmentLoaded) {
+      this.onEnvironment((env) => plugin.environmentLoaded??(this, this._config, env));
+    }
+
+    if (plugin.geoIPLoaded) {
+      this.onGeoIP((ipInfo) => plugin.geoIPLoaded??(this, this._config, ipInfo));
+    }
+
+    if (plugin.identitiesLoaded) {
+      this.onIdentities((identities) => plugin.identitiesLoaded??(this, this._config, identities));
+    }
+
+    if (plugin.jurisdictionLoaded) {
+      this.onJurisdiction((jurisdiction) => plugin.jurisdictionLoaded??(this, this._config, jurisdiction));
+    }
+
+    if (plugin.regionInfoLoaded) {
+      this.onRegionInfo((region) => plugin.regionInfoLoaded??(this, this._config, region));
+    }
+
+    if (plugin.showConsentExperience) {
+      this.onShowConsentExperience(() => plugin.showConsentExperience??(this, this._config));
+    }
+
+    if (plugin.showPreferenceExperience) {
+      this.onShowPreferenceExperience(() => plugin.showPreferenceExperience??(this, this._config));
+    }
+
+    if (plugin.consentChanged) {
+      this.onConsent((consent) => plugin.consentChanged??(this, this._config, consent));
+    }
+
+    if (plugin.rightInvoked) {
+      this.onInvokeRight((request) => plugin.rightInvoked??(this, this._config, request));
+    }
+  }
+
+  /**
+   * Returns the configuration.
+   */
   getConfig(): Promise<ketchapi.Configuration> {
     return Promise.resolve(this._config);
   }
@@ -111,10 +209,10 @@ export class Ketch {
    *
    * @param c
    */
-  shouldShowConsent(c: ConsentStatus): boolean {
+  shouldShowConsent(c: Consent): boolean {
     if (this._config.experiences?.consent && this._config.purposes) {
-      for (const pa of this._config.purposes) {
-        if (c[pa.code] === undefined) {
+      for (const p of this._config.purposes) {
+        if (c.purposes[p.code] === undefined) {
           log.debug('shouldShowConsent', true);
           return true;
         }
@@ -130,41 +228,68 @@ export class Ketch {
    *
    * @param config
    */
-  selectExperience(): string {
+  selectExperience(): 'jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
           if (this._config.experiences?.consent?.experienceDefault == 2) {
-            log.debug('selectExperience', constants.CONSENT_MODAL);
-            return constants.CONSENT_MODAL;
+            log.debug('selectExperience', 'experiences.consent.modal');
+            return 'experiences.consent.modal';
           }
         }
       }
     }
 
-    log.debug('selectExperience', constants.CONSENT_BANNER);
-    return constants.CONSENT_BANNER;
+    log.debug('selectExperience', 'experiences.consent.banner');
+    return 'experiences.consent.banner';
+  }
+
+  willShowExperience(): void {
+    if (this._config.options?.appDivs) {
+      const appDivList = this._config.options.appDivs.split(",")
+      for (const divID of appDivList) {
+        const div = document.getElementById(divID)
+        if (div) {
+          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
+          div.style.zIndex = "-1";
+        }
+      }
+    }
+
+    // update isExperienceDisplayed flag when experience displayed
+    this._isExperienceDisplayed = true
+
+    // TODO
+    // Call functions registered using onShowExperience
+    this._showExperience.forEach(func => {
+      func();
+    });
   }
 
   /**
    * Shows the consent manager.
    */
-  showConsent(): Promise<ConsentStatus> {
-    log.info('showConsent');
+  showConsentExperience(): Promise<Consent> {
+    log.info('showConsentExperience');
 
-    let c: Promise<ConsentStatus | undefined>;
+    let c: Promise<Consent | undefined>;
     if (this._consent.hasValue()) {
       c = this._consent.getValue();
     } else {
-      c = Promise.resolve({} as ConsentStatus);
+      c = Promise.resolve({} as Consent);
     }
 
     return c.then(consent => {
       if (consent === undefined) {
-        return {} as ConsentStatus;
+        return {} as Consent;
       }
 
-      return this.loadExperience(consent, this.selectExperience());
+      if (this._showConsentExperience) {
+        this.willShowExperience()
+        this._showConsentExperience(this, this._config, consent, {displayHint: this.selectExperience()});
+      }
+
+      return consent;
     });
   }
 
@@ -180,18 +305,31 @@ export class Ketch {
    *
    * @param c
    */
-  triggerPermitChangedEvent(c: ConsentStatus) {
+  triggerPermitChangedEvent(c: Consent): void {
     log.info('triggerPermitChangedEvent');
 
+    // c
     const permitChangedEvent: {[key: string]: any} = {
       event: 'ketchPermitChanged',
     }
 
     for (const purposeCode in c) {
-      permitChangedEvent[purposeCode] = c[purposeCode]
+      permitChangedEvent[purposeCode] = c.purposes[purposeCode]
     }
 
     dataLayer().push(permitChangedEvent)
+  }
+
+  /**
+   * Called when experience renderer tells us the user has updated consent.
+   *
+   * @param data
+   */
+  changeConsent(consent: Consent): Promise<any> {
+    // check for new identifiers for tags that may fire after consent collected
+    this.pollIdentity([4000, 8000])
+
+    return this.setConsent(consent)
   }
 
   /**
@@ -199,11 +337,11 @@ export class Ketch {
    *
    * @param c
    */
-  setConsent(c: ConsentStatus): Promise<ConsentStatus> {
+  setConsent(c: Consent): Promise<Consent> {
     log.info('setConsent', c);
 
     if (!c || isEmpty(c)) {
-      return this._consent.setValue(undefined) as Promise<ConsentStatus>;
+      return this._consent.setValue(undefined) as Promise<Consent>;
     }
 
     // Merge new consent into existing consent
@@ -213,7 +351,7 @@ export class Ketch {
       for (const key in existingConsent) {
         if (Object.prototype.hasOwnProperty.call(existingConsent, key) &&
           !Object.prototype.hasOwnProperty.call(c, key)) {
-          c[key] = existingConsent[key];
+          c.purposes[key] = existingConsent.purposes[key];
         }
       }
     }
@@ -231,17 +369,17 @@ export class Ketch {
   /**
    * Gets the consent.
    */
-  getConsent(): Promise<ConsentStatus> {
+  getConsent(): Promise<Consent> {
     log.info('getConsent');
 
     if (this.hasConsent()) {
-      return this._consent.getValue() as Promise<ConsentStatus>;
+      return this._consent.getValue() as Promise<Consent>;
     }
 
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities).then((c) => {
-          let changed = false;
+          const changed = false;
 
           // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
           this.triggerPermitChangedEvent(c)
@@ -253,12 +391,12 @@ export class Ketch {
           // requiresOptIn => false
           // else => true
           if (this._config.purposes) {
-            for (const pa of this._config.purposes) {
-              if (c[pa.code] === undefined) {
-                if (pa.requiresOptIn) {
-                  c[pa.code] = false;
+            for (const p of this._config.purposes) {
+              if (c.purposes[p.code] === undefined) {
+                if (p.requiresOptIn) {
+                  c.purposes[p.code] = false;
                 } else {
-                  c[pa.code] = true;
+                  c.purposes[p.code] = true;
                 }
               }
             }
@@ -271,7 +409,7 @@ export class Ketch {
           }
 
           if (displayConsent) {
-            p.push(this.showConsent());
+            p.push(this.showConsentExperience());
           } else {
             p.push(this._consent.setValue(c));
 
@@ -284,7 +422,20 @@ export class Ketch {
           return Promise.all(p);
         });
       })
-      .then(() => this._consent.getValue()) as Promise<ConsentStatus>;
+      .then(() => this._consent.getValue()) as Promise<Consent>;
+  }
+
+  /**
+   * Retrieve the consent for subsequent calls.
+   */
+  retrieveConsent(): Promise<Consent> {
+    log.info('retrieveConsent');
+
+    if (this._consent.hasValue()) {
+      return this._consent.getValue() as Promise<Consent>;
+    }
+
+    return Promise.resolve({} as Consent)
   }
 
   /**
@@ -292,8 +443,17 @@ export class Ketch {
    *
    * @param callback
    */
-  onConsent(callback: Callback) {
+  onConsent(callback: Callback): void {
     this._consent.subscribe(callback);
+  }
+
+  /**
+   * Registers a callback for right invocations.
+
+   * @param callback
+   */
+  onInvokeRight(callback: Callback): void {
+    this._invokeRights.push(callback);
   }
 
   /**
@@ -301,22 +461,22 @@ export class Ketch {
    *
    * @param identities
    */
-  fetchConsent(identities: string[]): Promise<ConsentStatus> {
+  fetchConsent(identities: Identities): Promise<Consent> {
     log.debug('getConsent', identities);
 
     // If no identities or purposes defined, skip the call.
-    if (!identities || identities.length === 0) {
+    if (!identities || Object.keys(identities).length === 0) {
       return Promise.reject(errors.noIdentitiesError);
     }
-    if (!this._config || !this._config.app || !this._config.organization || !this._config.environment ||
+    if (!this._config || !this._config.property || !this._config.organization || !this._config.environment ||
       !this._config.purposes || this._config.purposes.length === 0) {
       return Promise.reject(errors.noPurposesError);
     }
 
     const request: ketchapi.GetConsentRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
       identities: identities,
       purposes: {},
@@ -330,15 +490,19 @@ export class Ketch {
     }
 
     return ketchapi.getConsent(request).then((consent: ketchapi.GetConsentResponse) => {
-      const newConsent: ConsentStatus = {};
+      const newConsent: Consent = {purposes: {}};
 
       if (this._config.purposes && consent.purposes) {
-        for (const pa of this._config.purposes) {
-          if (consent.purposes[pa.code] &&
-            consent.purposes[pa.code].allowed) {
-            newConsent[pa.code] = consent.purposes[pa.code].allowed === 'true';
+        for (const p of this._config.purposes) {
+          if (consent.purposes[p.code] &&
+            consent.purposes[p.code].allowed) {
+            newConsent.purposes[p.code] = consent.purposes[p.code].allowed === 'true';
           }
         }
+      }
+
+      if (consent.vendors) {
+        newConsent.vendors = consent.vendors
       }
 
       return newConsent;
@@ -351,17 +515,17 @@ export class Ketch {
    * @param identities
    * @param consent
    */
-  updateConsent(identities: string[], consent: ConsentStatus): Promise<void> {
+  updateConsent(identities: Identities, consent: Consent): Promise<void> {
     log.debug('updateConsent', identities, consent);
 
     // If no identities or purposes defined, skip the call.
-    if (!identities || identities.length === 0) {
+    if (!identities || Object.keys(identities).length === 0) {
       log.debug('updateConsent', 'skipping');
       return Promise.resolve();
     }
 
-    if (!this._config || !this._config.organization || !this._config.app || !this._config.environment || !this._config.policyScope ||
-      !this._config.purposes || this._config.purposes.length === 0) {
+    if (!this._config || !this._config.organization || !this._config.property || !this._config.environment ||
+      !this._config.jurisdiction || !this._config.purposes || this._config.purposes.length === 0) {
       log.debug('updateConsent', 'skipping');
       return Promise.resolve();
     }
@@ -373,13 +537,14 @@ export class Ketch {
 
     const request: ketchapi.SetConsentRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
       identities: identities,
-      policyScopeCode: this._config.policyScope.code || '',
+      jurisdictionCode: this._config.jurisdiction.code || '',
       purposes: {},
       migrationOption: DEFAULT_MIGRATION_OPTION,
+      vendors: consent.vendors
     };
 
     if (this._config.options) {
@@ -387,11 +552,11 @@ export class Ketch {
     }
 
     if (this._config.purposes && consent) {
-      for (const pa of this._config.purposes) {
-        if (consent[pa.code] !== undefined) {
-          request.purposes[pa.code] = {
-            allowed: consent[pa.code].toString(),
-            legalBasisCode: pa.legalBasisCode
+      for (const p of this._config.purposes) {
+        if (consent.purposes[p.code] !== undefined) {
+          request.purposes[p.code] = {
+            allowed: consent.purposes[p.code].toString(),
+            legalBasisCode: p.legalBasisCode
           };
         }
       }
@@ -494,7 +659,7 @@ export class Ketch {
    *
    * @param callback
    */
-  onEnvironment(callback: Callback) {
+  onEnvironment(callback: Callback): void {
     this._environment.subscribe(callback);
   }
 
@@ -558,7 +723,7 @@ export class Ketch {
    *
    * @param callback
    */
-  onGeoIP(callback: Callback) {
+  onGeoIP(callback: Callback): void {
     this._geoip.subscribe(callback);
   }
 
@@ -567,10 +732,10 @@ export class Ketch {
    *
    * @param id
    */
-  setIdentities(id: string[]): Promise<string[]> {
+  setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id);
 
-    return this._identities.setValue(id) as Promise<string[]>;
+    return this._identities.setValue(id) as Promise<Identities>;
   }
 
   /**
@@ -581,12 +746,24 @@ export class Ketch {
   getProperty(p: string): string | null {
     const parts: string[] = p.split('.');
     let context: any = window;
+    let previousContext: any = null;
 
     while (parts.length > 0) {
       if (parts[0] === 'window') {
         parts.shift();
       } else if (typeof context === 'object') {
-        context = context[parts.shift() as string];
+        if (parts[0].slice(-2) === '()') {
+          previousContext = context
+          context = context[((parts[0] as string).slice(0, -2))]
+        } else {
+          previousContext = context
+          context = context[parts.shift() as string];
+        }
+      } else if (typeof context === 'function') {
+        const newContext = context.call(previousContext)
+        previousContext = context
+        context = newContext
+        parts.shift()
       } else {
         return null;
       }
@@ -598,38 +775,38 @@ export class Ketch {
   /**
    * Collect identities.
    */
-  collectIdentities(): Promise<string[]> {
+  collectIdentities(): Promise<Identities> {
     log.info('collectIdentities');
 
-    const ids = this._config.identities;
+    const configIDs = this._config.identities;
 
-    if (!this._config || !this._config.organization || ids == null || isEmpty(ids)) {
-      return Promise.resolve([]);
+    if (!this._config || !this._config.organization || configIDs == null || isEmpty(configIDs)) {
+      return Promise.resolve({});
     }
 
     const windowProperties: any[] = [];
     const dataLayerProperties: any[] = [];
     const cookieProperties: any[] = [];
     const managedCookieProperties: any[] = [];
-    const promises: Promise<string>[] = [];
+    const promises: Promise<string[]>[] = [];
 
-    for (const id in ids) {
-      if (Object.prototype.hasOwnProperty.call(ids, id)) {
-        switch (ids[id].type) {
+    for (const id in configIDs) {
+      if (Object.prototype.hasOwnProperty.call(configIDs, id)) {
+        switch (configIDs[id].type) {
           case 'window':
-            windowProperties.push([id, ids[id].variable]);
+            windowProperties.push([id, configIDs[id].variable]);
             break;
 
           case 'cookie':
-            cookieProperties.push([id, ids[id].variable]);
+            cookieProperties.push([id, configIDs[id].variable]);
             break;
 
           case 'managedCookie':
-            managedCookieProperties.push([id, ids[id].variable]);
+            managedCookieProperties.push([id, configIDs[id].variable]);
             break;
 
           default:
-            dataLayerProperties.push([id, ids[id].variable]);
+            dataLayerProperties.push([id, configIDs[id].variable]);
             break;
         }
       }
@@ -640,14 +817,7 @@ export class Ketch {
         const pv = this.getProperty(p[1]);
         if (!pv) continue;
 
-        const rn = new ResourceName({
-          service: '',
-          tenant: '',
-          organization: this._config.organization.code,
-          resource: 'id',
-          info: [p[0], pv]
-        });
-        promises.push(Promise.resolve(rn.toString()));
+        promises.push(Promise.resolve([p[0], pv]));
       }
     }
 
@@ -658,14 +828,7 @@ export class Ketch {
             const pv = dl[p[1]];
             if (!pv) continue;
 
-            const rn = new ResourceName({
-              service: '',
-              tenant: '',
-              organization: this._config.organization.code,
-              resource: 'id',
-              info: [p[0], pv]
-            });
-            promises.push(Promise.resolve(rn.toString()));
+            promises.push(Promise.resolve([p[0], pv]));
           }
         }
       }
@@ -675,17 +838,10 @@ export class Ketch {
       for (const p of cookieProperties) {
         promises.push(
           getCookie(p[1]).then((pv) => {
-            const rn = new ResourceName({
-              service: '',
-              tenant: '',
-              organization: this._config.organization?.code,
-              resource: 'id',
-              info: [p[0], pv]
-            });
-            return rn.toString();
+            return [p[0], pv]
           }, (error) => {
             log.trace(error);
-            return '';
+            return [];
           })
         )
       }
@@ -695,44 +851,38 @@ export class Ketch {
       for (const p of managedCookieProperties) {
         promises.push(
           getCookie(p[1]).then((pv) => {
-            const rn = new ResourceName({
-              service: '',
-              tenant: '',
-              organization: this._config.organization?.code,
-              resource: 'id',
-              info: [p[0], pv]
-            });
-            return rn.toString();
+            return [p[0], pv]
           }, () => {
             return setCookie(p[1], new OID().toString(), 730).then((pv) => {
-              const rn = new ResourceName({
-                service: '',
-                tenant: '',
-                organization: this._config.organization?.code,
-                resource: 'id',
-                info: [p[0], pv]
-              });
-              return rn.toString();
+              return [p[0], pv]
             }, (error) => {
               log.trace(error)
-              return '';
+              return [];
             })
           })
         )
       }
     }
 
-    return Promise.all(promises).then(items => items.filter(i => i !== ''));
+    const identities = {} as Identities
+    return Promise.all(promises).then(items => {
+      for (const item of items) {
+        if (item.length === 2) {
+          identities[item[0]] = item[1]
+        }
+      }
+      return identities
+    });
   }
 
   /**
    * Get the identities.
    */
-  getIdentities(): Promise<string[]> {
+  getIdentities(): Promise<Identities> {
     log.info('getIdentities');
 
     if (this._identities.hasValue()) {
-      return this._identities.getValue() as Promise<string[]>;
+      return this._identities.getValue() as Promise<Identities>;
     } else {
       return this.collectIdentities().then(id => this.setIdentities(id));
     }
@@ -747,20 +897,21 @@ export class Ketch {
     this._identities.subscribe(callback);
   }
 
+  // TODO anti corruption semaphore needed?
   /**
-   * Push the PolicyScopeInfo to data layer.
+   * Push the JurisdictionInfo to data layer.
    *
    * @param ps
    */
-  pushPolicyScope(ps: string) {
-    log.info('pushPolicyScope', ps);
+  pushJurisdiction(ps: string): void {
+    log.info('pushJurisdiction', ps);
 
-    const PolicyScopeEvent = {
-      event: 'ketchPolicyScope',
-      policyScopeCode: ps,
+    const JurisdictionEvent = {
+      event: 'ketchJurisdiction',
+      jurisdictionCode: ps,
     }
 
-    return dataLayer().push(PolicyScopeEvent)
+    dataLayer().push(JurisdictionEvent)
   }
 
   /**
@@ -768,23 +919,23 @@ export class Ketch {
    *
    * @param ps
    */
-  setPolicyScope(ps: string): Promise<string> {
-    log.info('setPolicyScope', ps);
+  setJurisdiction(ps: string): Promise<string> {
+    log.info('setJurisdiction', ps);
 
-    this.pushPolicyScope(ps);
-    return this._policyScope.setValue(ps) as Promise<string>;
+    this.pushJurisdiction(ps);
+    return this._jurisdiction.setValue(ps) as Promise<string>;
   }
 
   /**
    * Get the policy scope.
    */
-  getPolicyScope(): Promise<string> {
-    log.info('getPolicyScope');
+  getJurisdiction(): Promise<string> {
+    log.info('getJurisdiction');
 
-    if (this._policyScope.hasValue()) {
-      return this._policyScope.getValue() as Promise<string>;
+    if (this._jurisdiction.hasValue()) {
+      return this._jurisdiction.getValue() as Promise<string>;
     } else {
-      return this.loadPolicyScope().then(ps => this.setPolicyScope(ps));
+      return this.loadJurisdiction().then(ps => this.setJurisdiction(ps));
     }
   }
 
@@ -793,24 +944,24 @@ export class Ketch {
    *
    * @param callback
    */
-  onPolicyScope(callback: Callback): void {
-    this._policyScope.subscribe(callback);
+  onJurisdiction(callback: Callback): void {
+    this._jurisdiction.subscribe(callback);
   }
 
   /**
    * Get the policy scope from query, page or config.
    */
-  loadPolicyScope(): Promise<string> {
-    log.info('loadPolicyScope', this._config.policyScope);
+  loadJurisdiction(): Promise<string> {
+    log.info('loadJurisdiction', this._config.jurisdiction);
 
-    const policyScopeOverride = parameters.get(parameters.POLICY_SCOPE, window.location.search);
-    if (policyScopeOverride) {
-      return this.setPolicyScope(policyScopeOverride);
+    const jurisdictionOverride = parameters.get(parameters.POLICY_SCOPE, window.location.search);
+    if (jurisdictionOverride) {
+      return this.setJurisdiction(jurisdictionOverride);
     }
 
-    const ps: ketchapi.PolicyScopeInfo | undefined = this._config.policyScope;
+    const ps: ketchapi.JurisdictionInfo | undefined = this._config.jurisdiction;
     if (!ps) {
-      return Promise.reject(errors.noPolicyScopeError);
+      return Promise.reject(errors.noJurisdictionError);
     }
 
     const v = ps.variable;
@@ -819,7 +970,7 @@ export class Ketch {
       for (const dl of dataLayer()) {
         const scope = dl[v];
         if (scope) {
-          return this.setPolicyScope(scope);
+          return this.setJurisdiction(scope);
         }
       }
     }
@@ -834,17 +985,17 @@ export class Ketch {
       })
       .then(x => {
         if (x) {
-          return this.setPolicyScope(x);
+          return this.setJurisdiction(x);
         }
 
-        return Promise.reject(errors.noPolicyScopeError);
+        return Promise.reject(errors.noJurisdictionError);
       })
       .catch(() => {
         if (ps.defaultScopeCode) {
-          return this.setPolicyScope(ps.defaultScopeCode);
+          return this.setJurisdiction(ps.defaultScopeCode);
         }
 
-        return Promise.reject(errors.noPolicyScopeError);
+        return Promise.reject(errors.noJurisdictionError);
       });
   }
 
@@ -913,18 +1064,23 @@ export class Ketch {
   /**
    * Shows the preferences manager.
    */
-  showPreferences(): Promise<ConsentStatus> {
+  showPreferenceExperience(): Promise<Consent> {
     log.info('showPreference');
 
-    let c: Promise<ConsentStatus> = this.hasConsent() ? this.getConsent(): Promise.resolve({});
+    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}});
 
     return c.then(c => {
       // if no preference experience configured do not show
       if (!this._config.experiences?.preference) {
-        return
+        return c;
       }
 
-      return this.loadExperience(c, constants.PREFERENCE);
+      if (this._showPreferenceExperience) {
+        this.willShowExperience()
+        this._showPreferenceExperience(this, this._config, c);
+      }
+
+      return c;
     });
   }
 
@@ -934,18 +1090,24 @@ export class Ketch {
    * @param identities
    * @param eventData
    */
-  invokeRight(identities: string[], eventData: InvokeRightsEvent): Promise<void> {
-    log.debug('invokeRights', identities, eventData);
+  invokeRight(eventData: InvokeRightsEvent): Promise<void> {
+    log.debug('invokeRights', eventData);
 
     // If no identities or rights defined, skip the call.
-    if (!identities || identities.length === 0 ||
-      !eventData.rightsEmail || eventData.rightsEmail === '' ||
-      !eventData.right || eventData.right === '') {
+    if (!eventData.rightsEmail || eventData.rightsEmail === '' || !eventData.right ||
+      eventData.right === '') {
       return Promise.resolve();
     }
 
-    if (!this._config || !this._config.organization || !this._config.app || !this._config.environment || !this._config.policyScope ||
-      !this._config.rights || this._config.rights.length === 0) {
+    let identities = this._identities._value
+    if (identities === undefined) {
+      identities = {} as Identities
+    }
+    // add email identity from rights form
+    identities["email"] = eventData.rightsEmail
+
+    if (!this._config || !this._config.organization || !this._config.property || !this._config.environment ||
+      !this._config.jurisdiction || !this._config.rights || this._config.rights.length === 0) {
       return Promise.resolve();
     }
 
@@ -960,24 +1122,61 @@ export class Ketch {
 
     const request: ketchapi.InvokeRightRequest = {
       organizationCode: this._config.organization.code || '',
-      applicationCode: this._config.app.code || '',
-      applicationEnvironmentCode: this._config.environment.code,
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
       controllerCode: '',
       identities: identities,
-      policyScopeCode: this._config.policyScope.code || '',
+      jurisdictionCode: this._config.jurisdiction.code || '',
       rightCodes: [eventData.right],
       user: user
     };
+
+    for (const callback of this._invokeRights) {
+      callback(request);
+    }
 
     return ketchapi.invokeRight(request);
   }
 
   /**
-   * onShowExperience called before experience will show
-   * Used to trigger external dependencies
+   * Signals that an experience has been hidden
+   *
+   * @param reason is a string representing the reason the experience was closed
+   * Values: setConsent, invokeRight, close
    */
-  onShowExperience(callback: Function): void {
-    this._showExperience.push(callback);
+  experienceClosed(reason: string): Promise<Consent> {
+    for (const appDiv of this._appDivs) {
+      const div = document.getElementById(appDiv.id)
+      if (div) {
+        div.style.zIndex = appDiv.zIndex;
+      }
+    }
+    this._appDivs = []
+
+    // update isExperienceDisplayed flag when experience no longer displayed
+    // update hasExperienceBeenDisplayed flag after experience has been displayed
+    this._isExperienceDisplayed = false
+    this._hasExperienceBeenDisplayed = true
+
+    // Call functions registered using onHideExperience
+    this._hideExperience.forEach(function (func) {
+      func();
+    });
+
+    if (reason !== "setConsent") {
+      return this.retrieveConsent().then((consent) => {
+        if (this._config.purposes) {
+          for (const p of this._config.purposes) {
+            if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
+              consent.purposes[p.code] = false;
+            }
+          }
+        }
+        return this.setConsent(consent);
+      })
+    }
+
+    return Promise.resolve({} as Consent)
   }
 
   /**
@@ -989,172 +1188,98 @@ export class Ketch {
   }
 
   /**
-   * Called when Lanyard tells us the user has updated consent.
-   *
-   * @param data
+   * onShowExperience called after experience hidden
+   * Used to trigger external dependencies
    */
-  onUpdateConsent(data: UpdateConsentEvent): Promise<any> {
-    return this.setConsent(data.consent);
+  onShowExperience(callback: Function): void {
+    this._showExperience.push(callback);
   }
 
   /**
-   * Called when Lanyard tells us the user has invoked rights.
+   * onShowPreferenceExperience registers a function to handle showing preferences
    *
-   * @param data
+   * @param callback
    */
-  onInvokeRight(data: InvokeRightsEvent): Promise<void> {
-    log.debug('onInvokeRights', data);
-
-    return this.getIdentities().then(identities => this.invokeRight(identities, data));
+  onShowPreferenceExperience(callback: ShowPreferenceExperience): void {
+    this._showPreferenceExperience = callback;
   }
 
   /**
-   * Called when Lanyard tells us the user has closed the dialog.
+   * onShowConsentExperience registers a function to handle showing consent
+   *
+   * @param callback
    */
-  onCloseDialog(): Promise<void> {
-    // Send message back to Lanyard to confirm closing
-    window.postMessage(
-      {
-        type: constants.CLOSE_MODAL,
-        to: constants.LANYARD,
-        from: constants.SEMAPHORE,
-      },
-      origin
-    );
+  onShowConsentExperience(callback: ShowConsentExperience): void {
+    this._showConsentExperience = callback;
+  }
 
-    for (const appDiv of this._appDivs) {
-      const div = document.getElementById(appDiv.id)
-      if (div) {
-        div.style.zIndex = appDiv.zIndex;
+  /**
+   * Retrieves the current identities on the page.
+   * If previously collected values for identity and consent are different,
+   * show the experience or if experience already shown, update permits
+   */
+  refreshIdentityConsent(): Promise<void> {
+    log.debug('refreshIdentityConsent');
+
+    // compare identities currently on page with those previously retrieved
+    return Promise.all([this.collectIdentities(), this.getIdentities()])
+      .then(([pageIdentities, previousIdentities]) => {
+      // check if identity value the same
+      if (pageIdentities.size === previousIdentities.size) {
+        Object.keys(pageIdentities).forEach(key => {
+          if (pageIdentities[key] !== previousIdentities[key]) {
+            // no change in identities so no action needed
+            return
+          }
+        })
       }
-    }
-    this._appDivs = []
 
-    // Call functions registered using onHideExperience
-    this._hideExperience.forEach(func => {
-      func();
-    });
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Event handler from Lanyard.
-   *
-   * @param e
-   */
-  handleEvent(e: MessageEvent): Promise<any> {
-    // Check for things that would disqualify this event
-    if (
-      e.origin !== origin ||
-      !e.data ||
-      e.data.from !== constants.LANYARD ||
-      e.data.to !== constants.SEMAPHORE ||
-      !(e.data.type === constants.UPDATE_CONSENT || e.data.type === constants.INVOKE_RIGHTS || e.data.type === constants.CLOSE)
-    ) {
-      log.debug('skipping', e);
-      return Promise.resolve();
-    }
-
-    log.debug('message received', e.data.type);
-
-    // Call the handler
-    switch (e.data.type) {
-      case constants.UPDATE_CONSENT:
-        return this.onUpdateConsent(e.data);
-
-      case constants.INVOKE_RIGHTS:
-        return this.onInvokeRight(e.data);
-
-      case constants.CLOSE:
-        return this.onCloseDialog();
-    }
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Loaded is called when the Lanyard module is loaded
-   *
-   * @param consent
-   * @param experience
-   */
-  loaded(consent: ConsentStatus, experience: string): Promise<any> {
-    log.debug('loaded', consent, experience);
-
-    if (this._config.options?.appDivs) {
-      const appDivList = this._config.options.appDivs.split(",")
-      for (const divID of appDivList) {
-        const div = document.getElementById(divID)
-        if (div) {
-          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
-          div.style.zIndex = "-1";
+      // change in identities found so set new identities found on page and check for consent
+      return this.setIdentities(pageIdentities).then((identities) => {
+        // if experience is currently displayed only update identities and they return to wait for user input
+        if (this._isExperienceDisplayed) {
+          return
         }
-      }
-    }
+        // compare consent stored in permits for identities to last known consent
+        return Promise.all([this.fetchConsent(identities), this.retrieveConsent()])
+          .then(([permitConsent, localConsent]) => {
+            // check if consent value the same
+            if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
+              let newConsent = false
+              for (const key in permitConsent) {
+                if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
+                  // different consent values
+                  newConsent = true
+                  break
+                }
+              }
+              if (!newConsent) {
+                // no change in consent so no further action necessary
+                return
+              }
+            }
 
-    // Call functions registered using onShowExperience
-    this._showExperience.forEach(func => {
-      func();
-    });
+            // if experience has been displayed in session, update permits with already collected consent
+            if (this._hasExperienceBeenDisplayed) {
+              return this.updateConsent(identities, localConsent) as Promise<undefined>
+            }
 
-    // Send off the message to Lanyard to show the modal
-    window.postMessage(
-      {
-        type: constants.SHOW_MODAL,
-        config: this._config,
-        consent,
-        experience,
-        to: constants.LANYARD,
-        from: constants.SEMAPHORE,
-      },
-      origin
-    );
-
-    // Add an event listener for messages from Lanyard.
-    window.addEventListener('message', this.handleEvent, false);
-    return Promise.resolve();
+            // show experience for first time in session
+            return this.showConsentExperience()
+          }) as Promise<void>
+      })
+    })
   }
 
   /**
-   * Load the experience and setup the listeners to receive messages back from the experience manager.
+   * Calls refreshIdentityConsent at an interval specified in the param.
    *
-   * @param consent
-   * @param experience
+   * @param interval - array of intervals in milliseconds from first call that refreshIdentityConsent
    */
-  loadExperience(consent: ConsentStatus, experience: string): Promise<any> {
-    log.debug('load', consent, experience);
-
-    // Check to see if we already have the lanyard root (and then by definition
-    // have already loaded the script. If so, bypass loading the script a second
-    // time.
-    let elem = document.getElementById(constants.LANYARD_ROOT);
-    if (elem) {
-      return this.loaded(consent, experience);
+  pollIdentity(interval: number[]): void {
+    log.info('pollIdentity');
+    for (const t of interval) {
+      setTimeout(this.refreshIdentityConsent, t)
     }
-
-    // No element found, so create the root div.
-    elem = document.createElement('div');
-    elem.id = constants.LANYARD_ROOT;
-    const parentNode = window.document.body;
-    parentNode.insertBefore(elem, parentNode.firstChild);
-
-    // Load the bundle.
-    let url = this._config.services ? this._config.services[constants.LANYARD] : '';
-
-    return scripts
-      .load(url)
-      .then(
-        // Wait lanyard script parsed and executed after load
-        // TODO: implement via messaging
-        () =>
-          new Promise((resolve) => {
-            setTimeout(resolve, 50);
-          })
-      )
-      .then(() => this.loaded(consent, experience))
-      .catch(() => {
-        log.error('could not load lanyard bundle');
-      });
   }
 }

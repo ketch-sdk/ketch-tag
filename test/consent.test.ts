@@ -12,7 +12,7 @@ describe('consent', () => {
     organization: {
       code: 'org'
     },
-    app: {
+    property: {
       code: 'axonic',
       name: 'axonic.io',
       platform: 'WEB'
@@ -23,7 +23,7 @@ describe('consent', () => {
         hash: '1392568836159292875'
       }
     ],
-    policyScope: {
+    jurisdiction: {
       code: 'ccpa',
       defaultScopeCode: 'ccpa',
       variable: 'scope_tag'
@@ -100,13 +100,13 @@ describe('consent', () => {
     organization: {
       code: 'org'
     },
-    app: {
+    property: {
       code: 'app'
     },
     environment: {
       code: 'env'
     },
-    policyScope: {
+    jurisdiction: {
       code: 'ps',
     },
     rights: [
@@ -142,9 +142,9 @@ describe('consent', () => {
       migration: "3",
     }
   };
-  const identities = [
-    'id1'
-  ];
+  const identities = {
+    'space1': 'id1'
+  };
 
   describe('getConsent', () => {
     it('handles a call with full config', () => {
@@ -164,12 +164,16 @@ describe('consent', () => {
             allowed: 'false',
           },
         },
+        vendors: ["1"]
       });
 
       return ketch.fetchConsent(identities).then((x) => {
         expect(x).toEqual({
-          pacode1: true,
-          pacode2: false,
+          purposes: {
+            pacode1: true,
+            pacode2: false,
+          },
+          vendors: ["1"]
         });
         const {app, organization, environment} = config;
         expect(app).not.toBeNull();
@@ -181,7 +185,7 @@ describe('consent', () => {
     it('skips calling if no identities', () => {
       const ketch = new Ketch(config);
 
-      return expect(ketch.fetchConsent([]))
+      return expect(ketch.fetchConsent({}))
         .rejects.toBe(errors.noIdentitiesError);
     });
 
@@ -214,8 +218,11 @@ describe('consent', () => {
       mockSetConsent.mockResolvedValue();
 
       return ketch.updateConsent(identities, {
-        pacode1: true,
-        pacode2: false,
+        purposes: {
+          pacode1: true,
+          pacode2: false,
+        },
+        vendors: ["1"]
       }).then(() => {
         const {app, policyScope, organization, environment} = config;
         expect(app).not.toBeNull();
@@ -241,6 +248,7 @@ describe('consent', () => {
                 legalBasisCode: 'lb2',
               },
             },
+            vendors: ["1"],
             migrationOption: 3,
           });
         }
@@ -250,9 +258,12 @@ describe('consent', () => {
     it('skips if no identities', () => {
       const ketch = new Ketch(config);
 
-      return ketch.updateConsent([], {
-        pacode1: true,
-        pacode2: false,
+      return ketch.updateConsent({}, {
+        purposes: {
+          pacode1: true,
+          pacode2: false,
+        },
+        vendors: ["1"]
       }).then((x) => {
         expect(x).toBeUndefined();
       });
@@ -301,16 +312,31 @@ describe('consent', () => {
     const mockSetConsent = mocked(setConsent);
 
     it('returns the existing consent', () => {
-      const c = {ip: true};
+      const c = {
+        purposes: {
+          ip: true
+        },
+        vendors: ['1']
+      };
       mockSetConsent.mockResolvedValue();
 
       expect(ketch.hasConsent()).not.toBeTruthy();
       return ketch.setConsent(c).then((x) => {
-        expect(x).toEqual({ip: true});
+        expect(x).toEqual({
+          purposes: {
+            ip: true
+          },
+          vendors: ['1']
+        });
         expect(ketch.hasConsent()).toBeTruthy();
         return ketch.getConsent();
       }).then((y) => {
-        expect(y).toEqual({ip: true});
+        expect(y).toEqual({
+          purposes: {
+            ip: true
+          },
+          vendors: ['1']
+        });
       });
     });
   });
@@ -380,7 +406,7 @@ describe('consent', () => {
     it('shows when missing options', () => {
       const ketch = new Ketch(config2);
 
-      expect(ketch.shouldShowConsent({})).toBeTruthy();
+      expect(ketch.shouldShowConsent({purposes:{}})).toBeTruthy();
     });
 
     it('does not show when no purposes', () => {
@@ -393,7 +419,7 @@ describe('consent', () => {
         }
       } as any) as Configuration);
 
-      expect(ketch.shouldShowConsent({analytics: true})).not.toBeTruthy();
+      expect(ketch.shouldShowConsent({purposes: {analytics: true}})).not.toBeTruthy();
     });
 
     it('does not show when no consent experience', () => {
@@ -405,7 +431,7 @@ describe('consent', () => {
             description: 'We will use data collected about you to perform critical product enhancements.',
             legalBasisCode: 'disclosure',
             requiresPrivacyPolicy: true
-          },
+          }
         ]
       } as any) as Configuration);
 
@@ -416,7 +442,9 @@ describe('consent', () => {
       const ketch = new Ketch(config2);
 
       expect(ketch.shouldShowConsent({
-        datasales: true,
+        purposes: {
+          datasales: true,
+        }
       })).toBeTruthy();
     });
   });
@@ -425,10 +453,10 @@ describe('consent', () => {
     it('calls lanyard', () => {
       const ketch = new Ketch(config2);
 
-      const c = {datasales: true};
+      const c = {purposes: {datasales: true}};
 
       expect(ketch.setConsent(c)).resolves.toBe(c);
-      expect(ketch.showConsent()).resolves.toBe(c);
+      expect(ketch.showConsentExperience()).resolves.toBe(c);
     });
   });
 });

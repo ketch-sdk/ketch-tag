@@ -7,16 +7,16 @@ describe('identity', () => {
     it('returns one item list', () => {
       const ketch = new Ketch({} as Configuration);
 
-      return ketch.setIdentities(['id1']).then(() => {
-        return expect(ketch.getIdentities()).resolves.toEqual(['id1']);
+      return ketch.setIdentities({'space1': 'id1'}).then(() => {
+        return expect(ketch.getIdentities()).resolves.toEqual({'space1': 'id1'});
       });
     });
 
     it('returns two item list', () => {
       const ketch = new Ketch({} as Configuration);
 
-      return ketch.setIdentities(['id1', 'id2']).then(() => {
-        return expect(ketch.getIdentities()).resolves.toEqual(['id1', 'id2']);
+      return ketch.setIdentities({'space1': 'id1', 'space2': 'id2'}).then(() => {
+        return expect(ketch.getIdentities()).resolves.toEqual({'space1': 'id1', 'space2': 'id2'});
       });
     });
   });
@@ -33,7 +33,7 @@ describe('identity', () => {
 
       const r = ketch.collectIdentities().then(
         (ids) => {
-          expect(ids).toEqual([])
+          expect(ids).toEqual({})
         }
       )
       return r;
@@ -47,6 +47,10 @@ describe('identity', () => {
             type: 'window',
             variable: 'window.foo1',
           },
+          f2: {
+            type: 'window',
+            variable: 'window.foo2()',
+          },
         }
       };
       const ketch = new Ketch((config as any) as Configuration);
@@ -56,9 +60,9 @@ describe('identity', () => {
 
       const r = ketch.collectIdentities().then(
         (ids) => {
-          return expect(ids).toEqual([
-            'srn:::::org1:id/f1/wfv1'
-          ]);
+          return expect(ids).toEqual(
+            {'f1': 'wfv1'}
+          );
         }
       )
       return r
@@ -104,11 +108,11 @@ describe('identity', () => {
 
       const r = ketch.collectIdentities().then(
         (ids) => {
-          return expect(ids).toEqual([
-            'srn:::::org1:id/f1/dlfv1',
-            'srn:::::org1:id/f2/dlfv2',
-            'srn:::::org1:id/f4/dlfv4'
-          ]);
+          return expect(ids).toEqual({
+            'f1': 'dlfv1',
+            'f2': 'dlfv2',
+            'f4': 'dlfv4'
+          });
         }
       )
       return r
@@ -131,7 +135,7 @@ describe('identity', () => {
       const ketch = new Ketch((config as any) as Configuration);
 
       document.cookie = 'cookie1=cfv1'
-      expect(ketch.collectIdentities()).resolves.toEqual(['srn:::::org1:id/f1/cfv1']);
+      expect(ketch.collectIdentities()).resolves.toEqual({'f1': 'cfv1'});
     });
 
     it('handles managed cookie properties', () => {
@@ -156,10 +160,10 @@ describe('identity', () => {
         (ids) => {
           getCookie('mc2').then(
             (mc2) => {
-              return expect(ids).toEqual([
-                'srn:::::org1:id/f1/mcfv1',
-                'srn:::::org1:id/f2/'+mc2
-              ]);
+              return expect(ids).toEqual({
+                "f1": "mcfv1",
+                "f2:": mc2,
+            });
             },
             (error) => {
               return expect(error).toBeNull()

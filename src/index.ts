@@ -67,30 +67,31 @@ function getAction(action: string): Function | undefined {
     case 'getEnvironment': return ketch?.getEnvironment;
     case 'getGeoIP': return ketch?.getGeoIP;
     case 'getIdentities': return ketch?.getIdentities;
-    case 'getPolicyScope': return ketch?.getPolicyScope;
+    case 'getJurisdiction': return ketch?.getJurisdiction;
     case 'getRegionInfo': return ketch?.getRegionInfo;
     case 'onConsent': return ketch?.onConsent;
     case 'onEnvironment': return ketch?.onEnvironment;
     case 'onGeoIP': return ketch?.onGeoIP;
     case 'onHideExperience': return ketch?.onHideExperience;
-    case 'onIdentities': return ketch?.onIdentities;
-    case 'onPolicyScope': return ketch?.onPolicyScope;
-    case 'onRegionInfo': return ketch?.onRegionInfo;
     case 'onShowExperience': return ketch?.onShowExperience;
+    case 'onIdentities': return ketch?.onIdentities;
+    case 'onJurisdiction': return ketch?.onJurisdiction;
+    case 'onRegionInfo': return ketch?.onRegionInfo;
     case 'setEnvironment': return ketch?.setEnvironment;
     case 'setGeoIP': return ketch?.setGeoIP;
     case 'setIdentities': return ketch?.setIdentities;
-    case 'setPolicyScope': return ketch?.setPolicyScope;
+    case 'setJurisdiction': return ketch?.setJurisdiction;
     case 'setRegionInfo': return ketch?.setRegionInfo;
-    case 'showConsent': return ketch?.showConsent;
-    case 'showPreferences': return ketch?.showPreferences;
+    case 'showConsent': return ketch?.showConsentExperience;
+    case 'showPreferences': return ketch?.showPreferenceExperience;
+    case 'registerPlugin': return ketch?.registerPlugin;
   }
 
   return undefined;
 }
 
 /**
- * Retruns true if the given object is a function.
+ * Returns true if the given object is a function.
  *
  * @param obj
  */
