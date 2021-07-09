@@ -6,7 +6,7 @@
   "module": "dist/ketch-tag.esm.js",
   "jsnext:main": "dist/ketch-tag.esm.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rollup -c",
     "test": "jest --runInBand"
   },
   "repository": {
@@ -23,8 +23,7 @@
     "@ketch-com/oid-js": "^0.3.6",
     "@ketch-com/resourcename-js": "^0.2.6",
     "@ketch-sdk/ketch-plugin": "^0.1.5",
-    "@ketch-sdk/ketch-web-api": "^0.1.25",
-    "loglevel": "^1.7.1"
+    "@ketch-sdk/ketch-web-api": "^0.1.25"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
@@ -45,6 +44,7 @@
     "eslint-plugin-prettier": "^3.3.1",
     "jest": "^26.6.3",
     "jest-junit": "^12.0.0",
+    "loglevel": "^1.7.1",
     "prettier": "^2.2.1",
     "rollup": "^2.38.4",
     "rollup-plugin-typescript2": "^0.30.0",
