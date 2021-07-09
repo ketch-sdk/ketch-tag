@@ -228,7 +228,7 @@ export class Ketch {
    *
    * @param config
    */
-  selectExperience(): 'jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
+  selectExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
