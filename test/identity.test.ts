@@ -162,7 +162,7 @@ describe('identity', () => {
             (mc2) => {
               return expect(ids).toEqual({
                 "f1": "mcfv1",
-                "f2:": mc2,
+                "f2": mc2,
             });
             },
             (error) => {

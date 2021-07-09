@@ -16,7 +16,7 @@ const PLUGINS = [
   replace({
     _VERSION: JSON.stringify(pkg.version),
   }),
-  nodeResolve(),
+  nodeResolve()
 ];
 
 export default [
@@ -24,17 +24,18 @@ export default [
     input: 'src/index.ts',
     output: [
       {file: pkg.main, format: 'cjs'},
-      {file: pkg.module, format: 'es'},
+      {file: pkg.module, format: 'es'}
     ],
     plugins: PLUGINS,
-
+    context: 'this',
   },
   {
     input: 'src/pure.ts',
     output: [
       {file: 'dist/pure.js', format: 'cjs'},
-      {file: 'dist/pure.esm.js', format: 'es'},
+      {file: 'dist/pure.esm.js', format: 'es'}
     ],
     plugins: PLUGINS,
-  },
+    context: 'this',
+  }
 ];
