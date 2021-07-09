@@ -28,6 +28,7 @@ export default [
     ],
     plugins: PLUGINS,
     context: 'window',
+    external: ['loglevel']
   },
   {
     input: 'src/pure.ts',
@@ -37,5 +38,6 @@ export default [
     ],
     plugins: PLUGINS,
     context: 'window',
+    external: ['loglevel']
   }
 ];
