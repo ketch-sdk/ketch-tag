@@ -27,7 +27,7 @@ export default [
       {file: pkg.module, format: 'es'}
     ],
     plugins: PLUGINS,
-    context: 'this',
+    context: 'window',
   },
   {
     input: 'src/pure.ts',
@@ -36,6 +36,6 @@ export default [
       {file: 'dist/pure.esm.js', format: 'es'}
     ],
     plugins: PLUGINS,
-    context: 'this',
+    context: 'window',
   }
 ];
