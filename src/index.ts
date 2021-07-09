@@ -30,7 +30,7 @@ if (document.readyState === 'loading') {
 /**
  * This is the entry point when this package is first loaded.
  */
-function init(): Promise<any> {
+export default function init(): Promise<any> {
   log.trace('init');
   const p: Promise<any>[] = [];
 
