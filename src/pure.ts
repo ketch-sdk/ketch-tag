@@ -790,7 +790,7 @@ export class Ketch {
 
   /**
    * Collect identities.
-   */
+   */x
   collectIdentities(): Promise<Identities> {
     log.info('collectIdentities');
 
@@ -1295,7 +1295,7 @@ export class Ketch {
   pollIdentity(interval: number[]): void {
     log.info('pollIdentity');
     for (const t of interval) {
-      setTimeout(this.refreshIdentityConsent, t)
+      setTimeout(() => { this.refreshIdentityConsent() }, t)
     }
   }
 }
