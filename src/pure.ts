@@ -1295,7 +1295,7 @@ export class Ketch {
   pollIdentity(interval: number[]): void {
     log.info('pollIdentity');
     for (const t of interval) {
-      setTimeout(() => { this.refreshIdentityConsent() }, t)
+      setTimeout(this.refreshIdentityConsent.bind(this), t)
     }
   }
 }
