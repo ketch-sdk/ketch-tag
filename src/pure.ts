@@ -86,7 +86,7 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
         jurisdictionCode: jurisdiction,
       };
 
-      return ketchapi.getFullConfiguration(getApiUrl(boot), request).then(cfg => new Ketch(cfg, env, jurisdiction));
+      return ketchapi.getFullConfiguration(getApiUrl(boot), request).then(cfg => new Ketch(cfg));
     });
 }
 
@@ -149,15 +149,13 @@ export class Ketch {
    *
    * @param config
    */
-  constructor(config: ketchapi.Configuration,
-              environment?: Future<ketchapi.Environment>,
-              jurisdiction?: Future<string>) {
+  constructor(config: ketchapi.Configuration) {
     this._config = config;
     this._consent = new Future<Consent>('consent');
-    this._environment = environment || new Future<ketchapi.Environment>('environment');
+    this._environment = new Future<ketchapi.Environment>('environment');
     this._geoip = new Future('geoip');
     this._identities = new Future<Identities>('identities');
-    this._jurisdiction = jurisdiction || new Future<string>('jurisdiction');
+    this._jurisdiction = new Future<string>('jurisdiction');
     this._regionInfo = new Future<string>('regionInfo');
     this._origin = window.location.protocol + '//' + window.location.host;
     this._appDivs = [];
