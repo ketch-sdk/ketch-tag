@@ -716,9 +716,7 @@ export class Ketch {
   loadGeoIP(): Promise<ketchapi.GetLocationResponse> {
     log.info('loadGeoIP');
 
-    const request: ketchapi.GetLocationRequest = {};
-
-    return ketchapi.getLocation(getApiUrl(this._config), request);
+    return ketchapi.getLocation(getApiUrl(this._config));
   }
 
   /**
