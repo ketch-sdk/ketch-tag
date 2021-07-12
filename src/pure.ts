@@ -628,7 +628,7 @@ export class Ketch {
       return Promise.reject(errors.noEnvironmentError);
     }
 
-    // Try to locate based on pattern≠≠
+    // Try to locate based on pattern
     let environment = {} as ketchapi.Environment;
     for (let i = 0; i < this._config.environments.length; i++) {
       const e = this._config.environments[i];
