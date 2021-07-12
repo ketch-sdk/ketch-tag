@@ -88,7 +88,7 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
         jurisdictionCode: jurisdiction,
       };
 
-      return ketchapi.getFullConfiguration(boot, request).then(cfg => new Ketch(cfg));
+      return ketchapi.getFullConfiguration(getApiUrl(boot), request).then(cfg => new Ketch(cfg));
     });
 }
 
