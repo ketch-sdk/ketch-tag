@@ -790,7 +790,7 @@ export class Ketch {
 
   /**
    * Collect identities.
-   */x
+   */
   collectIdentities(): Promise<Identities> {
     log.info('collectIdentities');
 
