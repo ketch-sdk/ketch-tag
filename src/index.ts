@@ -58,6 +58,7 @@ function getAction(action: string): Function | undefined {
     case 'init': return function(cfg: ketchapi.Configuration): Promise<Ketch> {
       return newFromBootstrap(cfg).then(k => {
         ketch = k;
+        k.pollIdentity([1000, 2000, 4000, 8000])
         return k;
       })
     };
