@@ -18,9 +18,27 @@ import parameters from "./internal/parameters";
 import {getCookie, setCookie} from "./internal/cookie";
 import {OID} from "@ketch-com/oid-js";
 import {load} from "./internal/scripts";
+import constants from "./internal/constants";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
+
+/**
+ * Service url
+ */
+function getApiUrl(config: ketchapi.Configuration): string {
+  if (config.services) {
+    let url = config.services[constants.SHORELINE]
+    if (!url.endsWith('/')) {
+      url = url + '/';
+    }
+    url = url + 'web/v1';
+    return url
+  }
+
+  // default case
+  return 'https://global.ketchcdn.com/web/v1'
+}
 
 /**
  * Loads the config.
@@ -38,8 +56,8 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
   // TODO hardcode for cutover
   if (boot && boot.services) {
-    if (boot.services['lanyard']) {
-      promises.push(load(boot.services['lanyard']))
+    if (boot.services[constants.LANYARD]) {
+      promises.push(load(boot.services[constants.LANYARD]))
     }
   }
 
@@ -70,7 +88,7 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
         jurisdictionCode: jurisdiction,
       };
 
-      return ketchapi.getFullConfiguration(request).then(cfg => new Ketch(cfg));
+      return ketchapi.getFullConfiguration(boot, request).then(cfg => new Ketch(cfg));
     });
 }
 
@@ -489,7 +507,7 @@ export class Ketch {
       };
     }
 
-    return ketchapi.getConsent(request).then((consent: ketchapi.GetConsentResponse) => {
+    return ketchapi.getConsent(getApiUrl(this._config), request).then((consent: ketchapi.GetConsentResponse) => {
       const newConsent: Consent = {purposes: {}};
 
       if (this._config.purposes && consent.purposes) {
@@ -568,7 +586,7 @@ export class Ketch {
       return Promise.resolve();
     }
 
-    return ketchapi.setConsent(request);
+    return ketchapi.setConsent(getApiUrl(this._config), request);
   }
 
   /**
@@ -610,7 +628,7 @@ export class Ketch {
       return Promise.reject(errors.noEnvironmentError);
     }
 
-    // Try to locate based on pattern
+    // Try to locate based on pattern≠≠
     let environment = {} as ketchapi.Environment;
     for (let i = 0; i < this._config.environments.length; i++) {
       const e = this._config.environments[i];
@@ -700,7 +718,7 @@ export class Ketch {
 
     const request: ketchapi.GetLocationRequest = {};
 
-    return ketchapi.getLocation(request);
+    return ketchapi.getLocation(getApiUrl(this._config), request);
   }
 
   /**
@@ -1135,7 +1153,7 @@ export class Ketch {
       callback(request);
     }
 
-    return ketchapi.invokeRight(request);
+    return ketchapi.invokeRight(getApiUrl(this._config), request);
   }
 
   /**
