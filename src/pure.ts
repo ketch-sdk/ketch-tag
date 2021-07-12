@@ -63,8 +63,6 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
 
   return Promise.all(promises)
     .then(([env, jurisdiction]) => {
-      k.pollIdentity([1000, 2000, 4000, 8000])
-
       if (!env.hash) {
         return Promise.reject(errors.noEnvironmentError);
       }
