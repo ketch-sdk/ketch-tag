@@ -129,7 +129,7 @@ function entrypoint(fnName: string, ...args: any[]): Promise<any> {
   }
 
   if (args.length == argDecl.length) {
-    return fn(...args);
+    return fn.apply(ketch, args);
   }
 
   if (args.length == argDecl.length + 1) {
@@ -138,7 +138,7 @@ function entrypoint(fnName: string, ...args: any[]): Promise<any> {
       return Promise.reject(errors.expectedFunctionError(fnName));
     }
 
-    return fn(...args).then(resolve);
+    return fn.apply(ketch, args).then(resolve);
   }
 
   const reject = args.pop();
@@ -151,7 +151,7 @@ function entrypoint(fnName: string, ...args: any[]): Promise<any> {
     return Promise.reject(errors.expectedFunctionError(fnName));
   }
 
-  return fn(...args).then(resolve).catch(reject);
+  return fn.apply(ketch, args).then(resolve).catch(reject);
 }
 
 function push(a: any): void {
