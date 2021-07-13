@@ -320,12 +320,12 @@ export class Ketch {
     if (this._consent.hasValue()) {
       c = this._consent.getValue();
     } else {
-      c = Promise.resolve({} as Consent);
+      c = Promise.resolve({purposes: {}, vendors: []} as Consent);
     }
 
     return c.then(consent => {
       if (consent === undefined) {
-        return {} as Consent;
+        return {purposes: {}, vendors: []} as Consent;
       }
 
       if (this._showConsentExperience) {
@@ -479,7 +479,7 @@ export class Ketch {
       return this._consent.getValue() as Promise<Consent>;
     }
 
-    return Promise.resolve({} as Consent)
+    return Promise.resolve({purposes: {}, vendors: []} as Consent)
   }
 
   /**
@@ -1109,7 +1109,7 @@ export class Ketch {
   showPreferenceExperience(): Promise<Consent> {
     log.info('showPreference');
 
-    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}});
+    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}, vendors: []});
 
     return c.then(c => {
       // if no preference experience configured do not show
@@ -1218,7 +1218,7 @@ export class Ketch {
       })
     }
 
-    return Promise.resolve({} as Consent)
+    return Promise.resolve({purposes: {}, vendors: []} as Consent)
   }
 
   /**

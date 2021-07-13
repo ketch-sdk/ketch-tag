@@ -12,13 +12,13 @@ describe('preferences', () => {
         }
       } as any) as Configuration);
 
-      expect(ketch.showPreferenceExperience()).resolves.toBeUndefined();
+      return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({"purposes": {}, "vendors": []});
     });
 
     it('does not show experience', () => {
       const ketch = new Ketch({} as Configuration);
 
-      expect(ketch.showPreferenceExperience()).resolves.toBeUndefined();
+      return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({"purposes": {}, "vendors": []});
     });
   });
 });
