@@ -177,39 +177,67 @@ export class Ketch {
     }
 
     if (plugin.environmentLoaded) {
-      this.onEnvironment((env) => plugin.environmentLoaded??(this, this._config, env));
+      this.onEnvironment((env) => {
+        if (plugin.environmentLoaded) {
+          return plugin.environmentLoaded(this, this._config, env);
+        }
+      });
     }
 
     if (plugin.geoIPLoaded) {
-      this.onGeoIP((ipInfo) => plugin.geoIPLoaded??(this, this._config, ipInfo));
+      this.onGeoIP((ipInfo) => {
+        if (plugin.geoIPLoaded) {
+          return plugin.geoIPLoaded(this, this._config, ipInfo);
+        }
+      });
     }
 
     if (plugin.identitiesLoaded) {
-      this.onIdentities((identities) => plugin.identitiesLoaded??(this, this._config, identities));
+      this.onIdentities((identities) => {
+        if (plugin.identitiesLoaded) {
+          return plugin.identitiesLoaded(this, this._config, identities);
+        }
+      });
     }
 
     if (plugin.jurisdictionLoaded) {
-      this.onJurisdiction((jurisdiction) => plugin.jurisdictionLoaded??(this, this._config, jurisdiction));
+      this.onJurisdiction((jurisdiction) => {
+        if (plugin.jurisdictionLoaded) {
+          return plugin.jurisdictionLoaded(this, this._config, jurisdiction);
+        }
+      });
     }
 
     if (plugin.regionInfoLoaded) {
-      this.onRegionInfo((region) => plugin.regionInfoLoaded??(this, this._config, region));
+      this.onRegionInfo((region) => {
+        if (plugin.regionInfoLoaded) {
+          return plugin.regionInfoLoaded(this, this._config, region);
+        }
+      });
     }
 
     if (plugin.showConsentExperience) {
-      this.onShowConsentExperience(() => plugin.showConsentExperience??(this, this._config));
+      this.onShowConsentExperience(plugin.showConsentExperience);
     }
 
     if (plugin.showPreferenceExperience) {
-      this.onShowPreferenceExperience(() => plugin.showPreferenceExperience??(this, this._config));
+      this.onShowPreferenceExperience(plugin.showPreferenceExperience);
     }
 
     if (plugin.consentChanged) {
-      this.onConsent((consent) => plugin.consentChanged??(this, this._config, consent));
+      this.onConsent((consent) => {
+        if (plugin.consentChanged) {
+          return plugin.consentChanged(this, this._config, consent);
+        }
+      });
     }
 
     if (plugin.rightInvoked) {
-      this.onInvokeRight((request) => plugin.rightInvoked??(this, this._config, request));
+      this.onInvokeRight((request) => {
+        if (plugin.rightInvoked) {
+          return plugin.rightInvoked(this, this._config, request)
+        }
+      });
     }
   }
 
