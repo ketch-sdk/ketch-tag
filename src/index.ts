@@ -2,7 +2,6 @@ import loglevel from './internal/logging';
 import errors from './internal/errors';
 import {Ketch, newFromBootstrap} from "./pure";
 import constants from "./internal/constants";
-import * as ketchapi from "@ketch-sdk/ketch-web-api";
 const log = loglevel.getLogger('index');
 
 type CommandEntry = string | any[];
@@ -10,10 +9,6 @@ type CommandEntry = string | any[];
 let ketch: Ketch | undefined;
 
 log.trace('booting');
-
-getGlobal().push(['getConsent', (consent: ketchapi.GetConsentResponse): void => {
-  log.debug('getConsent returned', consent);
-}]);
 
 if (document.readyState === 'loading') {
   // Document hasn't finished loading yet, so add an event to init when content is loaded
@@ -30,62 +25,78 @@ if (document.readyState === 'loading') {
 /**
  * This is the entry point when this package is first loaded.
  */
-export default function init(): Promise<any> {
-  log.trace('init');
-  const p: Promise<any>[] = [];
+function init(): Promise<any> {
+  const initRequest = getGlobal().shift();
 
-  while (getGlobal().length > 0) {
-    const x = getGlobal().shift();
-
-    let r;
-    if (Array.isArray(x)) {
-      const fnName = x.shift();
-      r = entrypoint(fnName, ...x);
-    } else if (x !== undefined) {
-      r = entrypoint(x);
-    }
-
-    if (r && r.then) {
-      p.push(r);
-    }
+  if (!Array.isArray(initRequest) || initRequest[0] != 'init') {
+    log.error('ketch tag command queue is not configured correctly');
+    return Promise.resolve();
   }
 
-  return Promise.all(p);
+  const cfg = initRequest[1];
+
+  return newFromBootstrap(cfg).then(k => {
+    log.trace('init');
+
+    ketch = k;
+
+    const p: Promise<any>[] = [];
+
+    const g = getGlobal(push);
+    while (g.length > 0) {
+      const x = g.shift();
+
+      let r;
+      if (Array.isArray(x)) {
+        const fnName = x.shift();
+        r = entrypoint(fnName, ...x);
+      } else if (x !== undefined) {
+        r = entrypoint(x);
+      }
+
+      if (r && r.then) {
+        p.push(r);
+      }
+    }
+
+    p.push(ketch.getConsent());
+
+    k.pollIdentity([1000, 2000, 4000, 8000])
+
+    return p;
+  })
 }
 
 function getAction(action: string): Function | undefined {
+  if (ketch === undefined) {
+    return undefined;
+  }
+
   switch (action) {
-    case 'init': return function(cfg: ketchapi.Configuration): Promise<Ketch> {
-      return newFromBootstrap(cfg).then(k => {
-        ketch = k;
-        k.pollIdentity([1000, 2000, 4000, 8000])
-        return k;
-      })
-    };
     // TODO: case 'onConfig': return ketch.onConfig;
-    case 'getConfig': return ketch?.getConfig;
-    case 'getConsent': return ketch?.getConsent;
-    case 'getEnvironment': return ketch?.getEnvironment;
-    case 'getGeoIP': return ketch?.getGeoIP;
-    case 'getIdentities': return ketch?.getIdentities;
-    case 'getJurisdiction': return ketch?.getJurisdiction;
-    case 'getRegionInfo': return ketch?.getRegionInfo;
-    case 'onConsent': return ketch?.onConsent;
-    case 'onEnvironment': return ketch?.onEnvironment;
-    case 'onGeoIP': return ketch?.onGeoIP;
-    case 'onHideExperience': return ketch?.onHideExperience;
-    case 'onShowExperience': return ketch?.onShowExperience;
-    case 'onIdentities': return ketch?.onIdentities;
-    case 'onJurisdiction': return ketch?.onJurisdiction;
-    case 'onRegionInfo': return ketch?.onRegionInfo;
-    case 'setEnvironment': return ketch?.setEnvironment;
-    case 'setGeoIP': return ketch?.setGeoIP;
-    case 'setIdentities': return ketch?.setIdentities;
-    case 'setJurisdiction': return ketch?.setJurisdiction;
-    case 'setRegionInfo': return ketch?.setRegionInfo;
-    case 'showConsent': return ketch?.showConsentExperience;
-    case 'showPreferences': return ketch?.showPreferenceExperience;
-    case 'registerPlugin': return ketch?.registerPlugin;
+    case 'getConfig': return ketch.getConfig;
+    case 'getConsent': return ketch.getConsent;
+    case 'getEnvironment': return ketch.getEnvironment;
+    case 'getGeoIP': return ketch.getGeoIP;
+    case 'getIdentities': return ketch.getIdentities;
+    case 'getJurisdiction': return ketch.getJurisdiction;
+    case 'getRegionInfo': return ketch.getRegionInfo;
+    case 'onConsent': return ketch.onConsent;
+    case 'onEnvironment': return ketch.onEnvironment;
+    case 'onGeoIP': return ketch.onGeoIP;
+    case 'onHideExperience': return ketch.onHideExperience;
+    case 'onShowExperience': return ketch.onShowExperience;
+    case 'onIdentities': return ketch.onIdentities;
+    case 'onJurisdiction': return ketch.onJurisdiction;
+    case 'onRegionInfo': return ketch.onRegionInfo;
+    case 'setEnvironment': return ketch.setEnvironment;
+    case 'setGeoIP': return ketch.setGeoIP;
+    case 'setIdentities': return ketch.setIdentities;
+    case 'setJurisdiction': return ketch.setJurisdiction;
+    case 'setRegionInfo': return ketch.setRegionInfo;
+    case 'showConsent': return ketch.showConsentExperience;
+    case 'showPreferences': return ketch.showPreferenceExperience;
+    case 'registerPlugin': return ketch.registerPlugin;
   }
 
   return undefined;
@@ -174,7 +185,7 @@ function push(a: any): void {
   }
 }
 
-function getGlobal(): CommandEntry[] {
+function getGlobal(pusher?: Function): CommandEntry[] {
   let variableName = constants.VARIABLE_NAME;
 
   // @ts-ignore
@@ -184,6 +195,11 @@ function getGlobal(): CommandEntry[] {
 
   // @ts-ignore
   const v = window[variableName] = window[variableName] || [];
-  v.push = push;
+
+  // Override push if one is specified
+  if (pusher !== undefined) {
+    v.push = pusher;
+  }
+
   return v;
 }
