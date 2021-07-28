@@ -1268,12 +1268,17 @@ export class Ketch {
       .then(([pageIdentities, previousIdentities]) => {
       // check if identity value the same
       if (pageIdentities.size === previousIdentities.size) {
+        let identityMatch = true
         Object.keys(pageIdentities).forEach(key => {
           if (pageIdentities[key] !== previousIdentities[key]) {
-            // no change in identities so no action needed
-            return
+            // different identities
+            identityMatch = false
           }
         })
+        if (identityMatch) {
+          // no change in identities so no action needed
+          return
+        }
       }
 
       // change in identities found so set new identities found on page and check for consent
