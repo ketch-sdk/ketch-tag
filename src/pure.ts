@@ -423,7 +423,7 @@ export class Ketch {
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities).then((c) => {
-          const changed = false;
+          let changed = false;
 
           // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
           this.triggerPermitChangedEvent(c)
@@ -431,17 +431,12 @@ export class Ketch {
           // check if shouldShowConsent before populating permits
           const displayConsent = this.shouldShowConsent(c);
 
-          // populate permits that are undefined
-          // requiresOptIn => false
-          // else => true
+          // populate disclosure permits that are undefined
           if (this._config.purposes) {
             for (const p of this._config.purposes) {
-              if (c.purposes[p.code] === undefined) {
-                if (p.requiresOptIn) {
-                  c.purposes[p.code] = false;
-                } else {
-                  c.purposes[p.code] = true;
-                }
+              if (c.purposes[p.code] === undefined && !p.requiresOptIn) {
+                c.purposes[p.code] = true;
+                changed = true;
               }
             }
           }
