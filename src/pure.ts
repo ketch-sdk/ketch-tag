@@ -357,7 +357,7 @@ export class Ketch {
       event: 'ketchPermitChanged',
     }
 
-    for (const purposeCode in c) {
+    for (const purposeCode in c.purposes) {
       permitChangedEvent[purposeCode] = c.purposes[purposeCode]
     }
 
