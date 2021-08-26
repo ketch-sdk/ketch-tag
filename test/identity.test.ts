@@ -173,5 +173,34 @@ describe('identity', () => {
       )
       return r
     });
+
+    it("contains unique ids", () => {
+      const config = {
+        organization,
+        identities: {
+          f1: {
+            type: "managedCookie",
+            variable: "uuid",
+          },
+          f2: {
+            type: "managedCookie",
+            variable: "uuid2",
+          },
+        },
+      };
+      const ketch = new Ketch((config as any) as Configuration);
+
+      const r = ketch.collectIdentities().then(() => {
+        getCookie("uuid").then((uuid) => {
+          expect(uuid).toBeDefined();
+          expect(uuid).toMatch(/[a-z0-9-]/g);
+
+          getCookie("uuid2").then((uuid2) => {
+            expect(uuid).not.toEqual(uuid2);
+          });
+        });
+      });
+      return r;
+    });
   });
 });

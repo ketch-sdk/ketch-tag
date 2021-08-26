@@ -16,7 +16,7 @@ import loglevel from "./internal/logging";
 import errors from "./internal/errors";
 import parameters from "./internal/parameters";
 import {getCookie, setCookie} from "./internal/cookie";
-import {OID} from "@ketch-com/oid-js";
+import { v4 as uuidv4 } from "uuid";
 import {load} from "./internal/scripts";
 import constants from "./internal/constants";
 const log = loglevel.getLogger('ketch');
@@ -890,7 +890,7 @@ export class Ketch {
           getCookie(p[1]).then((pv) => {
             return [p[0], pv]
           }, () => {
-            return setCookie(p[1], new OID().toString(), 730).then((pv) => {
+            return setCookie(p[1], uuidv4(), 730).then((pv) => {
               return [p[0], pv]
             }, (error) => {
               log.trace(error)
