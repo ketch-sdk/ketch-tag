@@ -85,7 +85,7 @@ function getAction(action: string): Function | undefined {
     case 'onEnvironment': return ketch.onEnvironment;
     case 'onGeoIP': return ketch.onGeoIP;
     case 'onHideExperience': return ketch.onHideExperience;
-    case 'onShowExperience': return ketch.onShowExperience;
+    case 'onWillShowExperience': return ketch.onWillShowExperience;
     case 'onIdentities': return ketch.onIdentities;
     case 'onJurisdiction': return ketch.onJurisdiction;
     case 'onRegionInfo': return ketch.onRegionInfo;

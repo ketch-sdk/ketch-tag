@@ -318,7 +318,7 @@ export class Ketch {
       }
     }
 
-    // Call functions registered using onShowExperience
+    // Call functions registered using onWillShowExperience
     this._willShowExperience.forEach(func =>
       func(type)
     );
