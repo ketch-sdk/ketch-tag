@@ -22,6 +22,8 @@ import constants from "./internal/constants";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
+const EXPERIENCE_CONSENT = 'experiences.consent'
+const EXPERIENCE_PREFERNECE = 'experiences.preference'
 
 /**
  * Service url
@@ -111,12 +113,12 @@ export class Ketch {
   /**
    * hideExperience is the list of functions registered with onHideExperience
    */
-  _hideExperience: Function[];
+  _hideExperience: Callback[];
 
   /**
-   * hideExperience is the list of functions registered with onHideExperience
+   * willShowExperience is the list of functions registered with onWillShowExperience
    */
-  _showExperience: Function[];
+  _willShowExperience: Callback[];
 
   /**
    * invokeRights is the list of functions registered with onInvokeRight
@@ -160,7 +162,7 @@ export class Ketch {
     this._origin = window.location.protocol + '//' + window.location.host;
     this._appDivs = [];
     this._hideExperience = [];
-    this._showExperience = [];
+    this._willShowExperience = [];
     this._invokeRights = [];
     this._showPreferenceExperience = undefined;
     this._showConsentExperience = undefined;
@@ -222,6 +224,22 @@ export class Ketch {
 
     if (plugin.showPreferenceExperience) {
       this.onShowPreferenceExperience(plugin.showPreferenceExperience);
+    }
+
+    if (plugin.willShowExperience) {
+      this.onWillShowExperience(() => {
+        if (plugin.willShowExperience) {
+          return plugin.willShowExperience(this, this._config);
+        }
+      });
+    }
+
+    if (plugin.experienceHidden) {
+      this.onHideExperience((reason) => {
+        if (plugin.experienceHidden) {
+          return plugin.experienceHidden(this, this._config, reason);
+        }
+      });
     }
 
     if (plugin.consentChanged) {
@@ -288,7 +306,7 @@ export class Ketch {
     return 'experiences.consent.banner';
   }
 
-  willShowExperience(): void {
+  willShowExperience(type: string): void {
     if (this._config.options?.appDivs) {
       const appDivList = this._config.options.appDivs.split(",")
       for (const divID of appDivList) {
@@ -300,14 +318,13 @@ export class Ketch {
       }
     }
 
+    // Call functions registered using onShowExperience
+    this._willShowExperience.forEach(func =>
+      func(type)
+    );
+
     // update isExperienceDisplayed flag when experience displayed
     this._isExperienceDisplayed = true
-
-    // TODO
-    // Call functions registered using onShowExperience
-    this._showExperience.forEach(func => {
-      func();
-    });
   }
 
   /**
@@ -329,7 +346,7 @@ export class Ketch {
       }
 
       if (this._showConsentExperience) {
-        this.willShowExperience()
+        this.willShowExperience(EXPERIENCE_CONSENT)
         this._showConsentExperience(this, this._config, consent, {displayHint: this.selectExperience()});
       }
 
@@ -454,7 +471,7 @@ export class Ketch {
 
             // experience will not show - call functions registered using onHideExperience
             this._hideExperience.forEach(func => {
-              func();
+              func("willNotShow");
             });
           }
 
@@ -1113,7 +1130,7 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
-        this.willShowExperience()
+        this.willShowExperience(EXPERIENCE_PREFERNECE)
         this._showPreferenceExperience(this, this._config, c);
       }
 
@@ -1197,7 +1214,7 @@ export class Ketch {
 
     // Call functions registered using onHideExperience
     this._hideExperience.forEach(function (func) {
-      func();
+      func(reason);
     });
 
     if (reason !== "setConsent") {
@@ -1217,19 +1234,19 @@ export class Ketch {
   }
 
   /**
-   * onHideExperience called after experience hidden
+   * onWillShowExperience called before an experience is shown
    * Used to trigger external dependencies
    */
-  onHideExperience(callback: Function): void {
-    this._hideExperience.push(callback);
+  onWillShowExperience(callback: Callback): void {
+    this._willShowExperience.push(callback);
   }
 
   /**
-   * onShowExperience called after experience hidden
+   * onHideExperience called after experience hidden
    * Used to trigger external dependencies
    */
-  onShowExperience(callback: Function): void {
-    this._showExperience.push(callback);
+  onHideExperience(callback: Callback): void {
+    this._hideExperience.push(callback);
   }
 
   /**

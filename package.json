@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@ketch-com/resourcename-js": "^0.2.6",
-    "@ketch-sdk/ketch-plugin": "^0.1.5",
+    "@ketch-sdk/ketch-plugin": "^0.2.0",
     "@ketch-sdk/ketch-web-api": "^0.1.31",
     "uuid": "^8.3.2"
   },
