@@ -22,8 +22,30 @@ import constants from "./internal/constants";
 const log = loglevel.getLogger('ketch');
 
 const DEFAULT_MIGRATION_OPTION = 0;
-const EXPERIENCE_CONSENT = 'experiences.consent'
-const EXPERIENCE_PREFERNECE = 'experiences.preference'
+
+/**
+ * ExperienceType is the type of experience that will be shown
+ */
+enum ExperienceType {
+  Consent = 'experiences.consent',
+  Preference = 'experiences.preference',
+}
+
+/**
+ * ExperienceHidden is the reason for which the experience is hidden
+ *
+ * A plugin that displays an experience will indicate whether an experience
+ * is closed after a user sets consent, invokes a right, or closes the experience
+ * without taking an explicit action
+ *
+ * ketch-tag will determine if an experience will not be shown
+ */
+enum ExperienceHidden {
+  SetConsent = 'setConsent',
+  InvokeRight = 'invokeRight',
+  Close = 'close',
+  WillNotShow = 'willNotShow',
+}
 
 /**
  * Service url
@@ -346,7 +368,7 @@ export class Ketch {
       }
 
       if (this._showConsentExperience) {
-        this.willShowExperience(EXPERIENCE_CONSENT)
+        this.willShowExperience(ExperienceType.Consent)
         this._showConsentExperience(this, this._config, consent, {displayHint: this.selectExperience()});
       }
 
@@ -471,7 +493,7 @@ export class Ketch {
 
             // experience will not show - call functions registered using onHideExperience
             this._hideExperience.forEach(func => {
-              func("willNotShow");
+              func(ExperienceHidden.WillNotShow);
             });
           }
 
@@ -1130,7 +1152,7 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
-        this.willShowExperience(EXPERIENCE_PREFERNECE)
+        this.willShowExperience(ExperienceType.Preference)
         this._showPreferenceExperience(this, this._config, c);
       }
 
