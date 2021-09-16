@@ -56,7 +56,7 @@ function getApiUrl(config: ketchapi.Configuration): string {
     if (!url.endsWith('/')) {
       url = url + '/';
     }
-    url = url + 'web/v1';
+    url = url + 'web/v2';
     return url
   }
 
