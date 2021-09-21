@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@ketch-sdk/ketch-plugin": "^0.2.17",
-    "@ketch-sdk/ketch-web-api": "^0.1.35",
+    "@ketch-sdk/ketch-web-api": "^0.1.36",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
