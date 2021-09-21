@@ -579,9 +579,12 @@ export class Ketch {
 
       if (this._config.purposes && consent.purposes) {
         for (const p of this._config.purposes) {
-          if (consent.purposes[p.code] &&
-            consent.purposes[p.code].allowed) {
-            newConsent.purposes[p.code] = consent.purposes[p.code].allowed === 'true';
+          if (consent.purposes[p.code]) {
+            if (consent.purposes[p.code].allowed) {
+              newConsent.purposes[p.code] = consent.purposes[p.code].allowed === 'true';
+            } else {
+              newConsent.purposes[p.code] = consent.purposes[p.code] === 'true'
+            }
           }
         }
       }
