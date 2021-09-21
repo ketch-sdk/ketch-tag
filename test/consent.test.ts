@@ -175,8 +175,9 @@ describe('consent', () => {
           },
           vendors: ["1"]
         });
-        const {app, organization, environment} = config;
-        expect(app).not.toBeNull();
+        const {property, jurisdiction, organization, environment} = config;
+        expect(property).not.toBeNull();
+        expect(jurisdiction).not.toBeNull();
         expect(organization).not.toBeNull();
         expect(environment).not.toBeNull();
       });
@@ -194,14 +195,14 @@ describe('consent', () => {
         organization: {
           code: 'org'
         },
-        app: {
-          code: 'app'
+        property: {
+          code: 'property'
         },
         environment: {
           code: 'env',
         },
-        policyScope: {
-          code: 'ps',
+        jurisdiction: {
+          code: 'default',
         },
         purposes: [],
       } as any as Configuration);
@@ -224,20 +225,20 @@ describe('consent', () => {
         },
         vendors: ["1"]
       }).then(() => {
-        const {app, policyScope, organization, environment} = config;
-        expect(app).not.toBeNull();
-        expect(policyScope).not.toBeNull();
+        const {property, jurisdiction, organization, environment} = config;
+        expect(property).not.toBeNull();
+        expect(jurisdiction).not.toBeNull();
         expect(organization).not.toBeNull();
         expect(environment).not.toBeNull();
 
-        if (app && policyScope && organization && environment) {
-          expect(mockSetConsent).toHaveBeenCalledWith({
-            applicationCode: app.code,
-            applicationEnvironmentCode: environment.code,
+        if (property && jurisdiction && organization && environment) {
+          expect(mockSetConsent).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
+            propertyCode: property.code,
+            environmentCode: environment.code,
             controllerCode: '',
             organizationCode: 'org',
             identities,
-            policyScopeCode: policyScope.code,
+            jurisdictionCode: jurisdiction.code,
             purposes: {
               'pacode1': {
                 allowed: 'true',
@@ -274,14 +275,14 @@ describe('consent', () => {
         organization: {
           code: 'org'
         },
-        app: {
-          code: 'app'
+        property: {
+          code: 'property'
         },
         environment: {
           code: 'env',
         },
-        policyScope: {
-          code: 'ps',
+        jurisdiction: {
+          code: 'default',
         },
         purposes: [],
         options: {
@@ -290,8 +291,10 @@ describe('consent', () => {
       } as any as Configuration);
 
       return ketch.updateConsent(identities, {
-        pacode1: true,
-        pacode2: false,
+        purposes: {
+          pacode1: true,
+          pacode2: false,
+        }
       }).then((x) => {
         expect(x).toBeUndefined();
       });
@@ -435,7 +438,7 @@ describe('consent', () => {
         ]
       } as any) as Configuration);
 
-      expect(ketch.shouldShowConsent({})).not.toBeTruthy();
+      expect(ketch.shouldShowConsent({purposes: {}})).not.toBeTruthy();
     });
 
     it('shows when options', () => {

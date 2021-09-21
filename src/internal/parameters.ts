@@ -15,5 +15,7 @@ export default {
   DEPLOYMENT: prefixed('d'),
   POLICY_SCOPE: prefixed('p'),
   LANGUAGE: prefixed('l'),
+  SHOW: prefixed('show'),
   get: (key: string, input: string): string => (new URLSearchParams(input)).get(key) || '',
+  has: (key: string, input: string): boolean => (new URLSearchParams(input)).has(key),
 };

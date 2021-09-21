@@ -79,7 +79,7 @@ describe('gangplank', () => {
         expect(environment).not.toBeNull();
 
         if (property && jurisdiction && organization && environment) {
-          expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v1', {
+          expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
             propertyCode: property.code,
             environmentCode: environment.code,
             organizationCode: 'org',
