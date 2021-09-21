@@ -232,29 +232,26 @@ describe('consent', () => {
         expect(environment).not.toBeNull();
 
         if (property && jurisdiction && organization && environment) {
-          expect(mockSetConsent).toHaveBeenCalledWith(
-            'https://global.ketchcdn.com/web/v2',
-            {
-              propertyCode: property.code,
-              environmentCode: environment.code,
-              controllerCode: '',
-              organizationCode: 'org',
-              identities,
-              jurisdictionCode: jurisdiction.code,
-              purposes: {
-                'pacode1': {
-                  allowed: 'true',
-                  legalBasisCode: 'lb1',
-                },
-                'pacode2': {
-                  allowed: 'false',
-                  legalBasisCode: 'lb2',
-                },
+          expect(mockSetConsent).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
+            propertyCode: property.code,
+            environmentCode: environment.code,
+            controllerCode: '',
+            organizationCode: 'org',
+            identities,
+            jurisdictionCode: jurisdiction.code,
+            purposes: {
+              'pacode1': {
+                allowed: 'true',
+                legalBasisCode: 'lb1',
               },
-              vendors: ["1"],
-              migrationOption: 3,
-            }
-          );
+              'pacode2': {
+                allowed: 'false',
+                legalBasisCode: 'lb2',
+              },
+            },
+            vendors: ["1"],
+            migrationOption: 3,
+          });
         }
       });
     });
