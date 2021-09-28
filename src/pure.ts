@@ -473,7 +473,7 @@ export class Ketch {
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities).then((c) => {
-          let changed = false;
+          let shouldCreatePermits = false;
 
           // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
           this.triggerPermitChangedEvent(c)
@@ -486,29 +486,30 @@ export class Ketch {
             for (const p of this._config.purposes) {
               if (c.purposes[p.code] === undefined && !p.requiresOptIn) {
                 c.purposes[p.code] = true;
-                changed = true;
+                shouldCreatePermits = true;
               }
             }
           }
 
-          const p: Promise<any>[] = [];
+          // first set consent value then proceed to show experience and/or create permits
+          return this._consent.setValue(c).then(() => {
+            const p: Promise<any>[] = [];
 
-          if (changed) {
-            p.push(this.setConsent(c));
-          }
+            if (shouldCreatePermits) {
+              p.push(this.setConsent(c));
+            }
 
-          if (displayConsent) {
-            p.push(this.showConsentExperience());
-          } else {
-            p.push(this._consent.setValue(c));
+            if (displayConsent) {
+              p.push(this.showConsentExperience());
+            } else {
+              // experience will not show - call functions registered using onHideExperience
+              this._hideExperience.forEach(func => {
+                func(ExperienceHidden.WillNotShow);
+              });
+            }
 
-            // experience will not show - call functions registered using onHideExperience
-            this._hideExperience.forEach(func => {
-              func(ExperienceHidden.WillNotShow);
-            });
-          }
-
-          return Promise.all(p);
+            return Promise.all(p);
+          });
         });
       })
       .then(() => this._consent.getValue()) as Promise<Consent>;
