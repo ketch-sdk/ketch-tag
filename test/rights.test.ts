@@ -86,7 +86,7 @@ describe('gangplank', () => {
             controllerCode: '',
             identities,
             jurisdictionCode: jurisdiction.code,
-            rightCodes: ['portability'],
+            rightCode: 'portability',
             user: {
               first: 'first',
               last: 'last',
@@ -97,12 +97,6 @@ describe('gangplank', () => {
             }
           });
         }
-      });
-    });
-
-    it('skips if no identities', () => {
-      return ketch.invokeRight([], data).then(() => {
-        // expect(fetch).not.toHaveBeenCalled();
       });
     });
 
@@ -117,8 +111,10 @@ describe('gangplank', () => {
     }
 
     it('skips if no rightsEmail', () => {
-      return ketch.invokeRight(identities, dataNoEmail).then(() => {
-        // expect(fetch).not.toHaveBeenCalled();
+      const mockInvokeRight = mocked(invokeRight);
+      mockInvokeRight.mockResolvedValue();
+      return ketch.invokeRight(dataNoEmail).then(() => {
+        expect(mockInvokeRight).not.toHaveBeenCalled();
       });
     });
 
@@ -133,8 +129,10 @@ describe('gangplank', () => {
     }
 
     it('skips if no rights', () => {
-      return ketch.invokeRight(identities, dataNoRight).then(() => {
-        // expect(fetch).not.toHaveBeenCalled();
+      const mockInvokeRight = mocked(invokeRight);
+      mockInvokeRight.mockResolvedValue();
+      return ketch.invokeRight(dataNoRight).then(() => {
+        expect(mockInvokeRight).not.toHaveBeenCalled();
       });
     });
   });

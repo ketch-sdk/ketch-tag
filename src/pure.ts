@@ -397,16 +397,21 @@ export class Ketch {
   triggerPermitChangedEvent(c: Consent): void {
     log.info('triggerPermitChangedEvent');
 
-    // c
     const permitChangedEvent: {[key: string]: any} = {
       event: 'ketchPermitChanged',
     }
 
+    const swbPermitChangedEvent: {[key: string]: any} = {
+      event: 'switchbitPermitChanged',
+    }
+
     for (const purposeCode in c.purposes) {
       permitChangedEvent[purposeCode] = c.purposes[purposeCode]
+      swbPermitChangedEvent[purposeCode] = c.purposes[purposeCode]
     }
 
     dataLayer().push(permitChangedEvent)
+    dataLayer().push(swbPermitChangedEvent)
   }
 
   /**
@@ -1214,7 +1219,7 @@ export class Ketch {
       controllerCode: '',
       identities: identities,
       jurisdictionCode: this._config.jurisdiction.code || '',
-      rightCodes: [eventData.right],
+      rightCode: eventData.right,
       user: user
     };
 
