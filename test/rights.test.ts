@@ -99,5 +99,41 @@ describe('gangplank', () => {
         }
       });
     });
+
+    const dataNoEmail = {
+      right: 'portability',
+      firstName: '',
+      lastName: '',
+      rightsEmail: '',
+      country: '',
+      state: '',
+      details: ''
+    }
+
+    it('skips if no rightsEmail', () => {
+      const mockInvokeRight = mocked(invokeRight);
+      mockInvokeRight.mockResolvedValue();
+      return ketch.invokeRight(dataNoEmail).then(() => {
+        expect(mockInvokeRight).not.toHaveBeenCalled();
+      });
+    });
+
+    const dataNoRight = {
+      right: '',
+      firstName: '',
+      lastName: '',
+      rightsEmail: 'rights@email.com',
+      country: '',
+      state: '',
+      details: ''
+    }
+
+    it('skips if no rights', () => {
+      const mockInvokeRight = mocked(invokeRight);
+      mockInvokeRight.mockResolvedValue();
+      return ketch.invokeRight(dataNoRight).then(() => {
+        expect(mockInvokeRight).not.toHaveBeenCalled();
+      });
+    });
   });
 });
