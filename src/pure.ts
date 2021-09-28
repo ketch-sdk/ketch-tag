@@ -427,12 +427,12 @@ export class Ketch {
   }
 
   /**
-   * Sets the consent.
+   * Updates the client _consent value.
    *
    * @param c
    */
-  setConsent(c: Consent): Promise<Consent> {
-    log.info('setConsent', c);
+  updateClientConsent(c: Consent): Promise<Consent> {
+    log.info('updateClientConsent', c);
 
     if (!c || isEmpty(c)) {
       return this._consent.setValue(undefined) as Promise<Consent>;
@@ -453,7 +453,18 @@ export class Ketch {
     // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
     this.triggerPermitChangedEvent(c)
 
-    return this._consent.setValue(c).then(() => {
+    return this._consent.setValue(c) as Promise<Consent>;
+  }
+
+  /**
+   * Sets the consent.
+   *
+   * @param c
+   */
+  setConsent(c: Consent): Promise<Consent> {
+    log.info('setConsent', c);
+
+    return this.updateClientConsent(c).then(() => {
       return this.getIdentities()
         .then(identities => this.updateConsent(identities, c))
         .then(() => c);
@@ -473,10 +484,7 @@ export class Ketch {
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities).then((c) => {
-          let changed = false;
-
-          // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
-          this.triggerPermitChangedEvent(c)
+          let shouldCreatePermits = false;
 
           // check if shouldShowConsent before populating permits
           const displayConsent = this.shouldShowConsent(c);
@@ -486,29 +494,31 @@ export class Ketch {
             for (const p of this._config.purposes) {
               if (c.purposes[p.code] === undefined && !p.requiresOptIn) {
                 c.purposes[p.code] = true;
-                changed = true;
+                shouldCreatePermits = true;
               }
             }
           }
 
-          const p: Promise<any>[] = [];
-
-          if (changed) {
-            p.push(this.setConsent(c));
+          let consentPromise: Promise<any>;
+          if (shouldCreatePermits) {
+            consentPromise = this.setConsent(c);
+          } else {
+            consentPromise = this.updateClientConsent(c);
           }
 
-          if (displayConsent) {
-            p.push(this.showConsentExperience());
-          } else {
-            p.push(this._consent.setValue(c));
+          // first set consent value then proceed to show experience and/or create permits
+          return consentPromise.then(() => {
+            if (displayConsent) {
+              return this.showConsentExperience();
+            }
 
             // experience will not show - call functions registered using onHideExperience
             this._hideExperience.forEach(func => {
               func(ExperienceHidden.WillNotShow);
             });
-          }
 
-          return Promise.all(p);
+            return;
+          });
         });
       })
       .then(() => this._consent.getValue()) as Promise<Consent>;
