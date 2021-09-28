@@ -426,8 +426,13 @@ export class Ketch {
     return this.setConsent(consent)
   }
 
+  /**
+   * Updates the client _consent value.
+   *
+   * @param c
+   */
   updateClientConsent(c: Consent): Promise<Consent> {
-    log.info('updateConsentValue', c);
+    log.info('updateClientConsent', c);
 
     if (!c || isEmpty(c)) {
       return this._consent.setValue(undefined) as Promise<Consent>;
