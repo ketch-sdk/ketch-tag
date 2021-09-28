@@ -303,7 +303,7 @@ describe('consent', () => {
     it('skips if no consents', () => {
       const ketch = new Ketch(config);
 
-      return ketch.updateConsent(identities, {}).then((x) => {
+      return ketch.updateConsent(identities, {purposes:{}}).then((x) => {
         expect(x).toBeUndefined();
       });
     });
