@@ -61,9 +61,9 @@ function init(): Promise<any> {
 
     p.push(ketch.getConsent());
 
-    k.pollIdentity([1000, 2000, 4000, 8000])
-
-    return p;
+    return Promise.all(p).then(() => {
+      k.pollIdentity([1000, 2000, 4000, 8000])
+    })
   })
 }
 
