@@ -7,8 +7,8 @@ language: node
 toolchain: npm
 release:
   branches:
-    only: v1
+    only: v0
 publish:
   command: npm publish  --access public
   branches:
-    only: v1
+    only: v0
