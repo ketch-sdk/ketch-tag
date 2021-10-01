@@ -6,9 +6,8 @@ language: node
 toolchain: npm
 release:
   branches:
-    only: main
+    only: v1-hotfix
 publish:
   command: npm publish  --access public
   branches:
-    only: main
-
+    only: v1-hotfix

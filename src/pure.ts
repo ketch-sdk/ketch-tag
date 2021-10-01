@@ -547,7 +547,7 @@ export class Ketch {
       return Promise.reject(errors.noIdentitiesError);
     }
     if (!this._config || !this._config.property || !this._config.organization || !this._config.environment ||
-      !this._config.purposes || this._config.purposes.length === 0) {
+      !this._config.purposes || !this._config.jurisdiction || this._config.purposes.length === 0) {
       return Promise.reject(errors.noPurposesError);
     }
 
@@ -555,6 +555,7 @@ export class Ketch {
       organizationCode: this._config.organization.code || '',
       propertyCode: this._config.property.code || '',
       environmentCode: this._config.environment.code,
+      jurisdictionCode: this._config.jurisdiction.code || '',
       controllerCode: '',
       identities: identities,
       purposes: {},
