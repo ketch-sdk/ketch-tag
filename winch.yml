@@ -1,13 +1,14 @@
 name: ketch-tag
 description: Ketch Web Tag
 repository: https://github.com/ketch-sdk/ketch-tag
+local: true
 verbose: true
 language: node
 toolchain: npm
 release:
   branches:
-    only: v1-hotfix
+    only: v1
 publish:
   command: npm publish  --access public
   branches:
-    only: v1-hotfix
+    only: v1
