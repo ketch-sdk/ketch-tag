@@ -15,7 +15,7 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
     - uses: actions/checkout@v2.4.0
-    - uses: actions/cache@v2.1.6
+    - uses: actions/cache@v2.1.7
       with:
         path: ~/.npm
         key: v2-node-dep-${{ hashFiles('package-lock.json') }}
