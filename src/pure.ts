@@ -1169,20 +1169,19 @@ export class Ketch {
   showPreferenceExperience(): Promise<Consent> {
     log.info('showPreference');
 
-    const c: Promise<Consent> = this.hasConsent() ? this.getConsent(): Promise.resolve({purposes: {}, vendors: []});
+    return Promise.all([this.getConfig(), this.getConsent()])
+      .then(([config, consent]) => {
+        // if no preference experience configured do not show
+        if (!config.experiences?.preference) {
+          return consent;
+        }
 
-    return c.then(c => {
-      // if no preference experience configured do not show
-      if (!this._config.experiences?.preference) {
-        return c;
-      }
+        if (this._showPreferenceExperience) {
+          this.willShowExperience(ExperienceType.Preference)
+          this._showPreferenceExperience(this, config, consent);
+        }
 
-      if (this._showPreferenceExperience) {
-        this.willShowExperience(ExperienceType.Preference)
-        this._showPreferenceExperience(this, this._config, c);
-      }
-
-      return c;
+        return consent;
     });
   }
 
