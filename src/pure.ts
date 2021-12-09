@@ -78,13 +78,6 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
   promises.push(k.detectEnvironment())
   promises.push(k.loadJurisdiction())
 
-  // TODO hardcode for cutover
-  if (boot && boot.services) {
-    if (boot.services[constants.LANYARD]) {
-      promises.push(load(boot.services[constants.LANYARD]))
-    }
-  }
-
   return Promise.all(promises)
     .then(([env, jurisdiction]) => {
       if (!env.hash) {
@@ -110,7 +103,17 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
         jurisdictionCode: jurisdiction,
       };
 
-      return ketchapi.getFullConfiguration(getApiUrl(boot), request).then(cfg => new Ketch(cfg));
+      return ketchapi.getFullConfiguration(getApiUrl(boot), request).then(cfg => {
+        if (boot && boot.services) {
+          let lanyardPath = boot.services[constants.LANYARD]
+          if (lanyardPath) {
+            lanyardPath = lanyardPath.split('/').slice(0,-1).join('/')+`/lanyard.${cfg.language}.js`
+            return load(lanyardPath).then(() => new Ketch(cfg))
+          }
+        }
+
+        return new Ketch(cfg)
+      });
     });
 }
 
