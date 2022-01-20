@@ -518,16 +518,17 @@ export class Ketch {
       return this._consent.getValue() as Promise<Consent>;
     }
 
+    // get session consent
+    // TODO server side signing
+    const sessionConsentString = sessionStorage.getItem('consent');
+    let sessionConsent: Consent
+
+    if (sessionConsentString) {
+      sessionConsent = JSON.parse(sessionConsentString);
+    }
+
     return this.getIdentities()
       .then(identities => {
-        // TODO server side signing
-        const sessionConsentString = sessionStorage.getItem('consent');
-        let sessionConsent: Consent
-
-        if (sessionConsentString) {
-          sessionConsent = JSON.parse(sessionConsentString);
-        }
-
         return this.fetchConsent(identities)
           .then(c => this.mergeSessionConsent(c, sessionConsent))
           .then(((c) => {
