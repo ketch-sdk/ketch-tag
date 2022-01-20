@@ -531,7 +531,7 @@ export class Ketch {
       .then(identities => {
         return this.fetchConsent(identities)
           .then(c => this.mergeSessionConsent(c, sessionConsent))
-          .then(((c) => {
+          .then((c) => {
 
           let shouldCreatePermits = false;
 
