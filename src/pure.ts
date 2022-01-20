@@ -492,6 +492,10 @@ export class Ketch {
   mergeSessionConsent(c: Consent, sessionConsent: Consent): Promise<Consent> {
     log.info('mergeSessionConsent', c, sessionConsent);
 
+    if (!sessionConsent || !c) {
+      return this.updateClientConsent(c)
+    }
+
     let shouldCreatePermits = false
     for (const key in sessionConsent.purposes) {
       if (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
