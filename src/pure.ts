@@ -456,6 +456,9 @@ export class Ketch {
     // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
     this.triggerPermitChangedEvent(c)
 
+    // TODO server side signing
+    sessionStorage.setItem('consent', JSON.stringify(c));
+
     return this._consent.setValue(c) as Promise<Consent>;
   }
 
@@ -475,6 +478,37 @@ export class Ketch {
   }
 
   /**
+   * Merge session consent.
+   *
+   * This will merge consent retrieved from the server with consent stored in the client side session
+   * to ensure that consent is consistent within a client session. If the session consent has consent
+   * values that the server consent does not contain, setConsent will be called to update the server.
+   * Otherwise the client consent object and the session consent will be updated by calling
+   * updateClientConsent.
+   *
+   * @param c current consent
+   * @param sessionConsent sessionConsent
+   */
+  mergeSessionConsent(c: Consent, sessionConsent: Consent): Promise<Consent> {
+    log.info('mergeSessionConsent', c, sessionConsent);
+
+    let shouldCreatePermits = false
+    for (const key in sessionConsent.purposes) {
+      if (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+        !Object.prototype.hasOwnProperty.call(c.purposes, key)) {
+        c.purposes[key] = sessionConsent.purposes[key];
+        shouldCreatePermits = true;
+      }
+    }
+
+    if (shouldCreatePermits) {
+      return this.setConsent(c)
+    }
+
+    return this.updateClientConsent(c)
+  }
+
+  /**
    * Gets the consent.
    */
   getConsent(): Promise<Consent> {
@@ -484,9 +518,21 @@ export class Ketch {
       return this._consent.getValue() as Promise<Consent>;
     }
 
+    // get session consent
+    // TODO server side signing
+    const sessionConsentString = sessionStorage.getItem('consent');
+    let sessionConsent: Consent
+
+    if (sessionConsentString) {
+      sessionConsent = JSON.parse(sessionConsentString);
+    }
+
     return this.getIdentities()
       .then(identities => {
-        return this.fetchConsent(identities).then((c) => {
+        return this.fetchConsent(identities)
+          .then(c => this.mergeSessionConsent(c, sessionConsent))
+          .then((c) => {
+
           let shouldCreatePermits = false;
 
           // check if shouldShowConsent before populating permits
