@@ -496,13 +496,21 @@ export class Ketch {
       return this.updateClientConsent(c)
     }
 
+    // get possible config purposes as a set
+    const configPurposes: {[key: string]: boolean} = {};
+    if (this._config.purposes) {
+      for (const p of this._config.purposes) {
+        configPurposes[p.code] = true
+      }
+    }
+
     let shouldCreatePermits = false
     for (const key in sessionConsent.purposes) {
       // check if sessionConsent has additional values
       if (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
         !Object.prototype.hasOwnProperty.call(c.purposes, key)) {
         // confirm purpose code in config
-        if (this._config && this._config.purposes && Object.prototype.hasOwnProperty.call(this._config.purposes, key)) {
+        if (configPurposes[key]) {
           c.purposes[key] = sessionConsent.purposes[key];
           shouldCreatePermits = true;
         }
