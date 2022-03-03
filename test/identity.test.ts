@@ -51,12 +51,24 @@ describe('identity', () => {
             type: 'window',
             variable: 'window.foo2()',
           },
+          f3: {
+            type: 'window',
+            variable: 'window.foo3',
+          },
+          f4: {
+            type: 'window',
+            variable: 'window.foo4',
+          },
         }
       };
       const ketch = new Ketch((config as any) as Configuration);
 
       // @ts-ignore
       window['foo1'] = 'wfv1';
+      // @ts-ignore
+      window['foo3'] = '0';
+      // @ts-ignore
+      window['foo4'] = '';
 
       const r = ketch.collectIdentities().then(
         (ids) => {
