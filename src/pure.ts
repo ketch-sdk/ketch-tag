@@ -1035,7 +1035,9 @@ export class Ketch {
     return Promise.all(promises).then(items => {
       for (const item of items) {
         if (item.length === 2) {
-          identities[item[0]] = item[1]
+          if (!!item[1] && item[1] !== "0") {
+            identities[item[0]] = item[1]
+          }
         }
       }
       return identities
