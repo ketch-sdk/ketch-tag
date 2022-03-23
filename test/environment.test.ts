@@ -25,7 +25,7 @@ const devShort = {
   code: 'devShort',
   deploymentID: 'khGIVjDxxvy7dPN4lmAtV3',
   hash: '1392568836159292875',
-  pattern: 'aG9zdA==' // host
+  pattern: 'b2NhbGhvc3Q=' // ocalhost
 };
 
 const test = {
