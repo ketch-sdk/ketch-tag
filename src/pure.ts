@@ -785,7 +785,7 @@ export class Ketch {
       const e = this._config.environments[i];
       const pattern = atob(e.pattern || '');
 
-      if (pattern && new RegqExp(pattern).test(window.document.location.href) && (!environment.pattern ||
+      if (pattern && new RegExp(pattern).test(window.document.location.href) && (!environment.pattern ||
         (pattern.length > atob(environment.pattern).length))) {
         environment = e
       }
