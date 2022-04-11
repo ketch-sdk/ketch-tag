@@ -38,12 +38,24 @@ export function getCookie(key: string): Promise<string> {
 export function setCookie(key: string, value: any, ttl?: number): Promise<string> {
   log.trace('setItem', key, value);
 
+  const urlParts = window.document.location.href.split( ".")
+  let domain = ''
+  const urlPartsLength = urlParts.length
+  if (urlPartsLength > 3) {
+    // TODO handle other multipart suffixes
+    if (urlParts[urlPartsLength-2] == "co" && urlParts[urlPartsLength-1] == "uk") {
+      domain = '; domain=' + urlParts.slice(-3).join(".")
+    }
+  } else if (urlPartsLength > 2) {
+    domain = '; domain=' + urlParts.slice(-2).join(".")
+  }
+
   return new Promise((resolve, reject) => {
     try {
       const days = ttl || 1;
 
       const expires = new Date(Date.now() + days * 864e5).toUTCString();
-      window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+      window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/' + domain;
 
       resolve(value);
     } catch (e) {
