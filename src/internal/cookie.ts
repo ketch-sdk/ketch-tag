@@ -58,7 +58,7 @@ export function setCookie(key: string, value: any, ttl?: number): Promise<string
 
         // resolve if set, otherwise retry with an additional part on the domain
         if (v) {
-          resolve(value);
+          return resolve(value);
         }
       }
 
