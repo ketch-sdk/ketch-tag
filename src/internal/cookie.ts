@@ -51,10 +51,11 @@ export function setCookie(key: string, value: any, ttl?: number): Promise<string
 
         getCookie(key).then(() => {
           resolve(value);
+          return;
         })
       }
 
-      // set cookie without domain if hostnameParts.length < 2
+      // set cookie without domain if hostnameParts.length < 2 or other error
       window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
 
       resolve(value);
