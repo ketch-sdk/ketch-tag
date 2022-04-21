@@ -47,12 +47,19 @@ export function setCookie(key: string, value: any, ttl?: number): Promise<string
       // try to set cookie for last i parts of the domain
       // if cookie not found (likely because domain in public suffix list), retry with an additional part on the domain
       for (let i = 2; i <= hostnameParts.length; i++) {
+        // set cookie
         window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; domain=' + hostnameParts.slice(-1*i).join(".");
 
-        getCookie(key).then(() => {
+        // get cookie
+        const v = window.document.cookie.split('; ').reduce((r, v) => {
+          const parts = v.split('=');
+          return parts[0] === key ? decodeURIComponent(parts[1]) : r;
+        }, '');
+
+        // resolve if set, otherwise retry with an additional part on the domain
+        if (v) {
           resolve(value);
-          return;
-        })
+        }
       }
 
       // set cookie without domain if hostnameParts.length < 2 or other error
