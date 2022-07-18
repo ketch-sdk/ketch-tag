@@ -936,6 +936,10 @@ export class Ketch {
       }
     }
 
+    if ( context && typeof context === 'number') {
+      context = context.toString()
+    }
+
     return context;
   }
 
