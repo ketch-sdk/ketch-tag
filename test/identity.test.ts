@@ -59,6 +59,14 @@ describe('identity', () => {
             type: 'window',
             variable: 'window.foo4',
           },
+          f5: {
+            type: 'window',
+            variable: 'foo5.bar',
+          },
+          f6: {
+            type: 'window',
+            variable: 'foo6.bar',
+          },
         }
       };
       const ketch = new Ketch((config as any) as Configuration);
@@ -69,11 +77,15 @@ describe('identity', () => {
       window['foo3'] = '0';
       // @ts-ignore
       window['foo4'] = '';
+      // @ts-ignore
+      window['foo5'] = {'bar': 123};
+      // @ts-ignore
+      window['foo6'] = {'bar': null};
 
       const r = ketch.collectIdentities().then(
         (ids) => {
           return expect(ids).toEqual(
-            {'f1': 'wfv1'}
+            {'f1': 'wfv1', 'f5': '123'}
           );
         }
       )
