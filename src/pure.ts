@@ -53,11 +53,13 @@ enum ExperienceHidden {
 function getApiUrl(config: ketchapi.Configuration): string {
   if (config.services) {
     let url = config.services[constants.SHORELINE]
-    if (!url.endsWith('web/v2')) {
-      if (!url.endsWith('/')) {
-        url = url + '/';
-      }
-      url = url + 'web/v2';
+    // url must not end in '/'
+    if (url.endsWith('/')) {
+      url = url.slice(0, -1)
+    }
+    // url must end in /web/v2 if not set
+    if (!url.endsWith('/web/v2')) {
+      url = url + '/web/v2';
     }
     return url
   }
