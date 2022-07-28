@@ -1,6 +1,6 @@
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest/utils';
+import {mocked} from 'ts-jest';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';

@@ -1,4 +1,4 @@
-import {mocked} from 'ts-jest/utils';
+import {mocked} from 'ts-jest';
 
 jest.mock('@ketch-sdk/ketch-web-api');
 

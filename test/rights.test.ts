@@ -1,6 +1,6 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 
-import {mocked} from 'ts-jest/utils';
+import {mocked} from 'ts-jest';
 import {Configuration, invokeRight} from '@ketch-sdk/ketch-web-api';
 import {Ketch} from '../src/pure';
 

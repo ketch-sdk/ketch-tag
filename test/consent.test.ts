@@ -1,6 +1,6 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 
-import {mocked} from 'ts-jest/utils';
+import {mocked} from 'ts-jest';
 import {Configuration, getConsent, setConsent} from '@ketch-sdk/ketch-web-api';
 import errors from '../src/internal/errors';
 import {Ketch} from '../src/pure';
