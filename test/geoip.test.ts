@@ -1,11 +1,9 @@
-import {mocked} from 'ts-jest';
-
 jest.mock('@ketch-sdk/ketch-web-api');
 
 import {Configuration, getLocation, GetLocationResponse, IPInfo} from '@ketch-sdk/ketch-web-api';
 import {Ketch} from '../src/pure';
 
-const mockGetLocation = mocked(getLocation);
+const mockGetLocation = jest.mocked(getLocation);
 
 describe('geoip', () => {
   describe('getGeoIP', () => {

@@ -1,16 +1,15 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration, getLocation, GetLocationResponse} from '@ketch-sdk/ketch-web-api';
 
-const mockGetLocation = mocked(getLocation);
+const mockGetLocation = jest.mocked(getLocation);
 
 describe('regionInfo', () => {
-  const mockParametersGet = mocked(parameters.get);
+  const mockParametersGet = jest.mocked(parameters.get);
 
   describe('getRegionInfo', () => {
     it('returns the existing region info', () => {

@@ -1,6 +1,5 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 
-import {mocked} from 'ts-jest';
 import {Configuration, getConsent, setConsent} from '@ketch-sdk/ketch-web-api';
 import errors from '../src/internal/errors';
 import {Ketch} from '../src/pure';
@@ -150,7 +149,7 @@ describe('consent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config);
 
-      const mockGetConsent = mocked(getConsent);
+      const mockGetConsent = jest.mocked(getConsent);
 
       mockGetConsent.mockResolvedValue({
         purposes: {
@@ -215,7 +214,7 @@ describe('consent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config);
 
-      const mockSetConsent = mocked(setConsent);
+      const mockSetConsent = jest.mocked(setConsent);
       mockSetConsent.mockResolvedValue();
 
       return ketch.updateConsent(identities, {
@@ -312,7 +311,7 @@ describe('consent', () => {
   describe('getConsent', () => {
     const ketch = new Ketch(config);
 
-    const mockSetConsent = mocked(setConsent);
+    const mockSetConsent = jest.mocked(setConsent);
 
     it('returns the existing consent', () => {
       const c = {

@@ -1,6 +1,5 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 
-import {mocked} from 'ts-jest';
 import {Configuration, invokeRight} from '@ketch-sdk/ketch-web-api';
 import {Ketch} from '../src/pure';
 
@@ -68,7 +67,7 @@ describe('gangplank', () => {
 
   describe('invokeRights', () => {
     it('handles a call with full config', () => {
-      const mockInvokeRight = mocked(invokeRight);
+      const mockInvokeRight = jest.mocked(invokeRight);
       mockInvokeRight.mockResolvedValue();
 
       return ketch.invokeRight(data).then(() => {
@@ -111,7 +110,7 @@ describe('gangplank', () => {
     }
 
     it('skips if no rightsEmail', () => {
-      const mockInvokeRight = mocked(invokeRight);
+      const mockInvokeRight = jest.mocked(invokeRight);
       mockInvokeRight.mockResolvedValue();
       return ketch.invokeRight(dataNoEmail).then(() => {
         expect(mockInvokeRight).not.toHaveBeenCalled();
@@ -129,7 +128,7 @@ describe('gangplank', () => {
     }
 
     it('skips if no rights', () => {
-      const mockInvokeRight = mocked(invokeRight);
+      const mockInvokeRight = jest.mocked(invokeRight);
       mockInvokeRight.mockResolvedValue();
       return ketch.invokeRight(dataNoRight).then(() => {
         expect(mockInvokeRight).not.toHaveBeenCalled();

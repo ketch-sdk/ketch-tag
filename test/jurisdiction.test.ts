@@ -1,14 +1,13 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration, getLocation, GetLocationResponse} from '@ketch-sdk/ketch-web-api';
 
 describe('jurisdiction', () => {
-  const mockParametersGet = mocked(parameters.get);
+  const mockParametersGet = jest.mocked(parameters.get);
 
   describe('getJurisdiction', () => {
     it('returns the existing policy scope', () => {
@@ -36,7 +35,7 @@ describe('jurisdiction', () => {
     it('handles null regionInfo', () => {
       const ketch = new Ketch({} as Configuration);
 
-      const mockLoadRegionInfo = mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation);
 
       mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
 
@@ -50,7 +49,7 @@ describe('jurisdiction', () => {
         },
       } as Configuration);
 
-      const mockLoadRegionInfo = mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation);
       mockLoadRegionInfo.mockResolvedValue({
         location: {
           countryCode: 'GB'
@@ -78,7 +77,7 @@ describe('jurisdiction', () => {
         },
       } as any) as Configuration);
 
-      const mockLoadRegionInfo = mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation);
       mockLoadRegionInfo.mockResolvedValue({
         location: {
           countryCode: 'US',
@@ -100,7 +99,7 @@ describe('jurisdiction', () => {
         },
       } as any) as Configuration);
 
-      const mockLoadRegionInfo = mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation);
       mockLoadRegionInfo.mockResolvedValue({
         location: {
           countryCode: 'NA',
@@ -121,7 +120,7 @@ describe('jurisdiction', () => {
         },
       } as any) as Configuration);
 
-      const mockLoadRegionInfo = mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation);
       mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('default');

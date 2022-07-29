@@ -1,12 +1,11 @@
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration} from '@ketch-sdk/ketch-web-api';
 
-const mockParametersGet = mocked(parameters.get);
+const mockParametersGet = jest.mocked(parameters.get);
 
 const prod = {
   code: 'production',
