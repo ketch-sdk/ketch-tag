@@ -54,7 +54,7 @@ function init(): Promise<any> {
         r = entrypoint(x);
       }
 
-      if (r && r.then) {
+      if (r) {
         p.push(r);
       }
     }

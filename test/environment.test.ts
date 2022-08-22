@@ -1,12 +1,11 @@
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest/utils';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration} from '@ketch-sdk/ketch-web-api';
 
-const mockParametersGet = mocked(parameters.get);
+const mockParametersGet = jest.mocked(parameters.get);
 
 const prod = {
   code: 'production',
@@ -18,7 +17,7 @@ const dev = {
   code: 'dev',
   deploymentID: 'khGIVjDxxvy7dPN4lmAtV3',
   hash: '1392568836159292875',
-  pattern: 'bG9jYWxob3N0' // localhost
+  pattern: 'c2VuZGl0Lm5pbmph' // localhost
 };
 
 const devShort = {

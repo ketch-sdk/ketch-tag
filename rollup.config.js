@@ -15,6 +15,7 @@ const PLUGINS = [
   }),
   replace({
     _VERSION: JSON.stringify(pkg.version),
+    preventAssignment: true,
   }),
   nodeResolve()
 ];
