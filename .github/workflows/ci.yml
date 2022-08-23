@@ -22,17 +22,10 @@ jobs:
       uses: actions/setup-node@v3
       with:
         always-auth: true
-        registry-url: https://npm.pkg.github.com/
-        scope: ketch-com
-        node-version: 16
-        cache: 'npm'
-    - name: Setup Node
-      uses: actions/setup-node@v3
-      with:
-        always-auth: true
         registry-url: https://registry.npmjs.com/
         scope: ketch-sdk
         node-version: 16
+        cache: 'npm'
         token: ${{ secrets.NPM_TOKEN }}
     - name: Build and Publish
       run: winch ci
