@@ -305,7 +305,7 @@ export class Ketch {
    * @param c
    */
   shouldShowConsent(c: Consent): boolean {
-    if (this._config.experiences?.consent && this._config.purposes) {
+    if (this._config.purposes) {
       for (const p of this._config.purposes) {
         if (c.purposes[p.code] === undefined) {
           log.debug('shouldShowConsent', true);
