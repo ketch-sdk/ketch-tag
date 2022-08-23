@@ -35,6 +35,5 @@ jobs:
         node-version: 16
         cache: 'npm'
         token: ${{ secrets.NPM_TOKEN }}
-    - uses: winchci/actions-node@v14
     - name: Build and Publish
       run: winch ci
