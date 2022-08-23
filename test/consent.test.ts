@@ -424,7 +424,7 @@ describe('consent', () => {
       expect(ketch.shouldShowConsent({purposes: {analytics: true}})).not.toBeTruthy();
     });
 
-    it('does not show when no consent experience', () => {
+    it('still shows when no consent experience', () => {
       const ketch = new Ketch(({
         purposes: [
           {
@@ -437,7 +437,7 @@ describe('consent', () => {
         ]
       } as any) as Configuration);
 
-      expect(ketch.shouldShowConsent({purposes: {}})).not.toBeTruthy();
+      expect(ketch.shouldShowConsent({purposes: {}})).toBeTruthy();
     });
 
     it('shows when options', () => {
