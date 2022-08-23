@@ -111,7 +111,8 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
         if (boot && boot.services) {
           let lanyardPath = boot.services[constants.LANYARD]
           if (lanyardPath) {
-            lanyardPath = lanyardPath.split('.').slice(0,-1).join('.')+`.${cfg.language}.js`
+            const lastIndex = lanyardPath.lastIndexOf('.');
+            lanyardPath = lanyardPath.slice(0,lastIndex)+`.${cfg.language}.js`
             return load(lanyardPath).then(() => new Ketch(cfg))
           }
         }
