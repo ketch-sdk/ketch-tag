@@ -62,7 +62,10 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
 
   // A map from regular expressions to module names that allow to stub out resources with a single module
-  // moduleNameMapper: {},
+  moduleNameMapper: {
+    // Force module uuid to resolve with the CJS entry point, because Jest does not support package.json.exports. See https://github.com/uuidjs/uuid/issues/451
+    "uuid": require.resolve('uuid'),
+  },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
   // modulePathIgnorePatterns: [],
@@ -124,7 +127,9 @@ module.exports = {
   testEnvironment: 'jest-environment-jsdom',
 
   // Options that will be passed to the testEnvironment
-  // testEnvironmentOptions: {},
+  testEnvironmentOptions: {
+    url: "https://sendit.ninja/",
+  },
 
   // Adds a location field to test results
   // testLocationInResults: false,

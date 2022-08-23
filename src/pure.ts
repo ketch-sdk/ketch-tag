@@ -448,11 +448,12 @@ export class Ketch {
     // Merge new consent into existing consent
     if (this.hasConsent()) {
       const existingConsent = this._consent.getRawValue();
-
-      for (const key in existingConsent) {
-        if (Object.prototype.hasOwnProperty.call(existingConsent, key) &&
-          !Object.prototype.hasOwnProperty.call(c, key)) {
-          c.purposes[key] = existingConsent.purposes[key];
+      if (existingConsent) {
+        for (const key in existingConsent) {
+          if (Object.prototype.hasOwnProperty.call(existingConsent, key) &&
+            !Object.prototype.hasOwnProperty.call(c, key)) {
+            c.purposes[key] = existingConsent.purposes[key];
+          }
         }
       }
     }
@@ -1158,7 +1159,7 @@ export class Ketch {
           return ps.scopes[region];
         }
 
-        return ps.defaultScopeCode;
+        return ps.defaultScopeCode || '';
       })
       .then(x => {
         if (x) {
@@ -1263,7 +1264,6 @@ export class Ketch {
   /**
    * Invoke rights.
    *
-   * @param identities
    * @param eventData
    */
   invokeRight(eventData: InvokeRightsEvent): Promise<void> {

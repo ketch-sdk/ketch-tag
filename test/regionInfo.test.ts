@@ -1,16 +1,15 @@
 jest.mock('@ketch-sdk/ketch-web-api');
 jest.mock('../src/internal/parameters');
 
-import {mocked} from 'ts-jest/utils';
 import errors from '../src/internal/errors';
 import parameters from '../src/internal/parameters';
 import {Ketch} from '../src/pure';
 import {Configuration, getLocation, GetLocationResponse} from '@ketch-sdk/ketch-web-api';
 
-const mockGetLocation = mocked(getLocation);
+const mockGetLocation = jest.mocked(getLocation);
 
 describe('regionInfo', () => {
-  const mockParametersGet = mocked(parameters.get);
+  const mockParametersGet = jest.mocked(parameters.get);
 
   describe('getRegionInfo', () => {
     it('returns the existing region info', () => {
@@ -42,7 +41,7 @@ describe('regionInfo', () => {
         location: {
           ip: '10.11.12.13'
         }
-      });
+      } as GetLocationResponse);
 
       return expect(ketch.loadRegionInfo()).rejects.toBe(errors.unrecognizedLocationError);
     });
@@ -57,7 +56,7 @@ describe('regionInfo', () => {
           countryCode: 'UK',
           regionCode: 'CA'
         }
-      });
+      } as GetLocationResponse);
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('UK');
     });
@@ -71,7 +70,7 @@ describe('regionInfo', () => {
           ip: '10.11.12.13',
           countryCode: 'AU'
         }
-      });
+      } as GetLocationResponse);
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('AU');
     });
@@ -86,7 +85,7 @@ describe('regionInfo', () => {
           countryCode: 'US',
           regionCode: 'CA'
         }
-      });
+      } as GetLocationResponse);
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('US-CA');
     });
@@ -100,7 +99,7 @@ describe('regionInfo', () => {
           ip: '10.11.12.13',
           countryCode: 'AU'
         }
-      });
+      } as GetLocationResponse);
 
       mockParametersGet.mockImplementationOnce((key) => {
         if (key === parameters.REGION) return 'FOO';

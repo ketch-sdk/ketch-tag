@@ -1,11 +1,9 @@
-import {mocked} from 'ts-jest/utils';
-
 jest.mock('@ketch-sdk/ketch-web-api');
 
 import {Configuration, getLocation, GetLocationResponse, IPInfo} from '@ketch-sdk/ketch-web-api';
 import {Ketch} from '../src/pure';
 
-const mockGetLocation = mocked(getLocation);
+const mockGetLocation = jest.mocked(getLocation);
 
 describe('geoip', () => {
   describe('getGeoIP', () => {
@@ -30,7 +28,7 @@ describe('geoip', () => {
         location: {
           ip: '1.2.3.5'
         }
-      };
+      } as GetLocationResponse;
       mockGetLocation.mockResolvedValue(ip);
 
       const ketch = new Ketch({} as Configuration);
