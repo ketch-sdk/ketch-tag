@@ -14,15 +14,18 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-    - uses: actions/checkout@v2.4.0
-    - uses: actions/cache@v2.1.6
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup Winch
+      uses: winchci/setup-winch@v1
+    - name: Setup Node
+      uses: actions/setup-node@v3
       with:
-        path: ~/.npm
-        key: v2-node-dep-${{ hashFiles('package-lock.json') }}
-        restore-keys: v2-node-dep-
-    - run: |
-        echo "//registry.npmjs.com/:_authToken=${NPM_TOKEN}" > .npmrc
-        echo "@ketch-sdk:registry=https://registry.npmjs.com/" >> .npmrc
-        echo "@ketch-com:registry=https://registry.npmjs.com/" >> .npmrc
-        echo "always-auth=true" >> .npmrc
-    - uses: winchci/actions-node@v14
+        always-auth: true
+        registry-url: https://registry.npmjs.com/
+        scope: ketch-sdk
+        node-version: 16
+        cache: 'npm'
+        token: ${{ secrets.NPM_TOKEN }}
+    - name: Build and Publish
+      run: winch ci
