@@ -4,7 +4,7 @@
  * @param param
  */
 function prefixed(param: string): string {
-  return `swb_${param}`;
+  return `swb_${param}`
 }
 
 export default {
@@ -16,6 +16,6 @@ export default {
   POLICY_SCOPE: prefixed('p'),
   LANGUAGE: prefixed('l'),
   SHOW: prefixed('show'),
-  get: (key: string, input: string): string => (new URLSearchParams(input)).get(key) || '',
-  has: (key: string, input: string): boolean => (new URLSearchParams(input)).has(key),
-};
+  get: (key: string, input: string): string => new URLSearchParams(input).get(key) || '',
+  has: (key: string, input: string): boolean => new URLSearchParams(input).has(key),
+}

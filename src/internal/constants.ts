@@ -12,5 +12,5 @@ export default {
   PREFERENCE: 'experiences.preference',
   SHORELINE: 'shoreline',
   LANYARD: 'lanyard',
-  SEMAPHORE: 'semaphore'
-};
+  SEMAPHORE: 'semaphore',
+}

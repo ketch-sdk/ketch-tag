@@ -1,6 +1,6 @@
-import errors from './errors';
-import loglevel from './logging';
-const log = loglevel.getLogger('cookie');
+import errors from './errors'
+import loglevel from './logging'
+const log = loglevel.getLogger('cookie')
 
 /**
  * Get a value from a cookie by the key.
@@ -8,24 +8,24 @@ const log = loglevel.getLogger('cookie');
  * @param key
  */
 export function getCookie(key: string): Promise<string> {
-  log.trace('getItem', key);
+  log.trace('getItem', key)
 
   return new Promise((resolve, reject) => {
     try {
       const v = window.document.cookie.split('; ').reduce((r, v) => {
-        const parts = v.split('=');
-        return parts[0] === key ? decodeURIComponent(parts[1]) : r;
-      }, '');
+        const parts = v.split('=')
+        return parts[0] === key ? decodeURIComponent(parts[1]) : r
+      }, '')
 
       if (v) {
-        resolve(v);
+        resolve(v)
       } else {
-        reject(errors.itemNotFoundError);
+        reject(errors.itemNotFoundError)
       }
     } catch (e) {
-      reject(e);
+      reject(e)
     }
-  });
+  })
 }
 
 /**
@@ -36,11 +36,11 @@ export function getCookie(key: string): Promise<string> {
  * @param ttl
  */
 export function setCookie(key: string, value: any, ttl?: number): Promise<string> {
-  log.trace('setItem', key, value);
+  log.trace('setItem', key, value)
 
-  const days = ttl || 1;
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  const hostnameParts = window.document.location.hostname.split( ".")
+  const days = ttl || 1
+  const expires = new Date(Date.now() + days * 864e5).toUTCString()
+  const hostnameParts = window.document.location.hostname.split('.')
 
   return new Promise((resolve, reject) => {
     try {
@@ -48,26 +48,33 @@ export function setCookie(key: string, value: any, ttl?: number): Promise<string
       // if cookie not found (likely because domain in public suffix list), retry with an additional part on the domain
       for (let i = 2; i <= hostnameParts.length; i++) {
         // set cookie
-        window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; domain=' + hostnameParts.slice(-1*i).join(".");
+        window.document.cookie =
+          key +
+          '=' +
+          encodeURIComponent(value) +
+          '; expires=' +
+          expires +
+          '; path=/; domain=' +
+          hostnameParts.slice(-1 * i).join('.')
 
         // get cookie
         const v = window.document.cookie.split('; ').reduce((r, v) => {
-          const parts = v.split('=');
-          return parts[0] === key ? decodeURIComponent(parts[1]) : r;
-        }, '');
+          const parts = v.split('=')
+          return parts[0] === key ? decodeURIComponent(parts[1]) : r
+        }, '')
 
         // resolve if set, otherwise retry with an additional part on the domain
         if (v) {
-          return resolve(value);
+          return resolve(value)
         }
       }
 
       // set cookie without domain if hostnameParts.length < 2 or other error
-      window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+      window.document.cookie = key + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/'
 
-      resolve(value);
+      resolve(value)
     } catch (e) {
-      reject(e);
+      reject(e)
     }
-  });
+  })
 }

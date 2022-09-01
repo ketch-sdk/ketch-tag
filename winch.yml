@@ -11,4 +11,3 @@ publish:
   command: npm publish  --access public
   branches:
     only: main
-

@@ -1,56 +1,58 @@
-jest.mock('@ketch-sdk/ketch-web-api');
+jest.mock('@ketch-sdk/ketch-web-api')
 
-import {Configuration, getLocation, GetLocationResponse, IPInfo} from '@ketch-sdk/ketch-web-api';
-import {Ketch} from '../src/pure';
+import { Configuration, getLocation, GetLocationResponse, IPInfo } from '@ketch-sdk/ketch-web-api'
+import { Ketch } from '../src/pure'
 
-const mockGetLocation = jest.mocked(getLocation);
+const mockGetLocation = jest.mocked(getLocation)
 
 describe('geoip', () => {
   describe('getGeoIP', () => {
     it('returns the existing geoip', () => {
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
       // @ts-ignore
       const ip: IPInfo = {
-        ip: '1.2.3.4'
-      };
+        ip: '1.2.3.4',
+      }
 
       return ketch.setGeoIP(ip).then(() => {
-        return expect(ketch.getGeoIP()).resolves.toEqual(ip);
-      });
-    });
-  });
+        return expect(ketch.getGeoIP()).resolves.toEqual(ip)
+      })
+    })
+  })
 
   describe('loadGeoIP', () => {
     it('loads the location information', () => {
       const ip: GetLocationResponse = {
         // @ts-ignore
         location: {
-          ip: '1.2.3.5'
-        }
-      } as GetLocationResponse;
-      mockGetLocation.mockResolvedValue(ip);
+          ip: '1.2.3.5',
+        },
+      } as GetLocationResponse
+      mockGetLocation.mockResolvedValue(ip)
 
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
-      return ketch.loadGeoIP()
+      return ketch
+        .loadGeoIP()
         .then((r: GetLocationResponse) => r.location)
-        .then(p => ketch.setGeoIP(p)).then(() => {
-          return expect(ketch.getGeoIP()).resolves.toEqual(ip.location);
-        });
-    });
-  });
+        .then(p => ketch.setGeoIP(p))
+        .then(() => {
+          return expect(ketch.getGeoIP()).resolves.toEqual(ip.location)
+        })
+    })
+  })
 
   describe('pushGeoIP', () => {
     it('pushes geoIP to dataLayer', () => {
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
       // @ts-ignore
       const g: IPInfo = {
         ip: '1.2.3.5',
         countryCode: 'US',
         regionCode: 'CA',
-      };
+      }
       ketch.pushGeoIP(g)
 
       // @ts-ignore
@@ -65,6 +67,6 @@ describe('geoip', () => {
         }
       }
       return expect(r).toEqual(g)
-    });
-  });
-});
+    })
+  })
+})

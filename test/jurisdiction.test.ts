@@ -1,140 +1,140 @@
-jest.mock('@ketch-sdk/ketch-web-api');
-jest.mock('../src/internal/parameters');
+jest.mock('@ketch-sdk/ketch-web-api')
+jest.mock('../src/internal/parameters')
 
-import errors from '../src/internal/errors';
-import parameters from '../src/internal/parameters';
-import {Ketch} from '../src/pure';
-import {Configuration, getLocation, GetLocationResponse} from '@ketch-sdk/ketch-web-api';
+import errors from '../src/internal/errors'
+import parameters from '../src/internal/parameters'
+import { Ketch } from '../src/pure'
+import { Configuration, getLocation, GetLocationResponse } from '@ketch-sdk/ketch-web-api'
 
 describe('jurisdiction', () => {
-  const mockParametersGet = jest.mocked(parameters.get);
+  const mockParametersGet = jest.mocked(parameters.get)
 
   describe('getJurisdiction', () => {
     it('returns the existing policy scope', () => {
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
-      const ps = 'gdpr';
+      const ps = 'gdpr'
       return ketch.setJurisdiction(ps).then(() => {
-        return expect(ketch.getJurisdiction()).resolves.toEqual(ps);
-      });
-    });
-  });
+        return expect(ketch.getJurisdiction()).resolves.toEqual(ps)
+      })
+    })
+  })
 
   describe('loadJurisdiction', () => {
     it('allows setting policy scope on query', () => {
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
-      mockParametersGet.mockImplementationOnce((key) => {
-        if (key === parameters.POLICY_SCOPE) return 'FOO';
-        return '';
-      });
+      mockParametersGet.mockImplementationOnce(key => {
+        if (key === parameters.POLICY_SCOPE) return 'FOO'
+        return ''
+      })
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('FOO');
-    });
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('FOO')
+    })
 
     it('handles null regionInfo', () => {
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation)
 
-      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
+      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError)
 
-      return expect(ketch.loadJurisdiction()).rejects.toBe(errors.noJurisdictionError);
-    });
+      return expect(ketch.loadJurisdiction()).rejects.toBe(errors.noJurisdictionError)
+    })
 
     it('loads from dataLayer', () => {
       const ketch = new Ketch({
         jurisdiction: {
           variable: 'foobar',
         },
-      } as Configuration);
+      } as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation)
       mockLoadRegionInfo.mockResolvedValue({
         location: {
-          countryCode: 'GB'
-        }
-      } as GetLocationResponse);
+          countryCode: 'GB',
+        },
+      } as GetLocationResponse)
 
       // @ts-ignore
-      window['dataLayer'] = [];
+      window['dataLayer'] = []
       // @ts-ignore
       window['dataLayer'].push({
         foobar: 'ccpa',
-      });
+      })
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa');
-    });
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
+    })
 
     it('locates specified policy scope', () => {
-      const ketch = new Ketch(({
+      const ketch = new Ketch({
         jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
-            'UK': 'gdpr',
+            UK: 'gdpr',
           },
         },
-      } as any) as Configuration);
+      } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation)
       mockLoadRegionInfo.mockResolvedValue({
         location: {
           countryCode: 'US',
-          regionCode: 'CA'
-        }
-      } as GetLocationResponse);
+          regionCode: 'CA',
+        },
+      } as GetLocationResponse)
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa');
-    });
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
+    })
 
     it('defaults policy scope if not found', () => {
-      const ketch = new Ketch(({
+      const ketch = new Ketch({
         jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
-            'UK': 'gdpr',
+            UK: 'gdpr',
           },
         },
-      } as any) as Configuration);
+      } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation);
+      const mockLoadRegionInfo = jest.mocked(getLocation)
       mockLoadRegionInfo.mockResolvedValue({
         location: {
           countryCode: 'NA',
-        }
-      } as GetLocationResponse);
+        },
+      } as GetLocationResponse)
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('default');
-    });
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
+    })
 
     it('defaults policy scope on reject', () => {
-      const ketch = new Ketch(({
+      const ketch = new Ketch({
         jurisdiction: {
           defaultScopeCode: 'default',
           scopes: {
             'US-CA': 'ccpa',
-            'UK': 'gdpr',
+            UK: 'gdpr',
           },
         },
-      } as any) as Configuration);
+      } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation);
-      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError);
+      const mockLoadRegionInfo = jest.mocked(getLocation)
+      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError)
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('default');
-    });
-  });
+      return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
+    })
+  })
 
   describe('pushJurisdiction', () => {
     it('pushes jurisdiction to dataLayer', () => {
-      const ps = "US-CA"
+      const ps = 'US-CA'
 
-      const ketch = new Ketch({} as Configuration);
+      const ketch = new Ketch({} as Configuration)
 
       ketch.pushJurisdiction(ps)
-      let dataLayerPS = "";
+      let dataLayerPS = ''
 
       // @ts-ignore
       for (const dl of window['dataLayer']) {
@@ -143,6 +143,6 @@ describe('jurisdiction', () => {
         }
       }
       return expect(dataLayerPS).toEqual(ps)
-    });
-  });
-});
+    })
+  })
+})

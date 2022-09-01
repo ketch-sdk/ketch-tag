@@ -9,5 +9,5 @@ export default {
   noJurisdictionError: new Error('no jurisdiction'),
   notImplementedError: new Error('not implemented'),
   timedOutError: (ms: number): Error => new Error(`Timed out in ${ms} ms.`),
-  itemNotFoundError: new Error('item not found')
-};
+  itemNotFoundError: new Error('item not found'),
+}
