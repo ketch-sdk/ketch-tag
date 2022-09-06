@@ -1,38 +1,32 @@
 {
-    "extends": [
-        "eslint:recommended",
-        "plugin:jest/recommended",
-        "plugin:jest/style",
-        "plugin:@typescript-eslint/recommended"
-    ],
-    "env": {
-        "browser": true,
-        "es6": true,
-        "jest/globals": true
-    },
-    "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
-    },
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": 2018,
-        "sourceType": "module"
-    },
-    "plugins": [
-        "@typescript-eslint/eslint-plugin",
-        "jest"
-    ],
-    "rules": {
-        "valid-jsdoc": "off",
-        "max-len": ["error", 120],
-        "comma-dangle": ["error", {
-            "arrays": "never",
-            "objects": "only-multiline",
-            "imports": "never",
-            "exports": "never",
-            "functions": "never"
-        }],
-        "@typescript-eslint/no-explicit-any": "off"
-    }
+  "extends": [
+    "eslint:recommended",
+    "plugin:jest/recommended",
+    "plugin:jest/style",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest/globals": true
+  },
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint/eslint-plugin", "jest"],
+  "rules": {
+    "no-empty-function": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "valid-jsdoc": "off",
+    "max-len": ["error", 120],
+    "comma-dangle": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-comment": "off"
+  }
 }

@@ -63,9 +63,7 @@
       "description": "Right to be forgotten."
     }
   ],
-  "regulations": [
-    "ccpa"
-  ],
+  "regulations": ["ccpa"],
   "purposes": [
     {
       "ID": "69cddc24-450b-4f8f-a068-9847077f63e5",

@@ -4,7 +4,7 @@
  * @param param
  */
 function prefixed(param: string): string {
-  return `swb_${param}`;
+  return `swb_${param}`
 }
 
 export default {
@@ -18,4 +18,4 @@ export default {
   LANGUAGE: prefixed('l'),
   serviceNamed: (name: string): string => prefixed(`s_${name}`),
   get: jest.fn(),
-};
+}

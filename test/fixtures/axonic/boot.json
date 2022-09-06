@@ -67,9 +67,7 @@
       "variable": "huid"
     }
   },
-  "scripts": [
-    "https://cdn.b10s.io/transom/route/semaphore/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/semaphore.js"
-  ],
+  "scripts": ["https://cdn.b10s.io/transom/route/semaphore/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/semaphore.js"],
   "services": {
     "astrolabe": "https://cdn.b10s.io/astrolabe/",
     "lanyard": "https://cdn.b10s.io/transom/route/lanyard/6c48ff2e-2ad4-44e0-a7e3-9a91f9bfd86d/",

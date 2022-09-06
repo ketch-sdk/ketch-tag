@@ -1,19 +1,19 @@
-jest.mock('@ketch-sdk/ketch-web-api');
+jest.mock('@ketch-sdk/ketch-web-api')
 
-import {Configuration, invokeRight} from '@ketch-sdk/ketch-web-api';
-import {Ketch} from '../src/pure';
+import { Configuration, invokeRight } from '@ketch-sdk/ketch-web-api'
+import { Ketch } from '../src/pure'
 
 describe('gangplank', () => {
   // @ts-ignore
   const config: Configuration = {
     organization: {
-      code: 'org'
+      code: 'org',
     },
     property: {
-      code: 'app'
+      code: 'app',
     },
     environment: {
-      code: 'env'
+      code: 'env',
     },
     jurisdiction: {
       code: 'ps',
@@ -28,7 +28,7 @@ describe('gangplank', () => {
         code: 'rtbf',
         name: 'Data Deletion',
         description: 'Right to be forgotten.',
-      }
+      },
     ],
     purposes: [
       // @ts-ignore
@@ -45,15 +45,15 @@ describe('gangplank', () => {
       {
         code: 'pacode4',
         legalBasisCode: 'lb4',
-      }
+      },
     ],
     options: {
-      migration: "3",
-    }
-  };
+      migration: '3',
+    },
+  }
   const identities = {
-    'email': 'rights@email.com'
-  };
+    email: 'rights@email.com',
+  }
   const data = {
     right: 'portability',
     firstName: 'first',
@@ -61,21 +61,21 @@ describe('gangplank', () => {
     rightsEmail: 'rights@email.com',
     country: 'United States',
     state: 'California',
-    details: ''
+    details: '',
   }
-  const ketch = new Ketch(config);
+  const ketch = new Ketch(config)
 
   describe('invokeRights', () => {
     it('handles a call with full config', () => {
-      const mockInvokeRight = jest.mocked(invokeRight);
-      mockInvokeRight.mockResolvedValue();
+      const mockInvokeRight = jest.mocked(invokeRight)
+      mockInvokeRight.mockResolvedValue()
 
       return ketch.invokeRight(data).then(() => {
-        const {property, jurisdiction, organization, environment} = config;
-        expect(property).not.toBeNull();
-        expect(jurisdiction).not.toBeNull();
-        expect(organization).not.toBeNull();
-        expect(environment).not.toBeNull();
+        const { property, jurisdiction, organization, environment } = config
+        expect(property).not.toBeNull()
+        expect(jurisdiction).not.toBeNull()
+        expect(organization).not.toBeNull()
+        expect(environment).not.toBeNull()
 
         if (property && jurisdiction && organization && environment) {
           expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
@@ -92,12 +92,12 @@ describe('gangplank', () => {
               email: 'rights@email.com',
               country: 'United States',
               stateRegion: 'California',
-              description: ''
-            }
-          });
+              description: '',
+            },
+          })
         }
-      });
-    });
+      })
+    })
 
     const dataNoEmail = {
       right: 'portability',
@@ -106,16 +106,16 @@ describe('gangplank', () => {
       rightsEmail: '',
       country: '',
       state: '',
-      details: ''
+      details: '',
     }
 
     it('skips if no rightsEmail', () => {
-      const mockInvokeRight = jest.mocked(invokeRight);
-      mockInvokeRight.mockResolvedValue();
+      const mockInvokeRight = jest.mocked(invokeRight)
+      mockInvokeRight.mockResolvedValue()
       return ketch.invokeRight(dataNoEmail).then(() => {
-        expect(mockInvokeRight).not.toHaveBeenCalled();
-      });
-    });
+        expect(mockInvokeRight).not.toHaveBeenCalled()
+      })
+    })
 
     const dataNoRight = {
       right: '',
@@ -124,15 +124,15 @@ describe('gangplank', () => {
       rightsEmail: 'rights@email.com',
       country: '',
       state: '',
-      details: ''
+      details: '',
     }
 
     it('skips if no rights', () => {
-      const mockInvokeRight = jest.mocked(invokeRight);
-      mockInvokeRight.mockResolvedValue();
+      const mockInvokeRight = jest.mocked(invokeRight)
+      mockInvokeRight.mockResolvedValue()
       return ketch.invokeRight(dataNoRight).then(() => {
-        expect(mockInvokeRight).not.toHaveBeenCalled();
-      });
-    });
-  });
-});
+        expect(mockInvokeRight).not.toHaveBeenCalled()
+      })
+    })
+  })
+})
