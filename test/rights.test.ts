@@ -78,6 +78,7 @@ describe('gangplank', () => {
         expect(environment).not.toBeNull()
 
         if (property && jurisdiction && organization && environment) {
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
             propertyCode: property.code,
             environmentCode: environment.code,
@@ -87,12 +88,16 @@ describe('gangplank', () => {
             jurisdictionCode: jurisdiction.code,
             rightCode: 'portability',
             user: {
+              country: 'United States',
+              description: '',
+              email: 'rights@email.com',
               first: 'first',
               last: 'last',
-              email: 'rights@email.com',
-              country: 'United States',
               stateRegion: 'California',
-              description: '',
+              addressLine1: '666 High St',
+              addressLine2: 'Apartment 420',
+              phone: '330-867-5309',
+              postalCode: '90210',
             },
           })
         }
