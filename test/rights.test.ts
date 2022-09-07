@@ -83,7 +83,6 @@ describe('gangplank', () => {
         expect(environment).not.toBeNull()
 
         if (property && jurisdiction && organization && environment) {
-          console.log('\n', `hello I got called `, '\n')
           // eslint-disable-next-line jest/no-conditional-expect
           expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
             propertyCode: property.code,
