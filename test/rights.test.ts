@@ -55,18 +55,13 @@ describe('gangplank', () => {
     email: 'rights@email.com',
   }
   const data = {
-    addressLine1: '123 Sunshine Blvd',
-    addressLine2: 'Apartment 1',
-    country: 'United States',
-    details: '',
+    right: 'portability',
     firstName: 'first',
     lastName: 'last',
-    phoneNumber: '330-867-5309',
-    postalCode: '90210',
-    right: 'portability',
     rightsEmail: 'rights@email.com',
-    state: 'California',
-    stateRegion: 'CA',
+    country: 'United States',
+    stateRegion: 'California',
+    details: '',
   }
   const ketch = new Ketch(config)
 
@@ -93,18 +88,12 @@ describe('gangplank', () => {
             jurisdictionCode: jurisdiction.code,
             rightCode: 'portability',
             user: {
-              addressLine1: '123 Sunshine Blvd',
-              addressLine2: 'Apartment 1',
+              first: 'first',
+              last: 'last',
+              email: 'rights@email.com',
               country: 'United States',
-              details: '',
-              firstName: 'first',
-              lastName: 'last',
-              phoneNumber: '330-867-5309',
-              postalCode: '90210',
-              right: 'portability',
-              rightsEmail: 'rights@email.com',
-              state: 'California',
-              stateRegion: 'CA',
+              stateRegion: 'California',
+              description: '',
             },
           })
         }
