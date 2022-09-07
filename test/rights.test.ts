@@ -55,13 +55,18 @@ describe('gangplank', () => {
     email: 'rights@email.com',
   }
   const data = {
-    right: 'portability',
+    addressLine1: '123 Sunshine Blvd',
+    addressLine2: 'Apartment 1',
+    country: 'United States',
+    details: '',
     firstName: 'first',
     lastName: 'last',
+    phoneNumber: '330-867-5309',
+    postalCode: '90210',
+    right: 'portability',
     rightsEmail: 'rights@email.com',
-    country: 'United States',
     state: 'California',
-    details: '',
+    stateRegion: 'CA',
   }
   const ketch = new Ketch(config)
 
@@ -78,6 +83,7 @@ describe('gangplank', () => {
         expect(environment).not.toBeNull()
 
         if (property && jurisdiction && organization && environment) {
+          console.log('\n', `hello I got called `, '\n')
           // eslint-disable-next-line jest/no-conditional-expect
           expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
             propertyCode: property.code,
@@ -88,16 +94,18 @@ describe('gangplank', () => {
             jurisdictionCode: jurisdiction.code,
             rightCode: 'portability',
             user: {
+              addressLine1: '123 Sunshine Blvd',
+              addressLine2: 'Apartment 1',
               country: 'United States',
-              description: '',
-              email: 'rights@email.com',
-              first: 'first',
-              last: 'last',
-              stateRegion: 'California',
-              addressLine1: '666 High St',
-              addressLine2: 'Apartment 420',
-              phone: '330-867-5309',
+              details: '',
+              firstName: 'first',
+              lastName: 'last',
+              phoneNumber: '330-867-5309',
               postalCode: '90210',
+              right: 'portability',
+              rightsEmail: 'rights@email.com',
+              state: 'California',
+              stateRegion: 'CA',
             },
           })
         }
