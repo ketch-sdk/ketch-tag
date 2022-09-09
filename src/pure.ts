@@ -1328,12 +1328,8 @@ export class Ketch {
       first: eventData.firstName,
       last: eventData.lastName,
       country: eventData.country,
-      stateRegion: eventData.stateRegion,
+      stateRegion: eventData.state,
       description: eventData.details,
-      phone: eventData.phoneNumber,
-      postalCode: eventData.postalCode,
-      addressLine1: eventData.addressLine1,
-      addressLine2: eventData.addressLine2,
     }
 
     const request: ketchapi.InvokeRightRequest = {
