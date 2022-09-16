@@ -137,7 +137,7 @@ export class Ketch {
   _regionInfo: Future<string>
   _origin: string
   _shouldConsentExperienceShow: boolean
-  _provisionConsent?: Consent
+  _provisionalConsent?: Consent
   /**
    * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
    */
@@ -200,7 +200,7 @@ export class Ketch {
     this._showPreferenceExperience = undefined
     this._showConsentExperience = undefined
     this._shouldConsentExperienceShow = false
-    this._provisionConsent = undefined
+    this._provisionalConsent = undefined
   }
 
   /**
@@ -502,24 +502,24 @@ export class Ketch {
   }
 
   /**
- * Set to provision consent.
+ * Set to provisional consent.
  *
  */
-     setProvisionConsent(c : Consent) {
-      this._provisionConsent = c
+   setProvisionalConsent(c : Consent) {
+      this._provisionalConsent = c
     }
   /**
-   * override provision consent on retrieved consent from the server.
+   * override provisional consent on retrieved consent from the server.
    *
    * @param c current consent
    */
-    mergeProvisionConsent(c : Consent, provisionConsent: Consent): Promise<Consent> {
+   overrideWithProvisionalConsent(c : Consent, provisionalConsent: Consent): Promise<Consent> {
       return new Promise(resolve => {
-        if(!provisionConsent){
+        if(!provisionalConsent){
           resolve(c)
         }
-        for (const key in provisionConsent.purposes) {
-            c.purposes[key] = provisionConsent.purposes[key]
+        for (const key in provisionalConsent.purposes) {
+            c.purposes[key] = provisionalConsent.purposes[key]
         }
         resolve(c)
       })
@@ -595,10 +595,10 @@ export class Ketch {
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities)
-          .then(c => this.mergeProvisionConsent(c, this._provisionConsent!))
+          .then(c => this.overrideWithProvisionalConsent(c, this._provisionalConsent!))
           .then(c => this.mergeSessionConsent(c, sessionConsent))
           .then(c => {
-            this._provisionConsent = undefined
+            this._provisionalConsent = undefined
             let shouldCreatePermits = false
 
             // check if shouldShowConsent before populating permits

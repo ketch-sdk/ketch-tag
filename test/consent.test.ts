@@ -475,9 +475,9 @@ describe('consent', () => {
   })
 })
 
-describe('mergeProvisionConsent', () => {
+describe('overrideWithProvisionalConsent', () => {
   const ketch = new Ketch({}as any as Configuration)
-  it('merge provision Consent when both have value', () => {
+  it('overrideWithProvisionalConsent when server side consent and provisional consent both have value', () => {
     const serverConsent = {
       purposes : {
         analytics : true,
@@ -499,12 +499,12 @@ describe('mergeProvisionConsent', () => {
     } 
 
     return ketch
-      .mergeProvisionConsent(serverConsent, provisionConsent)
+      .overrideWithProvisionalConsent(serverConsent, provisionConsent)
       .then(x => {
         expect(x).toEqual(result)
       })
   })
-  it('merge provision Consent when provision consent empty ', () => {
+  it('overrideWithProvisionalConsent  when provisional consent empty ', () => {
     const serverConsent = {
       purposes : {
         analytics : true,
@@ -513,7 +513,7 @@ describe('mergeProvisionConsent', () => {
 
     const provisionConsent = undefined
     return ketch
-      .mergeProvisionConsent(serverConsent, provisionConsent!)
+      .overrideWithProvisionalConsent(serverConsent, provisionConsent!)
       .then(x => {
         expect(x).toEqual(serverConsent)
       })
