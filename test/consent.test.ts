@@ -474,3 +474,48 @@ describe('consent', () => {
     })
   })
 })
+
+describe('mergeProvisionConsent', () => {
+  const ketch = new Ketch({}as any as Configuration)
+  it('merge provision Consent when both have value', () => {
+    const serverConsent = {
+      purposes : {
+        analytics : true,
+        advertising : true
+      }}
+
+    const provisionConsent = {
+      purposes : {
+        advertising : false,
+        data_sales : false
+      }
+    } 
+    const result = {
+      purposes : {
+        analytics : true,
+        advertising : false,
+        data_sales : false
+      }
+    } 
+
+    return ketch
+      .mergeProvisionConsent(serverConsent, provisionConsent)
+      .then(x => {
+        expect(x).toEqual(result)
+      })
+  })
+  it('merge provision Consent when provision consent empty ', () => {
+    const serverConsent = {
+      purposes : {
+        analytics : true,
+        advertising : true
+      }}
+
+    const provisionConsent = undefined
+    return ketch
+      .mergeProvisionConsent(serverConsent, provisionConsent!)
+      .then(x => {
+        expect(x).toEqual(serverConsent)
+      })
+  })
+})
