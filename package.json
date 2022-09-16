@@ -21,7 +21,7 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "dependencies": {
-    "@ketch-sdk/ketch-plugin": "^0.3.0",
+    "@ketch-sdk/ketch-plugin": "^0.3.1",
     "@ketch-sdk/ketch-web-api": "^0.2.0",
     "uuid": "^8.3.2"
   },
