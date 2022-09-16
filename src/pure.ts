@@ -136,7 +136,7 @@ export class Ketch {
   _jurisdiction: Future<string>
   _regionInfo: Future<string>
   _origin: string
-  _isConsentExperienceShow: boolean
+  _shouldConsentExperienceShow: boolean
 
   /**
    * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
@@ -199,7 +199,7 @@ export class Ketch {
     this._invokeRights = []
     this._showPreferenceExperience = undefined
     this._showConsentExperience = undefined
-    this._isConsentExperienceShow = false
+    this._shouldConsentExperienceShow = false
   }
 
   /**
@@ -306,9 +306,9 @@ export class Ketch {
    * @param c
    */
   shouldShowConsent(c: Consent): boolean {
-    if(this._isConsentExperienceShow){
+    if(this._shouldConsentExperienceShow){
       log.debug('shouldShowConsent', true)
-      this._isConsentExperienceShow = false
+      this._shouldConsentExperienceShow = false
       return true
     }
     if (this._config.purposes) {
@@ -497,7 +497,7 @@ export class Ketch {
  *
  */
   setShowConsentExperience() {
-    this._isConsentExperienceShow = true
+    this._shouldConsentExperienceShow = true
   }
 
   /**
