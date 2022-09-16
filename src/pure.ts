@@ -137,7 +137,7 @@ export class Ketch {
   _regionInfo: Future<string>
   _origin: string
   _shouldConsentExperienceShow: boolean
-
+  _provisionalConsent?: Consent
   /**
    * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
    */
@@ -200,6 +200,7 @@ export class Ketch {
     this._showPreferenceExperience = undefined
     this._showConsentExperience = undefined
     this._shouldConsentExperienceShow = false
+    this._provisionalConsent = undefined
   }
 
   /**
@@ -501,6 +502,29 @@ export class Ketch {
   }
 
   /**
+ * Set to provisional consent.
+ *
+ */
+   setProvisionalConsent(c : Consent) {
+      this._provisionalConsent = c
+    }
+  /**
+   * override provisional consent on retrieved consent from the server.
+   *
+   * @param c current consent
+   */
+   overrideWithProvisionalConsent(c : Consent, provisionalConsent: Consent): Promise<Consent> {
+      return new Promise(resolve => {
+        if(!provisionalConsent){
+          resolve(c)
+        }
+        for (const key in provisionalConsent.purposes) {
+            c.purposes[key] = provisionalConsent.purposes[key]
+        }
+        resolve(c)
+      })
+    }
+  /**
    * Merge session consent.
    *
    * This will merge consent retrieved from the server with consent stored in the client side session
@@ -571,8 +595,10 @@ export class Ketch {
     return this.getIdentities()
       .then(identities => {
         return this.fetchConsent(identities)
+          .then(c => this.overrideWithProvisionalConsent(c, this._provisionalConsent!))
           .then(c => this.mergeSessionConsent(c, sessionConsent))
           .then(c => {
+            this._provisionalConsent = undefined
             let shouldCreatePermits = false
 
             // check if shouldShowConsent before populating permits
