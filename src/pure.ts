@@ -6,9 +6,10 @@ import {
   Consent,
   Identities,
   InvokeRightsEvent,
+  Plugin,
+  PreferenceExperienceParams,
   ShowConsentExperience,
   ShowPreferenceExperience,
-  Plugin,
 } from '@ketch-sdk/ketch-plugin/src'
 import dataLayer from './internal/datalayer'
 import isEmpty from './internal/isEmpty'
@@ -122,11 +123,6 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
       return new Ketch(cfg)
     })
   })
-}
-
-export interface PreferenceExperienceParams {
-  showRightsTab?: boolean;
-  dataSubjectTypeCodes?: string[]
 }
 
 /**
@@ -1329,7 +1325,7 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
-        let modifiedConfig: ketchapi.Configuration = config
+        const modifiedConfig: ketchapi.Configuration = config
         // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
         if (params.showRightsTab === false) {
           modifiedConfig.rights = undefined
