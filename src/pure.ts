@@ -19,6 +19,15 @@ import { getCookie, setCookie } from './internal/cookie'
 import { v4 as uuidv4 } from 'uuid'
 import { load } from './internal/scripts'
 import constants from './internal/constants'
+import {
+  CanonicalPurpose,
+  Deployment,
+  Environment, Experience,
+  Identity,
+  JurisdictionInfo,
+  Organization, PolicyDocument,
+  Property, Purpose, Right, Theme, Vendor
+} from "@ketch-sdk/ketch-web-api/src";
 const log = loglevel.getLogger('ketch')
 
 const DEFAULT_MIGRATION_OPTION = 0
@@ -122,6 +131,11 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
       return new Ketch(cfg)
     })
   })
+}
+
+export interface PreferenceExperienceParams {
+  showRightsTab?: boolean;
+  dataSubjectTypeCodes?: string[]
 }
 
 /**
@@ -1314,7 +1328,7 @@ export class Ketch {
   /**
    * Shows the preferences manager.
    */
-  showPreferenceExperience(): Promise<Consent> {
+  showPreferenceExperience(params: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
 
     return Promise.all([this.getConfig(), this.getConsent()]).then(([config, consent]) => {
@@ -1324,8 +1338,12 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
+        let modifiedConfig: ketchapi.Configuration = config
+        if (!params.showRightsTab) {
+          modifiedConfig.rights = undefined
+        }
         this.willShowExperience(ExperienceType.Preference)
-        this._showPreferenceExperience(this, config, consent)
+        this._showPreferenceExperience(this, modifiedConfig, consent)
       }
 
       return consent
