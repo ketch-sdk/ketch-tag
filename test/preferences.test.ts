@@ -18,7 +18,7 @@ describe('preferences', () => {
       }
 
       return ketch.setConsent(c).then(() => {
-        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
+        return expect(ketch.showPreferenceExperience({})).resolves.toStrictEqual({ purposes: {}, vendors: [] })
       })
     })
 
@@ -31,7 +31,7 @@ describe('preferences', () => {
       }
 
       return ketch.setConsent(c).then(() => {
-        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
+        return expect(ketch.showPreferenceExperience({})).resolves.toStrictEqual({ purposes: {}, vendors: [] })
       })
     })
   })
