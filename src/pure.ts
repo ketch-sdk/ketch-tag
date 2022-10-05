@@ -19,15 +19,6 @@ import { getCookie, setCookie } from './internal/cookie'
 import { v4 as uuidv4 } from 'uuid'
 import { load } from './internal/scripts'
 import constants from './internal/constants'
-import {
-  CanonicalPurpose,
-  Deployment,
-  Environment, Experience,
-  Identity,
-  JurisdictionInfo,
-  Organization, PolicyDocument,
-  Property, Purpose, Right, Theme, Vendor
-} from "@ketch-sdk/ketch-web-api/src";
 const log = loglevel.getLogger('ketch')
 
 const DEFAULT_MIGRATION_OPTION = 0
@@ -1339,7 +1330,8 @@ export class Ketch {
 
       if (this._showPreferenceExperience) {
         let modifiedConfig: ketchapi.Configuration = config
-        if (!params.showRightsTab) {
+        // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
+        if (params.showRightsTab === false) {
           modifiedConfig.rights = undefined
         }
         this.willShowExperience(ExperienceType.Preference)
