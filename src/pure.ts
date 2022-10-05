@@ -6,9 +6,10 @@ import {
   Consent,
   Identities,
   InvokeRightsEvent,
+  Plugin,
+  PreferenceExperienceParams,
   ShowConsentExperience,
   ShowPreferenceExperience,
-  Plugin,
 } from '@ketch-sdk/ketch-plugin/src'
 import dataLayer from './internal/datalayer'
 import isEmpty from './internal/isEmpty'
@@ -1314,7 +1315,7 @@ export class Ketch {
   /**
    * Shows the preferences manager.
    */
-  showPreferenceExperience(): Promise<Consent> {
+  showPreferenceExperience(params: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
 
     return Promise.all([this.getConfig(), this.getConsent()]).then(([config, consent]) => {
@@ -1324,8 +1325,13 @@ export class Ketch {
       }
 
       if (this._showPreferenceExperience) {
+        const modifiedConfig: ketchapi.Configuration = config
+        // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
+        if (params.showRightsTab === false) {
+          modifiedConfig.rights = undefined
+        }
         this.willShowExperience(ExperienceType.Preference)
-        this._showPreferenceExperience(this, config, consent)
+        this._showPreferenceExperience(this, modifiedConfig, consent)
       }
 
       return consent
