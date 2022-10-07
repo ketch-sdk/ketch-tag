@@ -1387,7 +1387,7 @@ export class Ketch {
    *
    * @param params Preferences Manager preferences
    */
-  showPreferenceExperience(params: PreferenceExperienceParams): Promise<Consent> {
+  showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
 
     return Promise.all([this.getConfig(), this.getConsent()]).then(([config, consent]) => {
@@ -1399,7 +1399,7 @@ export class Ketch {
       if (this._showPreferenceExperience) {
         const modifiedConfig: ketchapi.Configuration = config
         // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
-        if (params.showRightsTab === false) {
+        if (params && params.showRightsTab === false) {
           modifiedConfig.rights = undefined
         }
         this.willShowExperience(ExperienceType.Preference)
