@@ -42,7 +42,7 @@ jobs:
         uses: conventional-actions/write-version@v1
         with:
           output_path: frontend/package.json
-          version: ${{ needs.setup.outputs.version-patch }}
+          version: ${{ needs.build.outputs.version-patch }}
       - name: Install dependencies
         run: npm ci
       - name: Build
