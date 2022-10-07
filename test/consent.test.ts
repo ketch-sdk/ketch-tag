@@ -476,46 +476,44 @@ describe('consent', () => {
 })
 
 describe('overrideWithProvisionalConsent', () => {
-  const ketch = new Ketch({}as any as Configuration)
+  const ketch = new Ketch({} as any as Configuration)
   it('overrideWithProvisionalConsent when server side consent and provisional consent both have value', () => {
     const serverConsent = {
-      purposes : {
-        analytics : true,
-        advertising : true
-      }}
+      purposes: {
+        analytics: true,
+        advertising: true,
+      },
+    }
 
     const provisionConsent = {
-      purposes : {
-        advertising : false,
-        data_sales : false
-      }
-    } 
+      purposes: {
+        advertising: false,
+        data_sales: false,
+      },
+    }
     const result = {
-      purposes : {
-        analytics : true,
-        advertising : false,
-        data_sales : false
-      }
-    } 
+      purposes: {
+        analytics: true,
+        advertising: false,
+        data_sales: false,
+      },
+    }
 
-    return ketch
-      .overrideWithProvisionalConsent(serverConsent, provisionConsent)
-      .then(x => {
-        expect(x).toEqual(result)
-      })
+    return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent).then(x => {
+      expect(x).toEqual(result)
+    })
   })
   it('overrideWithProvisionalConsent  when provisional consent empty ', () => {
     const serverConsent = {
-      purposes : {
-        analytics : true,
-        advertising : true
-      }}
+      purposes: {
+        analytics: true,
+        advertising: true,
+      },
+    }
 
     const provisionConsent = undefined
-    return ketch
-      .overrideWithProvisionalConsent(serverConsent, provisionConsent!)
-      .then(x => {
-        expect(x).toEqual(serverConsent)
-      })
+    return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent!).then(x => {
+      expect(x).toEqual(serverConsent)
+    })
   })
 })

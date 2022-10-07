@@ -1,11 +1,10 @@
 .editorconfig
 .eslintignore
 .eslintrc.json
-.github/
-.lefthook
+.github
+.idea
 babel.config.js
 jest.config.js
-lefthook.yml
 rollup.config.js
 tsconfig.json
 tsfmt.json

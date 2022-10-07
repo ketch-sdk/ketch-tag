@@ -20,6 +20,7 @@ import { getCookie, setCookie } from './internal/cookie'
 import { v4 as uuidv4 } from 'uuid'
 import { load } from './internal/scripts'
 import constants from './internal/constants'
+
 const log = loglevel.getLogger('ketch')
 
 const DEFAULT_MIGRATION_OPTION = 0
@@ -50,6 +51,8 @@ enum ExperienceHidden {
 
 /**
  * Service url
+ *
+ * @param config The configuration
  */
 function getApiUrl(config: ketchapi.Configuration): string {
   if (config.services) {
@@ -72,6 +75,7 @@ function getApiUrl(config: ketchapi.Configuration): string {
 /**
  * Loads the config.
  *
+ * @internal
  * @param boot The bootstrap configuration.
  */
 export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
@@ -129,53 +133,109 @@ export function newFromBootstrap(boot: ketchapi.Configuration): Promise<Ketch> {
  * Ketch class is the public interface to the Ketch web infrastructure services.
  */
 export class Ketch {
+  /**
+   * @internal
+   */
   _config: ketchapi.Configuration
+
+  /**
+   * @internal
+   */
   _consent: Future<Consent>
+
+  /**
+   * @internal
+   */
   _environment: Future<ketchapi.Environment>
+
+  /**
+   * @internal
+   */
   _geoip: Future<ketchapi.IPInfo>
+
+  /**
+   * @internal
+   */
   _identities: Future<Identities>
+
+  /**
+   * @internal
+   */
   _jurisdiction: Future<string>
+
+  /**
+   * @internal
+   */
   _regionInfo: Future<string>
+
+  /**
+   * @internal
+   */
   _origin: string
+
+  /**
+   * @internal
+   */
   _shouldConsentExperienceShow: boolean
+
+  /**
+   * @internal
+   */
   _provisionalConsent?: Consent
+
   /**
    * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
+   *
+   * @internal
    */
   _appDivs: AppDiv[]
 
   /**
    * hideExperience is the list of functions registered with onHideExperience
+   *
+   * @internal
    */
   _hideExperience: Callback[]
 
   /**
    * willShowExperience is the list of functions registered with onWillShowExperience
+   *
+   * @internal
    */
   _willShowExperience: Callback[]
 
   /**
    * invokeRights is the list of functions registered with onInvokeRight
+   *
+   * @internal
    */
   _invokeRights: Callback[]
 
   /**
    * showPreferenceExperience is the function registered with onShowPreferenceExperience
+   *
+   * @internal
    */
   _showPreferenceExperience?: ShowPreferenceExperience
 
   /**
    * showConsentExperience is the function registered with onShowConsentExperience
+   *
+   * @internal
    */
   _showConsentExperience?: ShowConsentExperience
 
   /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
+   *
+   * @internal
    */
   _isExperienceDisplayed?: boolean
 
   /**
    * hasExperienceBeenDisplayed is a bool representing whether an experience has been shown in a session
+   *
+   * @internal
    */
   _hasExperienceBeenDisplayed?: boolean
 
@@ -183,7 +243,7 @@ export class Ketch {
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
    * provided.
    *
-   * @param config
+   * @param config Ketch configuration
    */
   constructor(config: ketchapi.Configuration) {
     this._config = config
@@ -305,10 +365,10 @@ export class Ketch {
   /**
    * Determines if we should show the consent dialog.
    *
-   * @param c
+   * @param c Consent to be used
    */
   shouldShowConsent(c: Consent): boolean {
-    if(this._shouldConsentExperienceShow){
+    if (this._shouldConsentExperienceShow) {
       log.debug('shouldShowConsent', true)
       this._shouldConsentExperienceShow = false
       return true
@@ -335,7 +395,6 @@ export class Ketch {
   /**
    * Selects the correct experience.
    *
-   * @param config
    */
   selectExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
     if (this._config.purposes) {
@@ -353,6 +412,11 @@ export class Ketch {
     return 'experiences.consent.banner'
   }
 
+  /**
+   * Signals that an experience will be shown
+   *
+   * @param type The type of experience to be shown
+   */
   willShowExperience(type: string): void {
     if (this._config.options?.appDivs) {
       const appDivList = this._config.options.appDivs.split(',')
@@ -409,7 +473,7 @@ export class Ketch {
   /**
    * Trigger ketchPermitChanged event by pushing updated permit values to dataLayer
    *
-   * @param c
+   * @param c Consent
    */
   triggerPermitChangedEvent(c: Consent): void {
     log.info('triggerPermitChangedEvent')
@@ -434,7 +498,7 @@ export class Ketch {
   /**
    * Called when experience renderer tells us the user has updated consent.
    *
-   * @param data
+   * @param consent Consent to change
    */
   changeConsent(consent: Consent): Promise<any> {
     // check for new identifiers for tags that may fire after consent collected
@@ -446,7 +510,7 @@ export class Ketch {
   /**
    * Updates the client _consent value.
    *
-   * @param c
+   * @param c Consent to update
    */
   updateClientConsent(c: Consent): Promise<Consent> {
     log.info('updateClientConsent', c)
@@ -482,7 +546,7 @@ export class Ketch {
   /**
    * Sets the consent.
    *
-   * @param c
+   * @param c Consent to set
    */
   setConsent(c: Consent): Promise<Consent> {
     log.info('setConsent', c)
@@ -495,43 +559,48 @@ export class Ketch {
   }
 
   /**
- * Set to show consent experience
- *
- */
+   * Set to show consent experience
+   *
+   */
   setShowConsentExperience() {
     this._shouldConsentExperienceShow = true
   }
 
   /**
- * Set to provisional consent.
- *
- */
-   setProvisionalConsent(c : Consent) {
-      this._provisionalConsent = c
-    }
+   * Set to provisional consent.
+   *
+   * @param c Consent to set
+   */
+  setProvisionalConsent(c: Consent) {
+    this._provisionalConsent = c
+  }
+
   /**
    * override provisional consent on retrieved consent from the server.
    *
    * @param c current consent
+   * @param provisionalConsent the provisional consent
    */
-   overrideWithProvisionalConsent(c : Consent, provisionalConsent: Consent): Promise<Consent> {
-      return new Promise(resolve => {
-        if(!provisionalConsent){
-          resolve(c)
-        }
-        for (const key in provisionalConsent.purposes) {
-            c.purposes[key] = provisionalConsent.purposes[key]
-        }
+  overrideWithProvisionalConsent(c: Consent, provisionalConsent: Consent): Promise<Consent> {
+    return new Promise(resolve => {
+      if (!provisionalConsent) {
         resolve(c)
-      })
-    }
+      }
+      for (const key in provisionalConsent.purposes) {
+        c.purposes[key] = provisionalConsent.purposes[key]
+      }
+      resolve(c)
+    })
+  }
+
   /**
    * Merge session consent.
    *
    * This will merge consent retrieved from the server with consent stored in the client side session
    * to ensure that consent is consistent within a client session. If the session consent has consent
    * values that the server consent does not contain, setConsent will be called to update the server.
-   * Otherwise the client consent object and the session consent will be updated by calling
+   *
+   * Otherwise, the client consent object and the session consent will be updated by calling
    * updateClientConsent.
    *
    * @param c current consent
@@ -656,7 +725,7 @@ export class Ketch {
   /**
    * Registers a callback for consent change notifications.
    *
-   * @param callback
+   * @param callback The consent callback to register
    */
   onConsent(callback: Callback): void {
     this._consent.subscribe(callback)
@@ -665,7 +734,7 @@ export class Ketch {
   /**
    * Registers a callback for right invocations.
 
-   * @param callback
+   * @param callback The right callback to register
    */
   onInvokeRight(callback: Callback): void {
     this._invokeRights.push(callback)
@@ -674,7 +743,7 @@ export class Ketch {
   /**
    * Get the consent.
    *
-   * @param identities
+   * @param identities Identities to fetch consent for
    */
   fetchConsent(identities: Identities): Promise<Consent> {
     log.debug('getConsent', identities)
@@ -739,8 +808,8 @@ export class Ketch {
   /**
    * Update consent.
    *
-   * @param identities
-   * @param consent
+   * @param identities Identities to update consent for
+   * @param consent Consent to update
    */
   updateConsent(identities: Identities, consent: Consent): Promise<void> {
     log.debug('updateConsent', identities, consent)
@@ -808,7 +877,7 @@ export class Ketch {
   /**
    * Set the environment.
    *
-   * @param env
+   * @param env Environment to set
    */
   setEnvironment(env: ketchapi.Environment): Promise<ketchapi.Environment> {
     log.info('setEnvironment', env)
@@ -894,7 +963,7 @@ export class Ketch {
   /**
    * Registers a callback for environment change notifications.
    *
-   * @param callback
+   * @param callback Environment callback to register
    */
   onEnvironment(callback: Callback): void {
     this._environment.subscribe(callback)
@@ -903,7 +972,7 @@ export class Ketch {
   /**
    * Push the IPInfo to data layer.
    *
-   * @param g
+   * @param g IPInfo
    */
   pushGeoIP(g: ketchapi.IPInfo): number {
     log.info('pushGeoIP', g)
@@ -921,7 +990,7 @@ export class Ketch {
   /**
    * Set the IPInfo.
    *
-   * @param g
+   * @param g IPInfo
    */
   setGeoIP(g: ketchapi.IPInfo): Promise<ketchapi.IPInfo> {
     log.info('setGeoIP', g)
@@ -956,7 +1025,7 @@ export class Ketch {
   /**
    * Registers a callback for GeoIP change notifications.
    *
-   * @param callback
+   * @param callback GeoIP callback to register
    */
   onGeoIP(callback: Callback): void {
     this._geoip.subscribe(callback)
@@ -965,7 +1034,7 @@ export class Ketch {
   /**
    * Sets the identities.
    *
-   * @param id
+   * @param id Identities to set
    */
   setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id)
@@ -976,7 +1045,7 @@ export class Ketch {
   /**
    * Get a window property.
    *
-   * @param p
+   * @param p Property name
    */
   getProperty(p: string): string | null {
     const parts: string[] = p.split('.')
@@ -1141,17 +1210,16 @@ export class Ketch {
   /**
    * Registers a callback for identity change notifications.
    *
-   * @param callback
+   * @param callback Identities callback to register
    */
   onIdentities(callback: Callback): void {
     this._identities.subscribe(callback)
   }
 
-  // TODO anti corruption semaphore needed?
   /**
    * Push the JurisdictionInfo to data layer.
    *
-   * @param ps
+   * @param ps Jurisdiction to push
    */
   pushJurisdiction(ps: string): void {
     log.info('pushJurisdiction', ps)
@@ -1167,7 +1235,7 @@ export class Ketch {
   /**
    * Set the policy scope.
    *
-   * @param ps
+   * @param ps Jurisdiction to set
    */
   setJurisdiction(ps: string): Promise<string> {
     log.info('setJurisdiction', ps)
@@ -1192,7 +1260,7 @@ export class Ketch {
   /**
    * Registers a callback for policy scope change notifications.
    *
-   * @param callback
+   * @param callback Callback to register
    */
   onJurisdiction(callback: Callback): void {
     this._jurisdiction.subscribe(callback)
@@ -1251,6 +1319,8 @@ export class Ketch {
 
   /**
    * Set the region.
+   *
+   * @param info Region information
    */
   setRegionInfo(info: string): Promise<string> {
     log.info('setRegionInfo', info)
@@ -1306,14 +1376,16 @@ export class Ketch {
   /**
    * Registers a callback for region info change notifications.
    *
-   * @param callback
+   * @param callback Callback to register
    */
   onRegionInfo(callback: Callback): void {
     this._regionInfo.subscribe(callback)
   }
 
   /**
-   * Shows the preferences manager.
+   * Shows the Preferences Manager.
+   *
+   * @param params Preferences Manager preferences
    */
   showPreferenceExperience(params: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
@@ -1341,7 +1413,7 @@ export class Ketch {
   /**
    * Invoke rights.
    *
-   * @param eventData
+   * @param eventData Event data to invoke right with
    */
   invokeRight(eventData: InvokeRightsEvent): Promise<void> {
     log.debug('invokeRights', eventData)
@@ -1445,6 +1517,8 @@ export class Ketch {
   /**
    * onWillShowExperience called before an experience is shown
    * Used to trigger external dependencies
+   *
+   * @param callback Callback to register
    */
   onWillShowExperience(callback: Callback): void {
     this._willShowExperience.push(callback)
@@ -1453,6 +1527,8 @@ export class Ketch {
   /**
    * onHideExperience called after experience hidden
    * Used to trigger external dependencies
+   *
+   * @param callback Callback to register
    */
   onHideExperience(callback: Callback): void {
     this._hideExperience.push(callback)
@@ -1461,7 +1537,7 @@ export class Ketch {
   /**
    * onShowPreferenceExperience registers a function to handle showing preferences
    *
-   * @param callback
+   * @param callback Callback to register
    */
   onShowPreferenceExperience(callback: ShowPreferenceExperience): void {
     this._showPreferenceExperience = callback
@@ -1470,7 +1546,7 @@ export class Ketch {
   /**
    * onShowConsentExperience registers a function to handle showing consent
    *
-   * @param callback
+   * @param callback Callback to register
    */
   onShowConsentExperience(callback: ShowConsentExperience): void {
     this._showConsentExperience = callback
