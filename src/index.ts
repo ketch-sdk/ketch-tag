@@ -158,11 +158,7 @@ function entrypoint(fnName: string, ...args: any[]): Promise<any> {
 
   log.debug('entrypoint', fnName, args, argDecl)
 
-  if (args.length < argDecl.length) {
-    return Promise.reject(errors.missingArgumentsError(fnName))
-  }
-
-  if (args.length == argDecl.length) {
+  if (args.length <= argDecl.length) {
     return fn.apply(ketch, args)
   }
 

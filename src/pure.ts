@@ -1387,7 +1387,7 @@ export class Ketch {
    *
    * @param params Preferences Manager preferences
    */
-  showPreferenceExperience(params: PreferenceExperienceParams): Promise<Consent> {
+  showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
 
     return Promise.all([this.getConfig(), this.getConsent()]).then(([config, consent]) => {
