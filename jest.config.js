@@ -103,10 +103,10 @@ module.exports = {
   // restoreMocks: false,
 
   // The root directory that Jest should scan for tests and modules within
-  // rootDir: 'test',
+  rootDir: 'test',
 
   // A list of paths to directories that Jest should use to search for files in
-  roots: ['./test'],
+  // roots: ['./test'],
 
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
@@ -131,7 +131,7 @@ module.exports = {
 
   // The glob patterns Jest uses to detect test files
   testMatch: [
-    "test/**/*.test.ts"
+    "**/*.test.ts"
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
