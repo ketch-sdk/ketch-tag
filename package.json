@@ -2,20 +2,21 @@
   "name": "@ketch-sdk/ketch-tag",
   "version": "0.0.1",
   "description": "Ketch TypeScript/JavaScript Web Tag",
-  "main": "dist/ketch-tag.js",
-  "module": "dist/ketch-tag.esm.js",
-  "jsnext:main": "dist/ketch-tag.esm.js",
+  "main": "dist/index.js",
+  "module": "dist/pure.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "ncc build --minify --license licenses.txt src/index.ts",
+    "lint": "eslint src/**/*.ts",
     "test": "jest --runInBand",
-    "format": "npx prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
-    "docs": "npx typedoc --excludeInternal src/pure.ts"
+    "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
+    "format-check": "prettier --check '**/*.ts'",
+    "docs": "typedoc --githubPages true --excludeInternal src/index.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ketch-sdk/ketch-tag.git"
   },
-  "author": "Ketch (https://www.ketch.com/)",
+  "author": "Ketch Kloud, Inc. (https://www.ketch.com/)",
   "license": "MIT",
   "homepage": "https://github.com/ketch-sdk/ketch-tag#readme",
   "bugs": {
@@ -23,36 +24,29 @@
   },
   "dependencies": {
     "@ketch-sdk/ketch-plugin": "^0.3.3",
-    "@ketch-sdk/ketch-web-api": "^0.2.0",
-    "uuid": "^8.3.2"
+    "@ketch-sdk/ketch-web-api": "^0.3.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
-    "@babel/eslint-parser": "^7.18.9",
-    "@babel/preset-env": "^7.18.10",
-    "@babel/preset-typescript": "^7.18.6",
-    "@rollup/plugin-babel": "^5.3.1",
-    "@rollup/plugin-node-resolve": "^13.3.0",
-    "@rollup/plugin-replace": "^4.0.0",
-    "@types/jest": "^28.1.7",
+    "@jest/globals": "^29.1.2",
+    "@types/jest": "^29.1.2",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.34.0",
-    "@typescript-eslint/parser": "^5.34.0",
-    "babel-jest": "^28.1.3",
-    "eslint": "^8.22.0",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "@typescript-eslint/parser": "^5.39.0",
+    "@vercel/ncc": "^0.34.0",
+    "eslint": "^8.25.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jest": "^26.8.7",
+    "eslint-plugin-jest": "^27.1.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "jest": "^28.1.3",
-    "jest-environment-jsdom": "^28.1.3",
-    "jest-junit": "^14.0.0",
+    "jest": "^29.1.2",
+    "jest-environment-jsdom": "^29.1.2",
+    "jest-junit": "^14.0.1",
     "loglevel": "^1.8.0",
     "prettier": "^2.7.1",
-    "rollup": "^2.78.1",
-    "rollup-plugin-typescript2": "^0.33.0",
-    "ts-jest": "^28.0.8",
+    "ts-jest": "^29.0.3",
     "typedoc": "^0.23.15",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.4"
+
   }
 }

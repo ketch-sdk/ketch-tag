@@ -1,12 +1,7 @@
+.github/
 .editorconfig
 .eslintignore
 .eslintrc.json
-.github
-.idea
-babel.config.js
 jest.config.js
-rollup.config.js
 tsconfig.json
 tsfmt.json
-winch.yml
-test-reports
