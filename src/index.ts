@@ -120,6 +120,8 @@ function getAction(action: string): Function | undefined {
       return ketch.showPreferenceExperience
     case 'registerPlugin':
       return ketch.registerPlugin
+    case 'fireNativeEvent':
+      return ketch.fireNativeEvent
   }
 
   return undefined
@@ -218,6 +220,7 @@ function getGlobal(pusher?: Function): CommandEntry[] {
   // Override push if one is specified
   if (pusher !== undefined) {
     v.push = pusher
+    v.loaded = true
   }
 
   return v

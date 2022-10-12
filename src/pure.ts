@@ -49,6 +49,29 @@ enum ExperienceHidden {
   WillNotShow = 'willNotShow',
 }
 
+declare global {
+  type AndroidListeners = {
+    [name: string]: AndroidListener
+  }
+
+  type AndroidListener = {
+    (args?: any): void
+  }
+
+  type WKHandler = {
+    postMessage(args?: any): void
+  }
+
+  type WebKit = {
+    messageHandlers: {[name: string]: WKHandler}
+  }
+
+  interface Window {
+    androidListener: AndroidListeners
+    webkit: WebKit
+  }
+}
+
 /**
  * Service url
  *
@@ -1626,6 +1649,30 @@ export class Ketch {
     log.info('pollIdentity')
     for (const t of interval) {
       setTimeout(this.refreshIdentityConsent.bind(this), t)
+    }
+  }
+
+  /**
+   * Fires an event to the native listeners
+   *
+   * @param name Name of the event
+   * @param args Arguments to pass to the event
+   */
+  async fireNativeEvent(name: string, args?: any): Promise<void> {
+    if (window.androidListener) {
+      const listener = window.androidListener[name]
+      if (listener) {
+        listener(JSON.stringify(args))
+      } else {
+        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+      }
+    } else if (window.webkit?.messageHandlers) {
+      const listener = window.webkit.messageHandlers[name]
+      if (listener) {
+        listener.postMessage(JSON.stringify(args))
+      } else {
+        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+      }
     }
   }
 }

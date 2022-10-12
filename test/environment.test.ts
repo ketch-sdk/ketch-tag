@@ -17,7 +17,7 @@ const dev = {
   code: 'dev',
   deploymentID: 'khGIVjDxxvy7dPN4lmAtV3',
   hash: '1392568836159292875',
-  pattern: 'c2VuZGl0Lm5pbmph', // localhost
+  pattern: 'bG9jYWxob3N0', // localhost
 }
 
 const devShort = {
@@ -47,37 +47,49 @@ describe('environment', () => {
 
   describe('detectEnvironment', () => {
     it('returns null if no environments', () => {
-      const config = {
-        environments: [],
+      const config: Configuration = {
+        organization: {
+          code: ""
+        },
+        environments: []
       }
-      const ketch = new Ketch(config as any as Configuration)
+      const ketch = new Ketch(config)
 
       const env = ketch.detectEnvironment()
       return expect(env).rejects.toBe(errors.noEnvironmentError)
     })
 
-    it('selects dev by because it matches href', () => {
-      const config = {
+    it('selects dev because it matches href', () => {
+      const config: Configuration = {
+        organization: {
+          code: ""
+        },
         environments: [prod, dev, test],
       }
-      const ketch = new Ketch(config as any as Configuration)
+      const ketch = new Ketch(config)
 
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(dev)
     })
 
     it('selects longer match', () => {
-      const config = {
+      const config: Configuration = {
+        organization: {
+          code: ""
+        },
         environments: [devShort, dev],
       }
-      const ketch = new Ketch(config as any as Configuration)
+      const ketch = new Ketch(config)
 
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(dev)
     })
 
     it('allows selection of environment via query', () => {
-      const config = {
+      const config: Configuration = {
+        organization: {
+          code: ""
+        },
         environments: [prod, dev, test],
       }
 
@@ -86,17 +98,20 @@ describe('environment', () => {
         return ''
       })
 
-      const ketch = new Ketch(config as any as Configuration)
+      const ketch = new Ketch(config)
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(test)
     })
 
     it('selects production by default', () => {
-      const config = {
+      const config: Configuration = {
+        organization: {
+          code: ""
+        },
         environments: [prod, test],
       }
 
-      const ketch = new Ketch(config as any as Configuration)
+      const ketch = new Ketch(config)
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(prod)
     })
