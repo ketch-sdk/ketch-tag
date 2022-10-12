@@ -1,16 +1,15 @@
 {
-    "singleQuote": true,
-    "trailingComma": "all",
-    "printWidth": 120,
-    "semi": false,
-    "arrowParens": "avoid",
-    "overrides": [
-      {
-        "files": ["**/*.yml", "**/*.yaml"],
-        "options": {
-          "singleQuote": false
-        }
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 120,
+  "semi": false,
+  "arrowParens": "avoid",
+  "overrides": [
+    {
+      "files": ["**/*.yml", "**/*.yaml"],
+      "options": {
+        "singleQuote": false
       }
-    ]
-  }
-  
+    }
+  ]
+}

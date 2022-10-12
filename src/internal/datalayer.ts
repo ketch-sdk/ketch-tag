@@ -1,4 +1,9 @@
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
+
 export default function datalayer(): any[] {
-  // @ts-ignore
-  return (window['dataLayer'] = window['dataLayer'] || [])
+  return (window.dataLayer = window.dataLayer || [])
 }
