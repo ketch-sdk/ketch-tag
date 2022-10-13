@@ -7,9 +7,12 @@
   "jsnext:main": "dist/ketch-tag.esm.js",
   "scripts": {
     "build": "rollup -c",
+    "lint": "eslint src/**/*.ts",
     "test": "jest --runInBand",
-    "format": "npx prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
-    "docs": "npx typedoc --excludeInternal src/pure.ts"
+    "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
+    "format-check": "prettier --check '**/*.ts'",
+    "docs": "typedoc --githubPages true --excludeInternal src/index.ts"
+
   },
   "repository": {
     "type": "git",

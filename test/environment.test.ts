@@ -17,7 +17,7 @@ const dev = {
   code: 'dev',
   deploymentID: 'khGIVjDxxvy7dPN4lmAtV3',
   hash: '1392568836159292875',
-  pattern: 'bG9jYWxob3N0', // localhost
+  pattern: 'c2VuZGl0Lm5pbmph', // sendit.ninja
 }
 
 const devShort = {
@@ -36,22 +36,22 @@ const test = {
 
 describe('environment', () => {
   describe('getEnvironment', () => {
-    it('returns the existing environment', () => {
+    it('returns the existing environment', async () => {
       const ketch = new Ketch({} as Configuration)
 
-      return ketch.setEnvironment(dev).then(() => {
-        return expect(ketch.getEnvironment()).resolves.toBe(dev)
-      })
+      await ketch.setEnvironment(dev)
+      const env = await ketch.getEnvironment()
+      return expect(env).toBe(dev)
     })
   })
 
   describe('detectEnvironment', () => {
-    it('returns null if no environments', () => {
+    it('returns null if no environments', async () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
-        environments: []
+        environments: [],
       }
       const ketch = new Ketch(config)
 
@@ -59,36 +59,36 @@ describe('environment', () => {
       return expect(env).rejects.toBe(errors.noEnvironmentError)
     })
 
-    it('selects dev because it matches href', () => {
+    it('selects dev because it matches href', async () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, dev, test],
       }
       const ketch = new Ketch(config)
 
-      const env = ketch.detectEnvironment()
-      return expect(env).resolves.toBe(dev)
+      const env = await ketch.detectEnvironment()
+      return expect(env).toBe(dev)
     })
 
-    it('selects longer match', () => {
+    it('selects longer match', async () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [devShort, dev],
       }
       const ketch = new Ketch(config)
 
-      const env = ketch.detectEnvironment()
-      return expect(env).resolves.toBe(dev)
+      const env = await ketch.detectEnvironment()
+      return expect(env).toBe(dev)
     })
 
-    it('allows selection of environment via query', () => {
+    it('allows selection of environment via query', async () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, dev, test],
       }
@@ -99,21 +99,21 @@ describe('environment', () => {
       })
 
       const ketch = new Ketch(config)
-      const env = ketch.detectEnvironment()
-      return expect(env).resolves.toBe(test)
+      const env = await ketch.detectEnvironment()
+      return expect(env).toBe(test)
     })
 
-    it('selects production by default', () => {
+    it('selects production by default', async () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, test],
       }
 
       const ketch = new Ketch(config)
-      const env = ketch.detectEnvironment()
-      return expect(env).resolves.toBe(prod)
+      const env = await ketch.detectEnvironment()
+      return expect(env).toBe(prod)
     })
   })
 })

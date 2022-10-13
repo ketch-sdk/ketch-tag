@@ -25,7 +25,7 @@ if (document.readyState === 'loading') {
 /**
  * This is the entry point when this package is first loaded.
  */
-function init(): Promise<any> {
+async function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 
   if (!Array.isArray(initRequest) || initRequest[0] != 'init') {
@@ -139,7 +139,7 @@ function isFunction(obj: any): boolean {
 /**
  * This is the entrypoint for all calls into the platform calling actions from outside.
  */
-function entrypoint(fnName: string, ...args: any[]): Promise<any> {
+async function entrypoint(fnName: string, ...args: any[]): Promise<any> {
   log.trace(fnName, args)
 
   const fn = getAction(fnName)

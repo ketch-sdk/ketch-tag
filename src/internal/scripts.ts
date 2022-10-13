@@ -6,7 +6,7 @@ const log = loglevel.getLogger('scripts')
  *
  * @param src
  */
-export function load(src: string): Promise<any> {
+export async function load(src: string): Promise<any> {
   log.trace('load', src)
 
   return new Promise((resolve, reject) => {

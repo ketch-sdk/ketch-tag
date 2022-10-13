@@ -7,7 +7,7 @@ const log = loglevel.getLogger('cookie')
  *
  * @param key
  */
-export function getCookie(key: string): Promise<string> {
+export async function getCookie(key: string): Promise<string> {
   log.trace('getItem', key)
 
   return new Promise((resolve, reject) => {
@@ -35,7 +35,7 @@ export function getCookie(key: string): Promise<string> {
  * @param value
  * @param ttl
  */
-export function setCookie(key: string, value: any, ttl?: number): Promise<string> {
+export async function setCookie(key: string, value: any, ttl?: number): Promise<string> {
   log.trace('setItem', key, value)
 
   const days = ttl || 1

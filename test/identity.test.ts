@@ -134,7 +134,7 @@ describe('identity', () => {
       return r
     })
 
-    it('handles cookie properties', () => {
+    it('handles cookie properties', async () => {
       const config = {
         organization,
         identities: {
@@ -151,7 +151,8 @@ describe('identity', () => {
       const ketch = new Ketch(config as any as Configuration)
 
       document.cookie = 'cookie1=cfv1'
-      expect(ketch.collectIdentities()).resolves.toEqual({ f1: 'cfv1' })
+      const id = await ketch.collectIdentities()
+      expect(id).toEqual({ f1: 'cfv1' })
     })
 
     it('handles managed cookie properties', () => {

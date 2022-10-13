@@ -63,7 +63,7 @@ declare global {
   }
 
   type WebKit = {
-    messageHandlers: {[name: string]: WKHandler}
+    messageHandlers: { [name: string]: WKHandler }
   }
 
   interface Window {
@@ -292,7 +292,7 @@ export class Ketch {
    *
    * @param plugin The plugin to register
    */
-  registerPlugin(plugin: Plugin): void {
+  async registerPlugin(plugin: Plugin): Promise<void> {
     if (plugin.init) {
       plugin.init(this, this._config)
     }
@@ -381,8 +381,8 @@ export class Ketch {
   /**
    * Returns the configuration.
    */
-  getConfig(): Promise<ketchapi.Configuration> {
-    return Promise.resolve(this._config)
+  async getConfig(): Promise<ketchapi.Configuration> {
+    return this._config
   }
 
   /**
@@ -462,7 +462,7 @@ export class Ketch {
   /**
    * Shows the consent manager.
    */
-  showConsentExperience(): Promise<Consent> {
+  async showConsentExperience(): Promise<Consent> {
     log.info('showConsentExperience')
 
     let c: Promise<Consent | undefined>
@@ -523,7 +523,7 @@ export class Ketch {
    *
    * @param consent Consent to change
    */
-  changeConsent(consent: Consent): Promise<any> {
+  async changeConsent(consent: Consent): Promise<any> {
     // check for new identifiers for tags that may fire after consent collected
     this.pollIdentity([4000, 8000])
 
@@ -535,11 +535,11 @@ export class Ketch {
    *
    * @param c Consent to update
    */
-  updateClientConsent(c: Consent): Promise<Consent> {
+  async updateClientConsent(c: Consent): Promise<Consent> {
     log.info('updateClientConsent', c)
 
     if (!c || isEmpty(c)) {
-      return this._consent.setValue(undefined) as Promise<Consent>
+      return (await this._consent.setValue(undefined)) as Consent
     }
 
     // Merge new consent into existing consent
@@ -563,7 +563,7 @@ export class Ketch {
     // TODO server side signing
     sessionStorage.setItem('consent', JSON.stringify(c))
 
-    return this._consent.setValue(c) as Promise<Consent>
+    return (await this._consent.setValue(c)) as Consent
   }
 
   /**
@@ -571,7 +571,7 @@ export class Ketch {
    *
    * @param c Consent to set
    */
-  setConsent(c: Consent): Promise<Consent> {
+  async setConsent(c: Consent): Promise<Consent> {
     log.info('setConsent', c)
 
     return this.updateClientConsent(c).then(() => {
@@ -604,7 +604,7 @@ export class Ketch {
    * @param c current consent
    * @param provisionalConsent the provisional consent
    */
-  overrideWithProvisionalConsent(c: Consent, provisionalConsent: Consent): Promise<Consent> {
+  async overrideWithProvisionalConsent(c: Consent, provisionalConsent: Consent): Promise<Consent> {
     return new Promise(resolve => {
       if (!provisionalConsent) {
         resolve(c)
@@ -629,7 +629,7 @@ export class Ketch {
    * @param c current consent
    * @param sessionConsent sessionConsent
    */
-  mergeSessionConsent(c: Consent, sessionConsent: Consent): Promise<Consent> {
+  async mergeSessionConsent(c: Consent, sessionConsent: Consent): Promise<Consent> {
     log.info('mergeSessionConsent', c, sessionConsent)
 
     if (!sessionConsent || !c) {
@@ -669,11 +669,11 @@ export class Ketch {
   /**
    * Gets the consent.
    */
-  getConsent(): Promise<Consent> {
+  async getConsent(): Promise<Consent> {
     log.info('getConsent')
 
     if (this.hasConsent()) {
-      return this._consent.getValue() as Promise<Consent>
+      return (await this._consent.getValue()) as Consent
     }
 
     // get session consent
@@ -735,11 +735,11 @@ export class Ketch {
   /**
    * Retrieve the consent for subsequent calls.
    */
-  retrieveConsent(): Promise<Consent> {
+  async retrieveConsent(): Promise<Consent> {
     log.info('retrieveConsent')
 
     if (this._consent.hasValue()) {
-      return this._consent.getValue() as Promise<Consent>
+      return (await this._consent.getValue()) as Consent
     }
 
     return Promise.resolve({ purposes: {}, vendors: [] } as Consent)
@@ -768,7 +768,7 @@ export class Ketch {
    *
    * @param identities Identities to fetch consent for
    */
-  fetchConsent(identities: Identities): Promise<Consent> {
+  async fetchConsent(identities: Identities): Promise<Consent> {
     log.debug('getConsent', identities)
 
     // If no identities or purposes defined, skip the call.
@@ -834,7 +834,7 @@ export class Ketch {
    * @param identities Identities to update consent for
    * @param consent Consent to update
    */
-  updateConsent(identities: Identities, consent: Consent): Promise<void> {
+  async updateConsent(identities: Identities, consent: Consent): Promise<void> {
     log.debug('updateConsent', identities, consent)
 
     // If no identities or purposes defined, skip the call.
@@ -902,16 +902,16 @@ export class Ketch {
    *
    * @param env Environment to set
    */
-  setEnvironment(env: ketchapi.Environment): Promise<ketchapi.Environment> {
+  async setEnvironment(env: ketchapi.Environment): Promise<ketchapi.Environment> {
     log.info('setEnvironment', env)
-    return this._environment.setValue(env) as Promise<ketchapi.Environment>
+    return (await this._environment.setValue(env)) as ketchapi.Environment
   }
 
   /**
    * Detect the current environment. It will first look at the query string for any specified environment,
    * then it will iterate through the environment specifications to match based on the environment pattern.
    */
-  detectEnvironment(): Promise<ketchapi.Environment> {
+  async detectEnvironment(): Promise<ketchapi.Environment> {
     log.info('detectEnvironment')
 
     // We have to have environments
@@ -973,11 +973,11 @@ export class Ketch {
   /**
    * Get the environment.
    */
-  getEnvironment(): Promise<ketchapi.Environment> {
+  async getEnvironment(): Promise<ketchapi.Environment> {
     log.info('getEnvironment')
 
     if (this._environment.hasValue()) {
-      return this._environment.getValue() as Promise<ketchapi.Environment>
+      return (await this._environment.getValue()) as ketchapi.Environment
     } else {
       return this.detectEnvironment().then(env => this.setEnvironment(env))
     }
@@ -1015,16 +1015,16 @@ export class Ketch {
    *
    * @param g IPInfo
    */
-  setGeoIP(g: ketchapi.IPInfo): Promise<ketchapi.IPInfo> {
+  async setGeoIP(g: ketchapi.IPInfo): Promise<ketchapi.IPInfo> {
     log.info('setGeoIP', g)
     this.pushGeoIP(g)
-    return this._geoip.setValue(g) as Promise<ketchapi.IPInfo>
+    return (await this._geoip.setValue(g)) as ketchapi.IPInfo
   }
 
   /**
    * Loads the IPInfo.
    */
-  loadGeoIP(): Promise<ketchapi.GetLocationResponse> {
+  async loadGeoIP(): Promise<ketchapi.GetLocationResponse> {
     log.info('loadGeoIP')
 
     return ketchapi.getLocation(getApiUrl(this._config))
@@ -1033,11 +1033,11 @@ export class Ketch {
   /**
    * Gets the IPInfo.
    */
-  getGeoIP(): Promise<ketchapi.IPInfo> {
+  async getGeoIP(): Promise<ketchapi.IPInfo> {
     log.info('getGeoIP')
 
     if (this._geoip.hasValue()) {
-      return this._geoip.getValue() as Promise<ketchapi.IPInfo>
+      return (await this._geoip.getValue()) as ketchapi.IPInfo
     } else {
       return this.loadGeoIP()
         .then(r => r.location)
@@ -1059,10 +1059,10 @@ export class Ketch {
    *
    * @param id Identities to set
    */
-  setIdentities(id: Identities): Promise<Identities> {
+  async setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id)
 
-    return this._identities.setValue(id) as Promise<Identities>
+    return (await this._identities.setValue(id)) as Identities
   }
 
   /**
@@ -1106,7 +1106,7 @@ export class Ketch {
   /**
    * Collect identities.
    */
-  collectIdentities(): Promise<Identities> {
+  async collectIdentities(): Promise<Identities> {
     log.info('collectIdentities')
 
     const configIDs = this._config.identities
@@ -1220,11 +1220,11 @@ export class Ketch {
   /**
    * Get the identities.
    */
-  getIdentities(): Promise<Identities> {
+  async getIdentities(): Promise<Identities> {
     log.info('getIdentities')
 
     if (this._identities.hasValue()) {
-      return this._identities.getValue() as Promise<Identities>
+      return (await this._identities.getValue()) as Identities
     } else {
       return this.collectIdentities().then(id => this.setIdentities(id))
     }
@@ -1260,21 +1260,21 @@ export class Ketch {
    *
    * @param ps Jurisdiction to set
    */
-  setJurisdiction(ps: string): Promise<string> {
+  async setJurisdiction(ps: string): Promise<string> {
     log.info('setJurisdiction', ps)
 
     this.pushJurisdiction(ps)
-    return this._jurisdiction.setValue(ps) as Promise<string>
+    return (await this._jurisdiction.setValue(ps)) as string
   }
 
   /**
    * Get the policy scope.
    */
-  getJurisdiction(): Promise<string> {
+  async getJurisdiction(): Promise<string> {
     log.info('getJurisdiction')
 
     if (this._jurisdiction.hasValue()) {
-      return this._jurisdiction.getValue() as Promise<string>
+      return (await this._jurisdiction.getValue()) as string
     } else {
       return this.loadJurisdiction().then(ps => this.setJurisdiction(ps))
     }
@@ -1292,7 +1292,7 @@ export class Ketch {
   /**
    * Get the policy scope from query, page or config.
    */
-  loadJurisdiction(): Promise<string> {
+  async loadJurisdiction(): Promise<string> {
     log.info('loadJurisdiction', this._config.jurisdiction)
 
     const jurisdictionOverride = parameters.get(parameters.POLICY_SCOPE, window.location.search)
@@ -1345,15 +1345,15 @@ export class Ketch {
    *
    * @param info Region information
    */
-  setRegionInfo(info: string): Promise<string> {
+  async setRegionInfo(info: string): Promise<string> {
     log.info('setRegionInfo', info)
-    return this._regionInfo.setValue(info) as Promise<string>
+    return (await this._regionInfo.setValue(info)) as string
   }
 
   /**
    * Load the region info.
    */
-  loadRegionInfo(): Promise<string> {
+  async loadRegionInfo(): Promise<string> {
     log.info('loadRegionInfo')
 
     const specifiedRegion = parameters.get(parameters.REGION, window.location.search)
@@ -1387,10 +1387,10 @@ export class Ketch {
   /**
    * Gets the region.
    */
-  getRegionInfo(): Promise<string> {
+  async getRegionInfo(): Promise<string> {
     log.info('getRegionInfo')
     if (this._regionInfo.hasValue()) {
-      return this._regionInfo.getValue() as Promise<string>
+      return (await this._regionInfo.getValue()) as string
     } else {
       return this.loadRegionInfo().then(info => this.setRegionInfo(info))
     }
@@ -1410,27 +1410,28 @@ export class Ketch {
    *
    * @param params Preferences Manager preferences
    */
-  showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
+  async showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
     log.info('showPreference')
 
-    return Promise.all([this.getConfig(), this.getConsent()]).then(([config, consent]) => {
-      // if no preference experience configured do not show
-      if (!config.experiences?.preference) {
-        return consent
-      }
+    const config = await this.getConfig()
+    const consent = await this.getConsent()
 
-      if (this._showPreferenceExperience) {
-        const modifiedConfig: ketchapi.Configuration = config
-        // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
-        if (params && params.showRightsTab === false) {
-          modifiedConfig.rights = undefined
-        }
-        this.willShowExperience(ExperienceType.Preference)
-        this._showPreferenceExperience(this, modifiedConfig, consent)
-      }
-
+    // if no preference experience configured do not show
+    if (!config.experiences?.preference) {
       return consent
-    })
+    }
+
+    if (this._showPreferenceExperience) {
+      const modifiedConfig: ketchapi.Configuration = config
+      // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
+      if (params && params.showRightsTab === false) {
+        modifiedConfig.rights = undefined
+      }
+      this.willShowExperience(ExperienceType.Preference)
+      this._showPreferenceExperience(this, modifiedConfig, consent)
+    }
+
+    return consent
   }
 
   /**
@@ -1438,7 +1439,7 @@ export class Ketch {
    *
    * @param eventData Event data to invoke right with
    */
-  invokeRight(eventData: InvokeRightsEvent): Promise<void> {
+  async invokeRight(eventData: InvokeRightsEvent): Promise<void> {
     log.debug('invokeRights', eventData)
 
     // If no identities or rights defined, skip the call.
@@ -1502,7 +1503,7 @@ export class Ketch {
    * @param reason is a string representing the reason the experience was closed
    * Values: setConsent, invokeRight, close
    */
-  experienceClosed(reason: string): Promise<Consent> {
+  async experienceClosed(reason: string): Promise<Consent> {
     for (const appDiv of this._appDivs) {
       const div = document.getElementById(appDiv.id)
       if (div) {
@@ -1580,7 +1581,7 @@ export class Ketch {
    * If previously collected values for identity and consent are different,
    * show the experience or if experience already shown, update permits
    */
-  refreshIdentityConsent(): Promise<void> {
+  async refreshIdentityConsent(): Promise<void> {
     log.debug('refreshIdentityConsent')
 
     // compare identities currently on page with those previously retrieved
