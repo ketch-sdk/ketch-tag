@@ -10,7 +10,7 @@ import {
   PreferenceExperienceParams,
   ShowConsentExperience,
   ShowPreferenceExperience,
-} from '@ketch-sdk/ketch-plugin/src'
+} from '@ketch-sdk/ketch-plugin'
 import dataLayer from './internal/datalayer'
 import isEmpty from './internal/isEmpty'
 import loglevel from './internal/logging'
@@ -298,7 +298,7 @@ export class Ketch {
     }
 
     if (plugin.environmentLoaded) {
-      this.onEnvironment(env => {
+      await this.onEnvironment(env => {
         if (plugin.environmentLoaded) {
           return plugin.environmentLoaded(this, this._config, env)
         }
@@ -306,7 +306,7 @@ export class Ketch {
     }
 
     if (plugin.geoIPLoaded) {
-      this.onGeoIP(ipInfo => {
+      await this.onGeoIP(ipInfo => {
         if (plugin.geoIPLoaded) {
           return plugin.geoIPLoaded(this, this._config, ipInfo)
         }
@@ -314,7 +314,7 @@ export class Ketch {
     }
 
     if (plugin.identitiesLoaded) {
-      this.onIdentities(identities => {
+      await this.onIdentities(identities => {
         if (plugin.identitiesLoaded) {
           return plugin.identitiesLoaded(this, this._config, identities)
         }
@@ -322,7 +322,7 @@ export class Ketch {
     }
 
     if (plugin.jurisdictionLoaded) {
-      this.onJurisdiction(jurisdiction => {
+      await this.onJurisdiction(jurisdiction => {
         if (plugin.jurisdictionLoaded) {
           return plugin.jurisdictionLoaded(this, this._config, jurisdiction)
         }
@@ -330,7 +330,7 @@ export class Ketch {
     }
 
     if (plugin.regionInfoLoaded) {
-      this.onRegionInfo(region => {
+      await this.onRegionInfo(region => {
         if (plugin.regionInfoLoaded) {
           return plugin.regionInfoLoaded(this, this._config, region)
         }
@@ -338,15 +338,15 @@ export class Ketch {
     }
 
     if (plugin.showConsentExperience) {
-      this.onShowConsentExperience(plugin.showConsentExperience)
+      await this.onShowConsentExperience(plugin.showConsentExperience)
     }
 
     if (plugin.showPreferenceExperience) {
-      this.onShowPreferenceExperience(plugin.showPreferenceExperience)
+      await this.onShowPreferenceExperience(plugin.showPreferenceExperience)
     }
 
     if (plugin.willShowExperience) {
-      this.onWillShowExperience(() => {
+      await this.onWillShowExperience(() => {
         if (plugin.willShowExperience) {
           return plugin.willShowExperience(this, this._config)
         }
@@ -354,7 +354,7 @@ export class Ketch {
     }
 
     if (plugin.experienceHidden) {
-      this.onHideExperience(reason => {
+      await this.onHideExperience(reason => {
         if (plugin.experienceHidden) {
           return plugin.experienceHidden(this, this._config, reason)
         }
@@ -362,7 +362,7 @@ export class Ketch {
     }
 
     if (plugin.consentChanged) {
-      this.onConsent(consent => {
+      await this.onConsent(consent => {
         if (plugin.consentChanged) {
           return plugin.consentChanged(this, this._config, consent)
         }
@@ -370,7 +370,7 @@ export class Ketch {
     }
 
     if (plugin.rightInvoked) {
-      this.onInvokeRight(request => {
+      await this.onInvokeRight(request => {
         if (plugin.rightInvoked) {
           return plugin.rightInvoked(this, this._config, request)
         }
@@ -523,11 +523,11 @@ export class Ketch {
    *
    * @param consent Consent to change
    */
-  async changeConsent(consent: Consent): Promise<any> {
+  async changeConsent(consent: Consent): Promise<void> {
     // check for new identifiers for tags that may fire after consent collected
     this.pollIdentity([4000, 8000])
 
-    return this.setConsent(consent)
+    await this.setConsent(consent)
   }
 
   /**
@@ -585,7 +585,7 @@ export class Ketch {
    * Set to show consent experience
    *
    */
-  setShowConsentExperience() {
+  async setShowConsentExperience(): Promise<void> {
     this._shouldConsentExperienceShow = true
   }
 
@@ -594,7 +594,7 @@ export class Ketch {
    *
    * @param c Consent to set
    */
-  setProvisionalConsent(c: Consent) {
+  async setProvisionalConsent(c: Consent): Promise<void> {
     this._provisionalConsent = c
   }
 
@@ -746,11 +746,21 @@ export class Ketch {
   }
 
   /**
+   * Registers a callback for the given event.
+   *
+   * @param event The event to register a callback for
+   * @param callback The callback to register
+   */
+  async on(_event: string, _callback: Callback): Promise<void> {
+
+  }
+
+  /**
    * Registers a callback for consent change notifications.
    *
    * @param callback The consent callback to register
    */
-  onConsent(callback: Callback): void {
+  async onConsent(callback: Callback): Promise<void> {
     this._consent.subscribe(callback)
   }
 
@@ -759,7 +769,7 @@ export class Ketch {
 
    * @param callback The right callback to register
    */
-  onInvokeRight(callback: Callback): void {
+  async onInvokeRight(callback: Callback): Promise<void> {
     this._invokeRights.push(callback)
   }
 
@@ -988,7 +998,7 @@ export class Ketch {
    *
    * @param callback Environment callback to register
    */
-  onEnvironment(callback: Callback): void {
+  async onEnvironment(callback: Callback): Promise<void> {
     this._environment.subscribe(callback)
   }
 
@@ -1050,7 +1060,7 @@ export class Ketch {
    *
    * @param callback GeoIP callback to register
    */
-  onGeoIP(callback: Callback): void {
+  async onGeoIP(callback: Callback): Promise<void> {
     this._geoip.subscribe(callback)
   }
 
@@ -1235,7 +1245,7 @@ export class Ketch {
    *
    * @param callback Identities callback to register
    */
-  onIdentities(callback: Callback): void {
+  async onIdentities(callback: Callback): Promise<void> {
     this._identities.subscribe(callback)
   }
 
@@ -1285,7 +1295,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onJurisdiction(callback: Callback): void {
+  async onJurisdiction(callback: Callback): Promise<void> {
     this._jurisdiction.subscribe(callback)
   }
 
@@ -1401,7 +1411,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onRegionInfo(callback: Callback): void {
+  async onRegionInfo(callback: Callback): Promise<void> {
     this._regionInfo.subscribe(callback)
   }
 
@@ -1544,7 +1554,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onWillShowExperience(callback: Callback): void {
+  async onWillShowExperience(callback: Callback): Promise<void> {
     this._willShowExperience.push(callback)
   }
 
@@ -1554,7 +1564,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onHideExperience(callback: Callback): void {
+  async onHideExperience(callback: Callback): Promise<void> {
     this._hideExperience.push(callback)
   }
 
@@ -1563,7 +1573,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onShowPreferenceExperience(callback: ShowPreferenceExperience): void {
+  async onShowPreferenceExperience(callback: ShowPreferenceExperience): Promise<void> {
     this._showPreferenceExperience = callback
   }
 
@@ -1572,7 +1582,7 @@ export class Ketch {
    *
    * @param callback Callback to register
    */
-  onShowConsentExperience(callback: ShowConsentExperience): void {
+  async onShowConsentExperience(callback: ShowConsentExperience): Promise<void> {
     this._showConsentExperience = callback
   }
 

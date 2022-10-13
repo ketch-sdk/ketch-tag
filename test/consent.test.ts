@@ -1,9 +1,14 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-
 import { Configuration, getConsent, setConsent } from '@ketch-sdk/ketch-web-api'
 import errors from '../src/internal/errors'
 import { Ketch } from '../src/pure'
 import constants from '../src/internal/constants'
+
+jest.mock('@ketch-sdk/ketch-web-api', () => {
+  return {
+    getConsent: jest.fn(),
+    setConsent: jest.fn(),
+  }
+})
 
 describe('consent', () => {
   // @ts-ignore

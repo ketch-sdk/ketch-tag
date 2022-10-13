@@ -3,6 +3,12 @@ jest.mock('@ketch-sdk/ketch-web-api')
 import { Configuration, invokeRight } from '@ketch-sdk/ketch-web-api'
 import { Ketch } from '../src/pure'
 
+jest.mock('@ketch-sdk/ketch-web-api', () => {
+  return {
+    invokeRight: jest.fn(),
+  }
+})
+
 describe('gangplank', () => {
   // @ts-ignore
   const config: Configuration = {

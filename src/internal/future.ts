@@ -1,5 +1,5 @@
 import loglevel from './logging'
-import { Callback } from '@ketch-sdk/ketch-plugin/src'
+import { Callback } from '@ketch-sdk/ketch-plugin'
 const log = loglevel.getLogger('Future')
 
 /**

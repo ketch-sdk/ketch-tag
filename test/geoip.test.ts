@@ -1,7 +1,11 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-
 import { Configuration, getLocation, GetLocationResponse, IPInfo } from '@ketch-sdk/ketch-web-api'
 import { Ketch } from '../src/pure'
+
+jest.mock('@ketch-sdk/ketch-web-api', () => {
+  return {
+    getLocation: jest.fn(),
+  }
+})
 
 const mockGetLocation = jest.mocked(getLocation)
 

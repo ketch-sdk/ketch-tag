@@ -88,6 +88,8 @@ function getAction(action: string): Function | undefined {
       return ketch.getJurisdiction
     case 'getRegionInfo':
       return ketch.getRegionInfo
+    case 'on':
+      return ketch.on
     case 'onConsent':
       return ketch.onConsent
     case 'onEnvironment':

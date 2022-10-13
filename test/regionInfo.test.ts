@@ -6,6 +6,12 @@ import parameters from '../src/internal/parameters'
 import { Ketch } from '../src/pure'
 import { Configuration, getLocation, GetLocationResponse } from '@ketch-sdk/ketch-web-api'
 
+jest.mock('@ketch-sdk/ketch-web-api', () => {
+  return {
+    getLocation: jest.fn(),
+  }
+})
+
 const mockGetLocation = jest.mocked(getLocation)
 
 describe('regionInfo', () => {
