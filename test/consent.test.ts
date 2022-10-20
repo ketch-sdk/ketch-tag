@@ -1,6 +1,6 @@
-import { Configuration, getConsent, setConsent } from '@ketch-sdk/ketch-web-api'
+import {Configuration, getConsent, IdentityFormat, IdentityType, setConsent} from '@ketch-sdk/ketch-web-api'
 import errors from '../src/internal/errors'
-import { Ketch } from '../src/pure'
+import {Ketch, ExperienceType} from '../src/pure'
 import constants from '../src/internal/constants'
 
 jest.mock('@ketch-sdk/ketch-web-api', () => {
@@ -34,8 +34,9 @@ describe('consent', () => {
     },
     identities: {
       axonic_cookie: {
-        type: 'dataLayer',
+        type: IdentityType.IDENTITY_TYPE_DATA_LAYER,
         variable: 'huid',
+        format: IdentityFormat.IDENTITY_FORMAT_STRING,
       },
     },
     environment: {
@@ -377,7 +378,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
     })
 
     it('returns banner if any purposes requires opt in and defaultExperience is not modal', () => {
@@ -393,7 +394,7 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
     })
 
     it('returns banner if none of the purposes requires opt in', () => {
@@ -409,13 +410,13 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
     })
 
     it('returns banner no purposes', () => {
       const ketch = new Ketch(config2)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
     })
   })
 
@@ -423,7 +424,7 @@ describe('consent', () => {
     it('shows when missing options', () => {
       const ketch = new Ketch(config2)
 
-      expect(ketch.getExperienceToShow({ purposes: {} })).toBeTruthy()
+      expect(ketch.selectExperience({ purposes: {} })).toEqual(ExperienceType.Consent)
     })
 
     it('does not show when no purposes', () => {
@@ -436,7 +437,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.getExperienceToShow({ purposes: { analytics: true } })).not.toBeTruthy()
+      expect(ketch.selectExperience({ purposes: { analytics: true } })).toEqual(undefined)
     })
 
     it('still shows when no consent experience', () => {
@@ -452,19 +453,19 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.getExperienceToShow({ purposes: {} })).toBeTruthy()
+      expect(ketch.selectExperience({ purposes: {} })).toEqual(ExperienceType.Consent)
     })
 
     it('shows when options', () => {
       const ketch = new Ketch(config2)
 
       expect(
-        ketch.getExperienceToShow({
+        ketch.selectExperience({
           purposes: {
             datasales: true,
           },
         }),
-      ).toBeTruthy()
+      ).toEqual(ExperienceType.Consent)
     })
   })
 

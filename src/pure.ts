@@ -1,6 +1,5 @@
 import * as ketchapi from '@ketch-sdk/ketch-web-api'
 import Future from './internal/future'
-// @ts-ignore
 import {
   AppDiv,
   Callback,
@@ -8,9 +7,10 @@ import {
   Identities,
   InvokeRightsEvent,
   Plugin,
-  PreferenceExperienceParams,
   ShowConsentExperience,
   ShowPreferenceExperience,
+  ShowPreferenceOptions,
+  isTab
 } from '@ketch-sdk/ketch-plugin'
 import dataLayer from './internal/datalayer'
 import isEmpty from './internal/isEmpty'
@@ -29,7 +29,7 @@ const DEFAULT_MIGRATION_OPTION = 0
 /**
  * ExperienceType is the type of experience that will be shown
  */
-enum ExperienceType {
+export enum ExperienceType {
   Consent = 'experiences.consent',
   Preference = 'experiences.preference',
 }
@@ -391,34 +391,38 @@ export class Ketch {
    *
    * @param c Consent to be used
    */
-  getExperienceToShow(c: Consent): ExperienceType | undefined {
-    // check if experience has not displayed and show parameter override set
-    if (parameters.has(parameters.SHOW, window.location.search) && !this._hasExperienceBeenDisplayed) {
-      const show = parameters.get(parameters.SHOW, window.location.search)
-      if (show.length === 0 || show === parameters.CONSENT) {
-        log.debug('getExperienceToShow', ExperienceType.Consent)
+  selectExperience(c: Consent): ExperienceType | undefined {
+    // if experience has already showed, do not show again
+    if (this._hasExperienceBeenDisplayed) {
+      log.debug('selectExperience', 'none')
+      return
+    }
+
+    // check if experience show parameter override set
+    const show = parameters.get(parameters.SHOW, window.location.search)
+    if (parameters.has(parameters.SHOW, window.location.search) && (show.length === 0 || show === parameters.CONSENT)) {
+        log.debug('selectExperience', ExperienceType.Consent)
         return ExperienceType.Consent
-      } else if (show === parameters.PREFERENCES) {
-        log.debug('getExperienceToShow', ExperienceType.Preference)
+    } else if (show === parameters.PREFERENCES) {
+        log.debug('selectExperience', ExperienceType.Preference)
         return ExperienceType.Preference
-      }
     }
 
     if (this._shouldConsentExperienceShow) {
-      log.debug('getExperienceToShow', ExperienceType.Consent)
+      log.debug('selectExperience', ExperienceType.Consent)
       this._shouldConsentExperienceShow = false
       return ExperienceType.Consent
     }
     if (this._config.purposes) {
       for (const p of this._config.purposes) {
         if (c.purposes[p.code] === undefined) {
-          log.debug('getExperienceToShow', ExperienceType.Consent)
+          log.debug('selectExperience', ExperienceType.Consent)
           return ExperienceType.Consent
         }
       }
     }
 
-    log.debug('getExperienceToShow', false)
+    log.debug('selectExperience', 'none')
     return
   }
 
@@ -426,7 +430,7 @@ export class Ketch {
    * Selects the correct experience.
    *
    */
-  selectExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
+  selectConsentExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
@@ -486,7 +490,7 @@ export class Ketch {
 
       if (this._showConsentExperience) {
         this.willShowExperience(ExperienceType.Consent)
-        this._showConsentExperience(this, this._config, consent, { displayHint: this.selectExperience() })
+        this._showConsentExperience(this, this._config, consent, { displayHint: this.selectConsentExperience() })
       }
 
       return consent
@@ -702,7 +706,7 @@ export class Ketch {
             let shouldCreatePermits = false
 
             // getExperienceToShow before populating permits
-            const experienceToShow = this.getExperienceToShow(c)
+            const experienceToShow = this.selectExperience(c)
 
             // populate disclosure permits that are undefined
             if (this._config.purposes) {
@@ -724,12 +728,10 @@ export class Ketch {
             // first set consent value then proceed to show experience and/or create permits
             return consentPromise.then(() => {
               switch (experienceToShow) {
-                case ExperienceType.Consent: {
+                case ExperienceType.Consent:
                   return this.showConsentExperience()
-                }
-                case ExperienceType.Preference: {
+                case ExperienceType.Preference:
                   return this.showPreferenceExperience()
-                }
               }
 
               // experience will not show - call functions registered using onHideExperience
@@ -1432,7 +1434,7 @@ export class Ketch {
    *
    * @param params Preferences Manager preferences
    */
-  async showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
+  async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
     log.info('showPreference')
 
     const config = await this.getConfig()
@@ -1443,14 +1445,19 @@ export class Ketch {
       return consent
     }
 
-    if (this._showPreferenceExperience) {
-      const modifiedConfig: ketchapi.Configuration = config
-      // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
-      if (params && params.showRightsTab === false) {
-        modifiedConfig.rights = undefined
+    // check if experience show parameter override set
+    const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
+    // override with url param
+    if ( isTab(tab) ) {
+      if ( !params ) {
+        params = {}
       }
+      params.tab = tab
+    }
+
+    if (this._showPreferenceExperience) {
       this.willShowExperience(ExperienceType.Preference)
-      this._showPreferenceExperience(this, modifiedConfig, consent)
+      this._showPreferenceExperience(this, config, consent, params)
     }
 
     return consent
