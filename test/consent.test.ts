@@ -423,7 +423,7 @@ describe('consent', () => {
     it('shows when missing options', () => {
       const ketch = new Ketch(config2)
 
-      expect(ketch.shouldShowConsent({ purposes: {} })).toBeTruthy()
+      expect(ketch.getExperienceToShow({ purposes: {} })).toBeTruthy()
     })
 
     it('does not show when no purposes', () => {
@@ -436,7 +436,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.shouldShowConsent({ purposes: { analytics: true } })).not.toBeTruthy()
+      expect(ketch.getExperienceToShow({ purposes: { analytics: true } })).not.toBeTruthy()
     })
 
     it('still shows when no consent experience', () => {
@@ -452,14 +452,14 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.shouldShowConsent({ purposes: {} })).toBeTruthy()
+      expect(ketch.getExperienceToShow({ purposes: {} })).toBeTruthy()
     })
 
     it('shows when options', () => {
       const ketch = new Ketch(config2)
 
       expect(
-        ketch.shouldShowConsent({
+        ketch.getExperienceToShow({
           purposes: {
             datasales: true,
           },

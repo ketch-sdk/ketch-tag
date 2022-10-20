@@ -1,5 +1,6 @@
 import * as ketchapi from '@ketch-sdk/ketch-web-api'
 import Future from './internal/future'
+// @ts-ignore
 import {
   AppDiv,
   Callback,
@@ -386,33 +387,39 @@ export class Ketch {
   }
 
   /**
-   * Determines if we should show the consent dialog.
+   * Determines which experience type to show if we should show an experience.
    *
    * @param c Consent to be used
    */
-  shouldShowConsent(c: Consent): boolean {
+  getExperienceToShow(c: Consent): ExperienceType | undefined {
+    // check if experience has not displayed and show parameter override set
+    if (parameters.has(parameters.SHOW, window.location.search) && !this._hasExperienceBeenDisplayed) {
+      const show = parameters.get(parameters.SHOW, window.location.search)
+      if (show.length === 0 || show === parameters.CONSENT) {
+        log.debug('getExperienceToShow', ExperienceType.Consent)
+        return ExperienceType.Consent
+      } else if (show === parameters.PREFERENCES) {
+        log.debug('getExperienceToShow', ExperienceType.Preference)
+        return ExperienceType.Preference
+      }
+    }
+
     if (this._shouldConsentExperienceShow) {
-      log.debug('shouldShowConsent', true)
+      log.debug('getExperienceToShow', ExperienceType.Consent)
       this._shouldConsentExperienceShow = false
-      return true
+      return ExperienceType.Consent
     }
     if (this._config.purposes) {
       for (const p of this._config.purposes) {
         if (c.purposes[p.code] === undefined) {
-          log.debug('shouldShowConsent', true)
-          return true
+          log.debug('getExperienceToShow', ExperienceType.Consent)
+          return ExperienceType.Consent
         }
       }
     }
 
-    // check if experience has not displayed and show parameter override set
-    if (parameters.has(parameters.SHOW, window.location.search) && !this._hasExperienceBeenDisplayed) {
-      log.debug('shouldShowConsent', true)
-      return true
-    }
-
-    log.debug('shouldShowConsent', false)
-    return false
+    log.debug('getExperienceToShow', false)
+    return
   }
 
   /**
@@ -694,8 +701,8 @@ export class Ketch {
             this._provisionalConsent = undefined
             let shouldCreatePermits = false
 
-            // check if shouldShowConsent before populating permits
-            const displayConsent = this.shouldShowConsent(c)
+            // getExperienceToShow before populating permits
+            const experienceToShow = this.getExperienceToShow(c)
 
             // populate disclosure permits that are undefined
             if (this._config.purposes) {
@@ -716,8 +723,13 @@ export class Ketch {
 
             // first set consent value then proceed to show experience and/or create permits
             return consentPromise.then(() => {
-              if (displayConsent) {
-                return this.showConsentExperience()
+              switch (experienceToShow) {
+                case ExperienceType.Consent: {
+                  return this.showConsentExperience()
+                }
+                case ExperienceType.Preference: {
+                  return this.showPreferenceExperience()
+                }
               }
 
               // experience will not show - call functions registered using onHideExperience
