@@ -1,6 +1,6 @@
 import {Configuration, getConsent, IdentityFormat, IdentityType, setConsent} from '@ketch-sdk/ketch-web-api'
 import errors from '../src/internal/errors'
-import {Ketch, ExperienceType} from '../src/pure'
+import {ExperienceType, Ketch} from '../src/pure'
 import constants from '../src/internal/constants'
 
 jest.mock('@ketch-sdk/ketch-web-api', () => {
@@ -34,9 +34,9 @@ describe('consent', () => {
     },
     identities: {
       axonic_cookie: {
-        type: IdentityType.IDENTITY_TYPE_DATA_LAYER,
+        type: 'dataLayer' as IdentityType,
         variable: 'huid',
-        format: IdentityFormat.IDENTITY_FORMAT_STRING,
+        format: 'string' as IdentityFormat,
       },
     },
     environment: {

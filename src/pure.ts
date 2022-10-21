@@ -705,8 +705,8 @@ export class Ketch {
             this._provisionalConsent = undefined
             let shouldCreatePermits = false
 
-            // getExperienceToShow before populating permits
-            const experienceToShow = this.selectExperience(c)
+            // selectExperience before populating permits
+            const experience = this.selectExperience(c)
 
             // populate disclosure permits that are undefined
             if (this._config.purposes) {
@@ -727,7 +727,7 @@ export class Ketch {
 
             // first set consent value then proceed to show experience and/or create permits
             return consentPromise.then(() => {
-              switch (experienceToShow) {
+              switch (experience) {
                 case ExperienceType.Consent:
                   return this.showConsentExperience()
                 case ExperienceType.Preference:
