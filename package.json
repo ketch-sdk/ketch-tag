@@ -22,13 +22,9 @@
   "bugs": {
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
-  "dependencies": {
-    "@ketch-sdk/ketch-web-api": "^1.0.3",
-    "loglevel": "^1.8.0",
-    "uuid": "^9.0.0"
-  },
   "devDependencies": {
     "@ketch-sdk/ketch-types": "^0.2.4",
+    "@ketch-sdk/ketch-web-api": "^1.0.5",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.2.0",
     "@types/uuid": "^8.3.4",
@@ -47,9 +43,11 @@
     "prettier": "^2.7.1",
     "ts-jest": "^29.0.3",
     "typedoc": "^0.23.18",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "uuid": "^9.0.0"
   },
   "files": [
-    "/dist"
+    "./dist/index.js",
+    "./dist/index.d.ts"
   ]
 }

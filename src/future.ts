@@ -1,6 +1,5 @@
-import loglevel from './logging'
+import log from './logging'
 import { Callback } from '@ketch-sdk/ketch-types'
-const log = loglevel.getLogger('Future')
 
 /**
  * Future implements a value that can be listened to where resolvers

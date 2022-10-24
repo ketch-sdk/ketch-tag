@@ -1,6 +1,5 @@
 import errors from './errors'
-import loglevel from './logging'
-const log = loglevel.getLogger('cookie')
+import log from './logging'
 
 /**
  * Get a value from a cookie by the key.

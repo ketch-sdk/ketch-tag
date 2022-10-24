@@ -1,5 +1,4 @@
-import loglevel from './logging'
-const log = loglevel.getLogger('scripts')
+import log from './logging'
 
 /**
  * Load the script specified by the given src.
