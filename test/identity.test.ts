@@ -1,6 +1,6 @@
 import { getCookie } from '../src/internal/cookie'
-import { Ketch } from '../src/pure'
-import { Configuration } from '@ketch-sdk/ketch-web-api'
+import { Ketch } from '../src/'
+import { Configuration } from '@ketch-sdk/ketch-types'
 
 describe('identity', () => {
   describe('getIdentities', () => {

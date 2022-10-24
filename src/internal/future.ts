@@ -1,5 +1,5 @@
 import loglevel from './logging'
-import { Callback } from '@ketch-sdk/ketch-plugin/src'
+import { Callback } from '@ketch-sdk/ketch-types'
 const log = loglevel.getLogger('Future')
 
 /**
@@ -64,12 +64,13 @@ export default class Future<T> {
   /**
    * Retrieves the value, calling resolve with the value.
    */
-  getValue(): Promise<T | undefined> {
-    return new Promise(resolve => {
+  async getValue(): Promise<T> {
+    return new Promise((resolve) => {
       this._pendingResolvers.push(resolve)
 
-      if (this.hasValue()) {
-        resolve(this.getRawValue())
+      const v = this.getRawValue()
+      if (v !== undefined) {
+        resolve(v)
       }
     })
   }
@@ -79,7 +80,7 @@ export default class Future<T> {
    *
    * @param v
    */
-  setValue(v?: T): Promise<T | undefined> {
+  async setValue(v?: T): Promise<T | undefined> {
     log.trace('setValue', this._name, v)
 
     return new Promise(resolve => {

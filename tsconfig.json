@@ -19,8 +19,5 @@
     "target": "es6"
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["**/*.spec.ts"],
-  "paths": {
-    "@ketch-sdk/ketch-plugin": ["node_modules/@ketch-sdk/ketch-plugin/src/index.ts"]
-  }
+  "exclude": ["**/*.spec.ts"]
 }

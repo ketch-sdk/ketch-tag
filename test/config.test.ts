@@ -1,5 +1,5 @@
-import { Configuration } from '@ketch-sdk/ketch-web-api'
-import { Ketch } from '../src/pure'
+import { Configuration } from '@ketch-sdk/ketch-types'
+import { Ketch } from '../src/'
 
 jest.mock('../src/internal/parameters')
 
@@ -8,8 +8,8 @@ describe('config', () => {
     it('returns the existing config', () => {
       const config = {
         language: 'en',
-      }
-      const ketch = new Ketch(config as any as Configuration)
+      } as Configuration
+      const ketch = new Ketch(config)
 
       return expect(ketch.getConfig()).resolves.toBe(config)
     })

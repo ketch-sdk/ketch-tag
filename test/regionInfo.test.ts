@@ -1,12 +1,10 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-jest.mock('../src/internal/parameters')
-
+import { Configuration } from '@ketch-sdk/ketch-types'
 import errors from '../src/internal/errors'
 import parameters from '../src/internal/parameters'
-import { Ketch } from '../src/pure'
-import { Configuration, getLocation, GetLocationResponse } from '@ketch-sdk/ketch-web-api'
+import { Ketch } from '../src/'
+import fetchMock from 'jest-fetch-mock'
 
-const mockGetLocation = jest.mocked(getLocation)
+jest.mock('../src/internal/parameters')
 
 describe('regionInfo', () => {
   const mockParametersGet = jest.mocked(parameters.get)
@@ -26,9 +24,9 @@ describe('regionInfo', () => {
     it('handles an invalid IPInfo', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
+      fetchMock.mockResponse(JSON.stringify({
         location: {},
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadRegionInfo()).rejects.toBe(errors.unrecognizedLocationError)
     })
@@ -36,12 +34,11 @@ describe('regionInfo', () => {
     it('handles a missing country_code', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
-        // @ts-ignore
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           ip: '10.11.12.13',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadRegionInfo()).rejects.toBe(errors.unrecognizedLocationError)
     })
@@ -49,14 +46,13 @@ describe('regionInfo', () => {
     it('handles a non-US country_code with a region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
-        // @ts-ignore
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           ip: '10.11.12.13',
           countryCode: 'UK',
           regionCode: 'CA',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('UK')
     })
@@ -64,13 +60,12 @@ describe('regionInfo', () => {
     it('handles no region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
-        // @ts-ignore
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           ip: '10.11.12.13',
           countryCode: 'AU',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('AU')
     })
@@ -78,14 +73,13 @@ describe('regionInfo', () => {
     it('handles sub region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
-        // @ts-ignore
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           ip: '10.11.12.13',
           countryCode: 'US',
           regionCode: 'CA',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('US-CA')
     })
@@ -93,13 +87,12 @@ describe('regionInfo', () => {
     it('handles region on the query', () => {
       const ketch = new Ketch({} as Configuration)
 
-      mockGetLocation.mockResolvedValue({
-        // @ts-ignore
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           ip: '10.11.12.13',
           countryCode: 'AU',
         },
-      } as GetLocationResponse)
+      }))
 
       mockParametersGet.mockImplementationOnce(key => {
         if (key === parameters.REGION) return 'FOO'
