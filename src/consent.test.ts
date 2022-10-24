@@ -151,13 +151,13 @@ describe('consent', () => {
       fetchMock.mockResponse(async (): Promise<string> => {
         return JSON.stringify({
           purposes: {
-            'pacode1': {
+            pacode1: {
               allowed: 'true',
             },
-            'pacode2': {
+            pacode2: {
               allowed: 'false',
             },
-            'pacode3': {
+            pacode3: {
               allowed: 'false',
             },
           },
@@ -231,14 +231,14 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
-              "body": "{\"organizationCode\":\"org\",\"propertyCode\":\"app\",\"environmentCode\":\"env\",\"controllerCode\":\"\",\"identities\":{\"space1\":\"id1\"},\"jurisdictionCode\":\"ps\",\"purposes\":{\"pacode1\":{\"allowed\":\"true\",\"legalBasisCode\":\"lb1\"},\"pacode2\":{\"allowed\":\"false\",\"legalBasisCode\":\"lb2\"}},\"migrationOption\":3,\"vendors\":[\"1\"]}",
-              "credentials": "omit",
-              "headers": {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
+              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":3,"vendors":["1"]}',
+              credentials: 'omit',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
               },
-              "method": "POST",
-              "mode": "cors",
+              method: 'POST',
+              mode: 'cors',
             })
           }
         })
@@ -315,7 +315,7 @@ describe('consent', () => {
         vendors: ['1'],
       }
       fetchMock.mockResponse(async (): Promise<string> => {
-        return "{}"
+        return '{}'
       })
 
       expect(ketch.hasConsent()).not.toBeTruthy()

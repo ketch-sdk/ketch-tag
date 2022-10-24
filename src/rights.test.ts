@@ -63,8 +63,7 @@ describe('gangplank', () => {
 
   describe('invokeRights', () => {
     it('handles a call with full config', () => {
-      fetchMock.mockResponse(JSON.stringify({
-      }))
+      fetchMock.mockResponse(JSON.stringify({}))
 
       return ketch.invokeRight(data).then(() => {
         const { property, jurisdiction, organization, environment } = config
@@ -76,14 +75,14 @@ describe('gangplank', () => {
         if (property && jurisdiction && organization && environment) {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/rights/org/invoke', {
-            "body": "{\"organizationCode\":\"org\",\"propertyCode\":\"app\",\"environmentCode\":\"env\",\"controllerCode\":\"\",\"identities\":{\"email\":\"rights@email.com\"},\"jurisdictionCode\":\"ps\",\"rightCode\":\"portability\",\"user\":{\"email\":\"rights@email.com\",\"first\":\"first\",\"last\":\"last\",\"country\":\"United States\",\"stateRegion\":\"California\",\"description\":\"\"}}",
-            "credentials": "omit",
-            "headers": {
-              "Accept": "application/json",
-              "Content-Type": "application/json",
+            body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"email":"rights@email.com"},"jurisdictionCode":"ps","rightCode":"portability","user":{"email":"rights@email.com","first":"first","last":"last","country":"United States","stateRegion":"California","description":""}}',
+            credentials: 'omit',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
             },
-            "method": "POST",
-            "mode": "cors",
+            method: 'POST',
+            mode: 'cors',
           })
         }
       })
@@ -100,9 +99,11 @@ describe('gangplank', () => {
     }
 
     it('skips if no rightsEmail', () => {
-      fetchMock.mockResponse(JSON.stringify({
-        location: {},
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {},
+        }),
+      )
 
       return ketch.invokeRight(dataNoEmail).then(() => {
         expect(fetchMock).not.toHaveBeenCalled()
@@ -120,9 +121,11 @@ describe('gangplank', () => {
     }
 
     it('skips if no rights', () => {
-      fetchMock.mockResponse(JSON.stringify({
-        location: {},
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {},
+        }),
+      )
 
       return ketch.invokeRight(dataNoRight).then(() => {
         expect(fetchMock).not.toHaveBeenCalled()

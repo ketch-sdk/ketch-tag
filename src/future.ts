@@ -1,6 +1,5 @@
-import loglevel from './logging'
+import log from './logging'
 import { Callback } from '@ketch-sdk/ketch-types'
-const log = loglevel.getLogger('Future')
 
 /**
  * Future implements a value that can be listened to where resolvers
@@ -65,7 +64,7 @@ export default class Future<T> {
    * Retrieves the value, calling resolve with the value.
    */
   async getValue(): Promise<T> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this._pendingResolvers.push(resolve)
 
       const v = this.getRawValue()
@@ -80,7 +79,7 @@ export default class Future<T> {
    *
    * @param v
    */
-  async setValue(v?: T): Promise<T | undefined> {
+  async setValue(v: T): Promise<T> {
     log.trace('setValue', this._name, v)
 
     return new Promise(resolve => {
@@ -88,6 +87,16 @@ export default class Future<T> {
 
       resolve(v)
     })
+  }
+
+  /**
+   * Clears the value, calling any pending resolvers.
+   *
+   */
+  async clearValue(): Promise<void> {
+    log.trace('clearValue', this._name)
+
+    this.setRawValue(undefined)
   }
 
   /**

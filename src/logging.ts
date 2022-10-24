@@ -1,21 +1,33 @@
-import loglevel, { LogLevelDesc } from 'loglevel'
 import parameters from './parameters'
 
-// Setup the log level based on a query string parameter.
+const levels: { [key: string]: number } = {
+  trace: 1,
+  debug: 2,
+  info: 3,
+  log: 3,
+  warn: 4,
+  error: 5,
+}
+let logLevel = levels.log
+
+// Set up the log level based on a query string parameter.
 if (parameters.get(parameters.DEBUG, window.location.search)) {
-  loglevel.setLevel('debug', true)
-} else {
-  const ll = parameters.get(parameters.LOG_LEVEL, window.location.search) as LogLevelDesc
-  if (ll) {
-    loglevel.setLevel(ll, true)
+  logLevel = levels.debug
+} else if (parameters.has(parameters.LOG_LEVEL, window.location.search)) {
+  logLevel = levels[parameters.get(parameters.LOG_LEVEL, window.location.search)] || levels.log
+}
+
+function logAt(level: number, ...data: any[]) {
+  if (level >= logLevel) {
+    console.log('[ketch]', ...data)
   }
 }
 
-const originalFactory = loglevel.methodFactory
-loglevel.methodFactory =
-  (methodName, logLevel, loggerName) =>
-  (...message): void => {
-    originalFactory(methodName, logLevel, loggerName)(`[semaphore] ${String(loggerName)}`, ...message)
-  }
-
-export default loglevel
+export default {
+  debug: (...data: any[]) => logAt(levels.debug, ...data),
+  trace: (...data: any[]) => logAt(levels.trace, ...data),
+  info: (...data: any[]) => logAt(levels.info, ...data),
+  log: (...data: any[]) => logAt(levels.log, ...data),
+  warn: (...data: any[]) => logAt(levels.warn, ...data),
+  error: (...data: any[]) => logAt(levels.error, ...data),
+}

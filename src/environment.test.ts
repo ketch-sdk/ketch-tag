@@ -49,9 +49,9 @@ describe('environment', () => {
     it('returns null if no environments', () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
-        environments: []
+        environments: [],
       }
       const ketch = new Ketch(config)
 
@@ -62,7 +62,7 @@ describe('environment', () => {
     it('selects dev because it matches href', () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, dev, test],
       }
@@ -75,7 +75,7 @@ describe('environment', () => {
     it('selects longer match', () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [devShort, dev],
       }
@@ -88,7 +88,7 @@ describe('environment', () => {
     it('allows selection of environment via query', () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, dev, test],
       }
@@ -106,7 +106,7 @@ describe('environment', () => {
     it('selects production by default', () => {
       const config: Configuration = {
         organization: {
-          code: ""
+          code: '',
         },
         environments: [prod, test],
       }
