@@ -2,10 +2,10 @@
   "compilerOptions": {
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
-    "declaration": false,
+    "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "inlineSourceMap": true,
-    "module": "esnext",
+    "module": "ES2015",
     "moduleResolution": "node",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
@@ -13,10 +13,12 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "./dist",
+    "outDir": "./lib",
     "removeComments": false,
+    "rootDir": "./src",
+    "declarationDir": "./lib",
     "strict": true,
-    "target": "es6"
+    "target": "ES2015"
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["**/*.spec.ts"]

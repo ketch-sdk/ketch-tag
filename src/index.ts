@@ -1,5 +1,5 @@
 import {KetchWebAPI} from '@ketch-sdk/ketch-web-api'
-import Future from './internal/future'
+import Future from './future'
 import {
   AppDiv,
   Callback, Configuration,
@@ -12,14 +12,14 @@ import {
   ShowPreferenceExperience, DataSubject,
   GetConsentRequest,
 } from '@ketch-sdk/ketch-types'
-import dataLayer, { tealiumKetchPermitData } from './internal/datalayer'
-import isEmpty from './internal/isEmpty'
-import loglevel from './internal/logging'
-import errors from './internal/errors'
-import parameters from './internal/parameters'
-import { getCookie, setCookie } from './internal/cookie'
+import dataLayer, { tealiumKetchPermitData } from './datalayer'
+import isEmpty from './isEmpty'
+import loglevel from './logging'
+import errors from './errors'
+import parameters from './parameters'
+import { getCookie, setCookie } from './cookie'
 import { v4 as uuidv4 } from 'uuid'
-import constants from './internal/constants'
+import constants from './constants'
 
 const log = loglevel.getLogger('ketch')
 

@@ -1,7 +1,7 @@
 import { Configuration, IdentityFormat, IdentityType } from '@ketch-sdk/ketch-types'
-import errors from '../src/internal/errors'
-import { Ketch } from '../src/'
-import constants from '../src/internal/constants'
+import errors from './errors'
+import { Ketch } from './'
+import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
 
 describe('consent', () => {

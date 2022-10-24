@@ -1,4 +1,4 @@
-import * as scripts from '../src/internal/scripts'
+import * as scripts from './scripts'
 
 describe('script', () => {
   describe('load', () => {

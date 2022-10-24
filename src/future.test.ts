@@ -1,5 +1,5 @@
-import Future from '../src/internal/future'
-import errors from '../src/internal/errors'
+import Future from './future'
+import errors from './errors'
 
 /**
  * Return a timeout Promise.
