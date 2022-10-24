@@ -65,7 +65,7 @@ export default class Future<T> {
    * Retrieves the value, calling resolve with the value.
    */
   async getValue(): Promise<T> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this._pendingResolvers.push(resolve)
 
       const v = this.getRawValue()

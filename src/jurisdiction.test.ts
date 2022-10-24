@@ -37,7 +37,6 @@ describe('jurisdiction', () => {
 
       fetchMock.mockResponse(JSON.stringify({}))
 
-
       return expect(ketch.loadJurisdiction()).rejects.toBe(errors.noJurisdictionError)
     })
 
@@ -48,11 +47,13 @@ describe('jurisdiction', () => {
         },
       } as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          countryCode: 'GB',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            countryCode: 'GB',
+          },
+        }),
+      )
 
       window.dataLayer = []
       window.dataLayer.push({
@@ -73,12 +74,14 @@ describe('jurisdiction', () => {
         },
       } as any as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          countryCode: 'US',
-          regionCode: 'CA',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            countryCode: 'US',
+            regionCode: 'CA',
+          },
+        }),
+      )
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
     })
@@ -94,11 +97,14 @@ describe('jurisdiction', () => {
         },
       } as any as Configuration)
 
-      fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({
-        location: {
-          countryCode: 'NA',
-        },
-      }))
+      fetchMock.mockResponse(
+        async (): Promise<string> =>
+          JSON.stringify({
+            location: {
+              countryCode: 'NA',
+            },
+          }),
+      )
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
     })

@@ -1,15 +1,24 @@
-import {KetchWebAPI} from '@ketch-sdk/ketch-web-api'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import Future from './future'
 import {
   AppDiv,
-  Callback, Configuration,
-  Consent, Environment, GetConsentResponse, GetLocationResponse,
-  Identities, InvokeRightRequest,
-  InvokeRightsEvent, IPInfo, JurisdictionInfo,
+  Callback,
+  Configuration,
+  Consent,
+  Environment,
+  GetConsentResponse,
+  GetLocationResponse,
+  Identities,
+  InvokeRightRequest,
+  InvokeRightsEvent,
+  IPInfo,
+  JurisdictionInfo,
   Plugin,
-  PreferenceExperienceParams, SetConsentRequest,
+  PreferenceExperienceParams,
+  SetConsentRequest,
   ShowConsentExperience,
-  ShowPreferenceExperience, DataSubject,
+  ShowPreferenceExperience,
+  DataSubject,
   GetConsentRequest,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { tealiumKetchPermitData } from './datalayer'
@@ -63,7 +72,7 @@ declare global {
   }
 
   type WebKit = {
-    messageHandlers: {[name: string]: WKHandler}
+    messageHandlers: { [name: string]: WKHandler }
   }
 
   interface Window {
@@ -457,7 +466,7 @@ export class Ketch {
     for (const purposeCode in c.purposes) {
       permitChangedEvent[purposeCode] = c.purposes[purposeCode]
       swbPermitChangedEvent[purposeCode] = c.purposes[purposeCode]
-      tealiumKetchDataLayer[purposeCode] = c.purposes[purposeCode] ? '1' : '0';
+      tealiumKetchDataLayer[purposeCode] = c.purposes[purposeCode] ? '1' : '0'
     }
 
     dataLayer().push(permitChangedEvent)
@@ -850,7 +859,7 @@ export class Ketch {
    */
   async setEnvironment(env: Environment): Promise<Environment> {
     log.info('setEnvironment', env)
-    return await this._environment.setValue(env) || {} as Environment
+    return (await this._environment.setValue(env)) || ({} as Environment)
   }
 
   /**
@@ -964,7 +973,7 @@ export class Ketch {
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
     log.info('setGeoIP', g)
     this.pushGeoIP(g)
-    return await this._geoip.setValue(g) || {} as IPInfo
+    return (await this._geoip.setValue(g)) || ({} as IPInfo)
   }
 
   /**
@@ -1008,7 +1017,7 @@ export class Ketch {
   async setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id)
 
-    return await this._identities.setValue(id) || {} as Identities
+    return (await this._identities.setValue(id)) || ({} as Identities)
   }
 
   /**
@@ -1210,7 +1219,7 @@ export class Ketch {
     log.info('setJurisdiction', ps)
 
     this.pushJurisdiction(ps)
-    return await this._jurisdiction.setValue(ps) || ''
+    return (await this._jurisdiction.setValue(ps)) || ''
   }
 
   /**
@@ -1293,7 +1302,7 @@ export class Ketch {
    */
   async setRegionInfo(info: string): Promise<string> {
     log.info('setRegionInfo', info)
-    return await this._regionInfo.setValue(info) || ''
+    return (await this._regionInfo.setValue(info)) || ''
   }
 
   /**

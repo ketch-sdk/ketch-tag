@@ -1,12 +1,12 @@
 declare global {
   interface Window {
-    dataLayer: any[];
-    utag_data: TealiumketchPermitData;
+    dataLayer: any[]
+    utag_data: TealiumketchPermitData
   }
 
   type TealiumketchPermitData = {
-    [key: string]: any;
-    ketchPermit?: any;
+    [key: string]: any
+    ketchPermit?: any
   }
 }
 

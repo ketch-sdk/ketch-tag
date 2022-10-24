@@ -24,9 +24,11 @@ describe('regionInfo', () => {
     it('handles an invalid IPInfo', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {},
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {},
+        }),
+      )
 
       return expect(ketch.loadRegionInfo()).rejects.toBe(errors.unrecognizedLocationError)
     })
@@ -34,11 +36,13 @@ describe('regionInfo', () => {
     it('handles a missing country_code', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          ip: '10.11.12.13',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            ip: '10.11.12.13',
+          },
+        }),
+      )
 
       return expect(ketch.loadRegionInfo()).rejects.toBe(errors.unrecognizedLocationError)
     })
@@ -46,13 +50,15 @@ describe('regionInfo', () => {
     it('handles a non-US country_code with a region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          ip: '10.11.12.13',
-          countryCode: 'UK',
-          regionCode: 'CA',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            ip: '10.11.12.13',
+            countryCode: 'UK',
+            regionCode: 'CA',
+          },
+        }),
+      )
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('UK')
     })
@@ -60,12 +66,14 @@ describe('regionInfo', () => {
     it('handles no region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          ip: '10.11.12.13',
-          countryCode: 'AU',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            ip: '10.11.12.13',
+            countryCode: 'AU',
+          },
+        }),
+      )
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('AU')
     })
@@ -73,13 +81,15 @@ describe('regionInfo', () => {
     it('handles sub region', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          ip: '10.11.12.13',
-          countryCode: 'US',
-          regionCode: 'CA',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            ip: '10.11.12.13',
+            countryCode: 'US',
+            regionCode: 'CA',
+          },
+        }),
+      )
 
       return expect(ketch.loadRegionInfo()).resolves.toEqual('US-CA')
     })
@@ -87,12 +97,14 @@ describe('regionInfo', () => {
     it('handles region on the query', () => {
       const ketch = new Ketch({} as Configuration)
 
-      fetchMock.mockResponse(JSON.stringify({
-        location: {
-          ip: '10.11.12.13',
-          countryCode: 'AU',
-        },
-      }))
+      fetchMock.mockResponse(
+        JSON.stringify({
+          location: {
+            ip: '10.11.12.13',
+            countryCode: 'AU',
+          },
+        }),
+      )
 
       mockParametersGet.mockImplementationOnce(key => {
         if (key === parameters.REGION) return 'FOO'
