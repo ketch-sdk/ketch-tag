@@ -1,9 +1,8 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-
-import { Configuration, getConsent, setConsent } from '@ketch-sdk/ketch-web-api'
+import { Configuration, IdentityFormat, IdentityType } from '@ketch-sdk/ketch-types'
 import errors from '../src/internal/errors'
-import { Ketch } from '../src/pure'
+import { Ketch } from '../src/'
 import constants from '../src/internal/constants'
+import fetchMock from 'jest-fetch-mock'
 
 describe('consent', () => {
   // @ts-ignore
@@ -29,8 +28,9 @@ describe('consent', () => {
     },
     identities: {
       axonic_cookie: {
-        type: 'dataLayer',
         variable: 'huid',
+        type: IdentityType.IDENTITY_TYPE_DATA_LAYER,
+        format: IdentityFormat.IDENTITY_FORMAT_STRING,
       },
     },
     environment: {
@@ -148,21 +148,21 @@ describe('consent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config)
 
-      const mockGetConsent = jest.mocked(getConsent)
-
-      mockGetConsent.mockResolvedValue({
-        purposes: {
-          pacode1: {
-            allowed: 'true',
+      fetchMock.mockResponse(async (): Promise<string> => {
+        return JSON.stringify({
+          purposes: {
+            'pacode1': {
+              allowed: 'true',
+            },
+            'pacode2': {
+              allowed: 'false',
+            },
+            'pacode3': {
+              allowed: 'false',
+            },
           },
-          pacode2: {
-            allowed: 'false',
-          },
-          pacode3: {
-            allowed: 'false',
-          },
-        },
-        vendors: ['1'],
+          vendors: ['1'],
+        })
       })
 
       return ketch.fetchConsent(identities).then(x => {
@@ -212,8 +212,7 @@ describe('consent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config)
 
-      const mockSetConsent = jest.mocked(setConsent)
-      mockSetConsent.mockResolvedValue()
+      fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({}))
 
       return ketch
         .updateConsent(identities, {
@@ -231,25 +230,15 @@ describe('consent', () => {
           expect(environment).not.toBeNull()
 
           if (property && jurisdiction && organization && environment) {
-            expect(mockSetConsent).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
-              propertyCode: property.code,
-              environmentCode: environment.code,
-              controllerCode: '',
-              organizationCode: 'org',
-              identities,
-              jurisdictionCode: jurisdiction.code,
-              purposes: {
-                pacode1: {
-                  allowed: 'true',
-                  legalBasisCode: 'lb1',
-                },
-                pacode2: {
-                  allowed: 'false',
-                  legalBasisCode: 'lb2',
-                },
+            expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
+              "body": "{\"organizationCode\":\"org\",\"propertyCode\":\"app\",\"environmentCode\":\"env\",\"controllerCode\":\"\",\"identities\":{\"space1\":\"id1\"},\"jurisdictionCode\":\"ps\",\"purposes\":{\"pacode1\":{\"allowed\":\"true\",\"legalBasisCode\":\"lb1\"},\"pacode2\":{\"allowed\":\"false\",\"legalBasisCode\":\"lb2\"}},\"migrationOption\":3,\"vendors\":[\"1\"]}",
+              "credentials": "omit",
+              "headers": {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
               },
-              vendors: ['1'],
-              migrationOption: 3,
+              "method": "POST",
+              "mode": "cors",
             })
           }
         })
@@ -318,8 +307,6 @@ describe('consent', () => {
   describe('getConsent', () => {
     const ketch = new Ketch(config)
 
-    const mockSetConsent = jest.mocked(setConsent)
-
     it('returns the existing consent', () => {
       const c = {
         purposes: {
@@ -327,7 +314,9 @@ describe('consent', () => {
         },
         vendors: ['1'],
       }
-      mockSetConsent.mockResolvedValue()
+      fetchMock.mockResponse(async (): Promise<string> => {
+        return "{}"
+      })
 
       expect(ketch.hasConsent()).not.toBeTruthy()
       return ketch

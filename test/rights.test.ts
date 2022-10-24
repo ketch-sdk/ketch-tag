@@ -1,7 +1,6 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-
-import { Configuration, invokeRight } from '@ketch-sdk/ketch-web-api'
-import { Ketch } from '../src/pure'
+import { Configuration } from '@ketch-sdk/ketch-types'
+import { Ketch } from '../src/'
+import fetchMock from 'jest-fetch-mock'
 
 describe('gangplank', () => {
   // @ts-ignore
@@ -51,9 +50,6 @@ describe('gangplank', () => {
       migration: '3',
     },
   }
-  const identities = {
-    email: 'rights@email.com',
-  }
   const data = {
     right: 'portability',
     firstName: 'first',
@@ -67,8 +63,8 @@ describe('gangplank', () => {
 
   describe('invokeRights', () => {
     it('handles a call with full config', () => {
-      const mockInvokeRight = jest.mocked(invokeRight)
-      mockInvokeRight.mockResolvedValue()
+      fetchMock.mockResponse(JSON.stringify({
+      }))
 
       return ketch.invokeRight(data).then(() => {
         const { property, jurisdiction, organization, environment } = config
@@ -79,22 +75,15 @@ describe('gangplank', () => {
 
         if (property && jurisdiction && organization && environment) {
           // eslint-disable-next-line jest/no-conditional-expect
-          expect(mockInvokeRight).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2', {
-            propertyCode: property.code,
-            environmentCode: environment.code,
-            organizationCode: 'org',
-            controllerCode: '',
-            identities,
-            jurisdictionCode: jurisdiction.code,
-            rightCode: 'portability',
-            user: {
-              first: 'first',
-              last: 'last',
-              email: 'rights@email.com',
-              country: 'United States',
-              stateRegion: 'California',
-              description: '',
+          expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/rights/org/invoke', {
+            "body": "{\"organizationCode\":\"org\",\"propertyCode\":\"app\",\"environmentCode\":\"env\",\"controllerCode\":\"\",\"identities\":{\"email\":\"rights@email.com\"},\"jurisdictionCode\":\"ps\",\"rightCode\":\"portability\",\"user\":{\"email\":\"rights@email.com\",\"first\":\"first\",\"last\":\"last\",\"country\":\"United States\",\"stateRegion\":\"California\",\"description\":\"\"}}",
+            "credentials": "omit",
+            "headers": {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
             },
+            "method": "POST",
+            "mode": "cors",
           })
         }
       })
@@ -111,10 +100,12 @@ describe('gangplank', () => {
     }
 
     it('skips if no rightsEmail', () => {
-      const mockInvokeRight = jest.mocked(invokeRight)
-      mockInvokeRight.mockResolvedValue()
+      fetchMock.mockResponse(JSON.stringify({
+        location: {},
+      }))
+
       return ketch.invokeRight(dataNoEmail).then(() => {
-        expect(mockInvokeRight).not.toHaveBeenCalled()
+        expect(fetchMock).not.toHaveBeenCalled()
       })
     })
 
@@ -129,10 +120,12 @@ describe('gangplank', () => {
     }
 
     it('skips if no rights', () => {
-      const mockInvokeRight = jest.mocked(invokeRight)
-      mockInvokeRight.mockResolvedValue()
+      fetchMock.mockResponse(JSON.stringify({
+        location: {},
+      }))
+
       return ketch.invokeRight(dataNoRight).then(() => {
-        expect(mockInvokeRight).not.toHaveBeenCalled()
+        expect(fetchMock).not.toHaveBeenCalled()
       })
     })
   })

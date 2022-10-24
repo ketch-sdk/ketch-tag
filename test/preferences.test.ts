@@ -1,5 +1,5 @@
-import { Configuration } from '@ketch-sdk/ketch-web-api'
-import { Ketch } from '../src/pure'
+import { Configuration } from '@ketch-sdk/ketch-types'
+import { Ketch } from '../src/'
 
 describe('preferences', () => {
   describe('showPreferences', () => {

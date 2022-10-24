@@ -1,10 +1,10 @@
-jest.mock('@ketch-sdk/ketch-web-api')
-jest.mock('../src/internal/parameters')
-
 import errors from '../src/internal/errors'
 import parameters from '../src/internal/parameters'
-import { Ketch } from '../src/pure'
-import { Configuration, getLocation, GetLocationResponse } from '@ketch-sdk/ketch-web-api'
+import { Ketch } from '../src/'
+import { Configuration } from '@ketch-sdk/ketch-types'
+import fetchMock from 'jest-fetch-mock'
+
+jest.mock('../src/internal/parameters')
 
 describe('jurisdiction', () => {
   const mockParametersGet = jest.mocked(parameters.get)
@@ -35,9 +35,8 @@ describe('jurisdiction', () => {
     it('handles null regionInfo', () => {
       const ketch = new Ketch({} as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation)
+      fetchMock.mockResponse(JSON.stringify({}))
 
-      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError)
 
       return expect(ketch.loadJurisdiction()).rejects.toBe(errors.noJurisdictionError)
     })
@@ -49,17 +48,14 @@ describe('jurisdiction', () => {
         },
       } as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation)
-      mockLoadRegionInfo.mockResolvedValue({
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           countryCode: 'GB',
         },
-      } as GetLocationResponse)
+      }))
 
-      // @ts-ignore
-      window['dataLayer'] = []
-      // @ts-ignore
-      window['dataLayer'].push({
+      window.dataLayer = []
+      window.dataLayer.push({
         foobar: 'ccpa',
       })
 
@@ -77,13 +73,12 @@ describe('jurisdiction', () => {
         },
       } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation)
-      mockLoadRegionInfo.mockResolvedValue({
+      fetchMock.mockResponse(JSON.stringify({
         location: {
           countryCode: 'US',
           regionCode: 'CA',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
     })
@@ -99,12 +94,11 @@ describe('jurisdiction', () => {
         },
       } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation)
-      mockLoadRegionInfo.mockResolvedValue({
+      fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({
         location: {
           countryCode: 'NA',
         },
-      } as GetLocationResponse)
+      }))
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
     })
@@ -120,8 +114,7 @@ describe('jurisdiction', () => {
         },
       } as any as Configuration)
 
-      const mockLoadRegionInfo = jest.mocked(getLocation)
-      mockLoadRegionInfo.mockRejectedValue(errors.unrecognizedLocationError)
+      fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({}))
 
       return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
     })
@@ -137,7 +130,7 @@ describe('jurisdiction', () => {
       let dataLayerPS = ''
 
       // @ts-ignore
-      for (const dl of window['dataLayer']) {
+      for (const dl of window.dataLayer) {
         if (dl['event'] === 'ketchJurisdiction') {
           dataLayerPS = dl['jurisdictionCode']
         }
