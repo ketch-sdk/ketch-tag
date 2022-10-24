@@ -80,7 +80,7 @@ export default class Future<T> {
    *
    * @param v
    */
-  async setValue(v?: T): Promise<T | undefined> {
+  async setValue(v: T): Promise<T> {
     log.trace('setValue', this._name, v)
 
     return new Promise(resolve => {
@@ -88,6 +88,16 @@ export default class Future<T> {
 
       resolve(v)
     })
+  }
+
+  /**
+   * Clears the value, calling any pending resolvers.
+   *
+   */
+  async clearValue(): Promise<void> {
+    log.trace('clearValue', this._name)
+
+    this.setRawValue(undefined)
   }
 
   /**

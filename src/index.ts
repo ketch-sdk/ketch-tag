@@ -6,13 +6,11 @@ import {
   Configuration,
   Consent,
   Environment,
-  GetConsentResponse,
   GetLocationResponse,
   Identities,
   InvokeRightRequest,
   InvokeRightsEvent,
   IPInfo,
-  JurisdictionInfo,
   Plugin,
   PreferenceExperienceParams,
   SetConsentRequest,
@@ -250,7 +248,7 @@ export class Ketch {
     }
 
     if (plugin.environmentLoaded) {
-      this.onEnvironment(env => {
+      await this.onEnvironment(env => {
         if (plugin.environmentLoaded) {
           return plugin.environmentLoaded(this, this._config, env)
         }
@@ -258,7 +256,7 @@ export class Ketch {
     }
 
     if (plugin.geoIPLoaded) {
-      this.onGeoIP(ipInfo => {
+      await this.onGeoIP(ipInfo => {
         if (plugin.geoIPLoaded) {
           return plugin.geoIPLoaded(this, this._config, ipInfo)
         }
@@ -266,7 +264,7 @@ export class Ketch {
     }
 
     if (plugin.identitiesLoaded) {
-      this.onIdentities(identities => {
+      await this.onIdentities(identities => {
         if (plugin.identitiesLoaded) {
           return plugin.identitiesLoaded(this, this._config, identities)
         }
@@ -274,7 +272,7 @@ export class Ketch {
     }
 
     if (plugin.jurisdictionLoaded) {
-      this.onJurisdiction(jurisdiction => {
+      await this.onJurisdiction(jurisdiction => {
         if (plugin.jurisdictionLoaded) {
           return plugin.jurisdictionLoaded(this, this._config, jurisdiction)
         }
@@ -282,7 +280,7 @@ export class Ketch {
     }
 
     if (plugin.regionInfoLoaded) {
-      this.onRegionInfo(region => {
+      await this.onRegionInfo(region => {
         if (plugin.regionInfoLoaded) {
           return plugin.regionInfoLoaded(this, this._config, region)
         }
@@ -290,15 +288,15 @@ export class Ketch {
     }
 
     if (plugin.showConsentExperience) {
-      this.onShowConsentExperience(plugin.showConsentExperience)
+      await this.onShowConsentExperience(plugin.showConsentExperience)
     }
 
     if (plugin.showPreferenceExperience) {
-      this.onShowPreferenceExperience(plugin.showPreferenceExperience)
+      await this.onShowPreferenceExperience(plugin.showPreferenceExperience)
     }
 
     if (plugin.willShowExperience) {
-      this.onWillShowExperience(() => {
+      await this.onWillShowExperience(() => {
         if (plugin.willShowExperience) {
           return plugin.willShowExperience(this, this._config)
         }
@@ -306,7 +304,7 @@ export class Ketch {
     }
 
     if (plugin.experienceHidden) {
-      this.onHideExperience(reason => {
+      await this.onHideExperience(reason => {
         if (plugin.experienceHidden) {
           return plugin.experienceHidden(this, this._config, reason)
         }
@@ -314,7 +312,7 @@ export class Ketch {
     }
 
     if (plugin.consentChanged) {
-      this.onConsent(consent => {
+      await this.onConsent(consent => {
         if (plugin.consentChanged) {
           return plugin.consentChanged(this, this._config, consent)
         }
@@ -322,7 +320,7 @@ export class Ketch {
     }
 
     if (plugin.rightInvoked) {
-      this.onInvokeRight(request => {
+      await this.onInvokeRight(request => {
         if (plugin.rightInvoked) {
           return plugin.rightInvoked(this, this._config, request)
         }
@@ -417,25 +415,14 @@ export class Ketch {
   async showConsentExperience(): Promise<Consent> {
     log.info('showConsentExperience')
 
-    let c: Promise<Consent | undefined>
-    if (this._consent.hasValue()) {
-      c = this._consent.getValue()
-    } else {
-      c = Promise.resolve({ purposes: {}, vendors: [] } as Consent)
+    const consent = this._consent.hasValue() ? await this._consent.getValue() : ({ purposes: {}, vendors: [] } as Consent)
+
+    if (this._showConsentExperience) {
+      this.willShowExperience(ExperienceType.Consent)
+      this._showConsentExperience(this, this._config, consent, { displayHint: this.selectExperience() })
     }
 
-    return c.then(consent => {
-      if (consent === undefined) {
-        return { purposes: {}, vendors: [] } as Consent
-      }
-
-      if (this._showConsentExperience) {
-        this.willShowExperience(ExperienceType.Consent)
-        this._showConsentExperience(this, this._config, consent, { displayHint: this.selectExperience() })
-      }
-
-      return consent
-    })
+    return consent
   }
 
   /**
@@ -494,7 +481,8 @@ export class Ketch {
     log.info('updateClientConsent', c)
 
     if (!c || isEmpty(c)) {
-      return this._consent.setValue(undefined) as Promise<Consent>
+      await this._consent.clearValue()
+      return {} as Consent
     }
 
     // Merge new consent into existing consent
@@ -518,7 +506,7 @@ export class Ketch {
     // TODO server side signing
     sessionStorage.setItem('consent', JSON.stringify(c))
 
-    return this._consent.setValue(c) as Promise<Consent>
+    return this._consent.setValue(c)
   }
 
   /**
@@ -529,11 +517,13 @@ export class Ketch {
   async setConsent(c: Consent): Promise<Consent> {
     log.info('setConsent', c)
 
-    return this.updateClientConsent(c).then(() => {
-      return this.getIdentities()
-        .then(identities => this.updateConsent(identities, c))
-        .then(() => c)
-    })
+    await this.updateClientConsent(c)
+
+    const identities = await this.getIdentities()
+
+    await this.updateConsent(identities, c)
+
+    return c
   }
 
   /**
@@ -634,57 +624,43 @@ export class Ketch {
     // get session consent
     // TODO server side signing
     const sessionConsentString = sessionStorage.getItem('consent')
-    let sessionConsent: Consent
+    const sessionConsent = sessionConsentString ? JSON.parse(sessionConsentString) : undefined
 
-    if (sessionConsentString) {
-      sessionConsent = JSON.parse(sessionConsentString)
+    const identities = await this.getIdentities()
+
+    let c = await this.fetchConsent(identities)
+    c = await this.overrideWithProvisionalConsent(c, this._provisionalConsent!)
+    if (sessionConsent) {
+      c = await this.mergeSessionConsent(c, sessionConsent)
     }
 
-    return this.getIdentities()
-      .then(identities => {
-        return this.fetchConsent(identities)
-          .then(c => this.overrideWithProvisionalConsent(c, this._provisionalConsent!))
-          .then(c => this.mergeSessionConsent(c, sessionConsent))
-          .then(c => {
-            this._provisionalConsent = undefined
-            let shouldCreatePermits = false
+    this._provisionalConsent = undefined
+    let shouldCreatePermits = false
 
-            // check if shouldShowConsent before populating permits
-            const displayConsent = this.shouldShowConsent(c)
+    // check if shouldShowConsent before populating permits
+    const displayConsent = this.shouldShowConsent(c)
 
-            // populate disclosure permits that are undefined
-            if (this._config.purposes) {
-              for (const p of this._config.purposes) {
-                if (c.purposes[p.code] === undefined && !p.requiresOptIn) {
-                  c.purposes[p.code] = true
-                  shouldCreatePermits = true
-                }
-              }
-            }
+    // populate disclosure permits that are undefined
+    if (this._config.purposes) {
+      for (const p of this._config.purposes) {
+        if (c.purposes[p.code] === undefined && !p.requiresOptIn) {
+          c.purposes[p.code] = true
+          shouldCreatePermits = true
+        }
+      }
+    }
 
-            let consentPromise: Promise<any>
-            if (shouldCreatePermits) {
-              consentPromise = this.setConsent(c)
-            } else {
-              consentPromise = this.updateClientConsent(c)
-            }
+    shouldCreatePermits ? await this.setConsent(c) : await this.updateClientConsent(c)
 
-            // first set consent value then proceed to show experience and/or create permits
-            return consentPromise.then(() => {
-              if (displayConsent) {
-                return this.showConsentExperience()
-              }
+    // first set consent value then proceed to show experience and/or create permits
+    if (displayConsent) {
+      return this.showConsentExperience()
+    }
 
-              // experience will not show - call functions registered using onHideExperience
-              this._hideExperience.forEach(func => {
-                func(ExperienceHidden.WillNotShow)
-              })
+    // experience will not show - call functions registered using onHideExperience
+    this._hideExperience.forEach(callback => { callback(ExperienceHidden.WillNotShow) })
 
-              return
-            })
-          })
-      })
-      .then(() => this._consent.getValue()) as Promise<Consent>
+    return this._consent.getValue()
   }
 
   /**
@@ -728,8 +704,9 @@ export class Ketch {
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
-      return Promise.reject(errors.noIdentitiesError)
+      throw errors.noIdentitiesError
     }
+
     if (
       !this._config ||
       !this._config.property ||
@@ -739,7 +716,7 @@ export class Ketch {
       !this._config.jurisdiction ||
       this._config.purposes.length === 0
     ) {
-      return Promise.reject(errors.noPurposesError)
+      throw errors.noPurposesError
     }
 
     const request: GetConsentRequest = {
@@ -759,28 +736,27 @@ export class Ketch {
       }
     }
 
-    return this._api.getConsent(request).then((consent: GetConsentResponse) => {
-      const newConsent: Consent = { purposes: {} }
+    const consent = await this._api.getConsent(request)
+    const newConsent: Consent = { purposes: {} }
 
-      if (this._config.purposes && consent.purposes) {
-        for (const p of this._config.purposes) {
-          if (consent.purposes[p.code]) {
-            const x = consent.purposes[p.code]
-            if (typeof x === 'string') {
-              newConsent.purposes[p.code] = x === 'true'
-            } else if (x.allowed) {
-              newConsent.purposes[p.code] = x.allowed === 'true'
-            }
+    if (this._config.purposes && consent.purposes) {
+      for (const p of this._config.purposes) {
+        if (consent.purposes[p.code]) {
+          const x = consent.purposes[p.code]
+          if (typeof x === 'string') {
+            newConsent.purposes[p.code] = x === 'true'
+          } else if (x.allowed) {
+            newConsent.purposes[p.code] = x.allowed === 'true'
           }
         }
       }
+    }
 
-      if (consent.vendors) {
-        newConsent.vendors = consent.vendors
-      }
+    if (consent.vendors) {
+      newConsent.vendors = consent.vendors
+    }
 
-      return newConsent
-    })
+    return newConsent
   }
 
   /**
@@ -859,7 +835,7 @@ export class Ketch {
    */
   async setEnvironment(env: Environment): Promise<Environment> {
     log.info('setEnvironment', env)
-    return (await this._environment.setValue(env)) || ({} as Environment)
+    return this._environment.setValue(env)
   }
 
   /**
@@ -872,7 +848,7 @@ export class Ketch {
     // We have to have environments
     if (!this._config.environments) {
       log.debug('detectEnvironment', 'no environments')
-      return Promise.reject(errors.noEnvironmentError)
+      throw errors.noEnvironmentError
     }
 
     // Try to locate the specifiedEnv
@@ -888,7 +864,7 @@ export class Ketch {
       }
 
       log.error('not found', specifiedEnv)
-      return Promise.reject(errors.noEnvironmentError)
+      throw errors.noEnvironmentError
     }
 
     // Try to locate based on pattern
@@ -922,7 +898,7 @@ export class Ketch {
       }
     }
 
-    return Promise.reject(errors.noEnvironmentError)
+    throw errors.noEnvironmentError
   }
 
   /**
@@ -934,7 +910,8 @@ export class Ketch {
     if (this._environment.hasValue()) {
       return this._environment.getValue()
     } else {
-      return this.detectEnvironment().then(env => this.setEnvironment(env))
+      const env = await this.detectEnvironment()
+      return this.setEnvironment(env)
     }
   }
 
@@ -973,7 +950,7 @@ export class Ketch {
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
     log.info('setGeoIP', g)
     this.pushGeoIP(g)
-    return (await this._geoip.setValue(g)) || ({} as IPInfo)
+    return this._geoip.setValue(g)
   }
 
   /**
@@ -994,9 +971,8 @@ export class Ketch {
     if (this._geoip.hasValue()) {
       return this._geoip.getValue()
     } else {
-      return this.loadGeoIP()
-        .then(r => r.location)
-        .then(ip => this.setGeoIP(ip))
+      const r = await this.loadGeoIP()
+      return this.setGeoIP(r.location)
     }
   }
 
@@ -1017,7 +993,7 @@ export class Ketch {
   async setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id)
 
-    return (await this._identities.setValue(id)) || ({} as Identities)
+    return await this._identities.setValue(id)
   }
 
   /**
@@ -1181,7 +1157,8 @@ export class Ketch {
     if (this._identities.hasValue()) {
       return this._identities.getValue()
     } else {
-      return this.collectIdentities().then(id => this.setIdentities(id))
+      const id = await this.collectIdentities()
+      return this.setIdentities(id)
     }
   }
 
@@ -1219,7 +1196,7 @@ export class Ketch {
     log.info('setJurisdiction', ps)
 
     this.pushJurisdiction(ps)
-    return (await this._jurisdiction.setValue(ps)) || ''
+    return this._jurisdiction.setValue(ps)
   }
 
   /**
@@ -1231,7 +1208,8 @@ export class Ketch {
     if (this._jurisdiction.hasValue()) {
       return this._jurisdiction.getValue()
     } else {
-      return this.loadJurisdiction().then(ps => this.setJurisdiction(ps))
+      const ps = await this.loadJurisdiction()
+      return this.setJurisdiction(ps)
     }
   }
 
@@ -1255,9 +1233,9 @@ export class Ketch {
       return this.setJurisdiction(jurisdictionOverride)
     }
 
-    const ps: JurisdictionInfo | undefined = this._config.jurisdiction
+    const ps = this._config.jurisdiction
     if (!ps) {
-      return Promise.reject(errors.noJurisdictionError)
+      throw errors.noJurisdictionError
     }
 
     const v = ps.variable
@@ -1271,28 +1249,17 @@ export class Ketch {
       }
     }
 
-    return this.loadRegionInfo()
-      .then(region => {
-        if (ps.scopes && ps.scopes[region]) {
-          return ps.scopes[region]
-        }
-
-        return ps.defaultScopeCode || ''
-      })
-      .then(x => {
-        if (x) {
-          return this.setJurisdiction(x)
-        }
-
+    try {
+      const region = await this.loadRegionInfo()
+      const jurisdiction = (ps.scopes && ps.scopes[region]) ? ps.scopes[region] : (ps.defaultScopeCode || '')
+      if (!jurisdiction) {
         return Promise.reject(errors.noJurisdictionError)
-      })
-      .catch(() => {
-        if (ps.defaultScopeCode) {
-          return this.setJurisdiction(ps.defaultScopeCode)
-        }
+      }
 
-        return Promise.reject(errors.noJurisdictionError)
-      })
+      return this.setJurisdiction(jurisdiction)
+    } catch (e) {
+      return ps.defaultScopeCode || ''
+    }
   }
 
   /**
@@ -1302,7 +1269,7 @@ export class Ketch {
    */
   async setRegionInfo(info: string): Promise<string> {
     log.info('setRegionInfo', info)
-    return (await this._regionInfo.setValue(info)) || ''
+    return this._regionInfo.setValue(info)
   }
 
   /**
@@ -1316,27 +1283,27 @@ export class Ketch {
       return this.setRegionInfo(specifiedRegion)
     }
 
-    return this.loadGeoIP()
-      .then(r => r.location)
-      .then(d => this.setGeoIP(d))
-      .then(g => {
-        if (!g) {
-          return Promise.reject(errors.unrecognizedLocationError)
-        }
+    const r = await this.loadGeoIP()
+    if (!r || !r.location) {
+      throw errors.unrecognizedLocationError
+    }
 
-        const cc = g.countryCode
-        if (!cc) {
-          return Promise.reject(errors.unrecognizedLocationError)
-        }
+    const g = await this.setGeoIP(r.location)
+    if (!g) {
+      throw errors.unrecognizedLocationError
+    }
 
-        let region = cc
-        if (cc === 'US') {
-          region = `${cc}-${g.regionCode}`
-        }
+    const cc = g.countryCode
+    if (!cc) {
+      throw errors.unrecognizedLocationError
+    }
 
-        return region
-      })
-      .then(info => this.setRegionInfo(info))
+    let region = cc
+    if (cc === 'US') {
+      region = `${cc}-${g.regionCode}`
+    }
+
+    return this.setRegionInfo(region)
   }
 
   /**
@@ -1347,7 +1314,8 @@ export class Ketch {
     if (this._regionInfo.hasValue()) {
       return this._regionInfo.getValue()
     } else {
-      return this.loadRegionInfo().then(info => this.setRegionInfo(info))
+      const info = await this.loadRegionInfo()
+      return this.setRegionInfo(info)
     }
   }
 
@@ -1478,16 +1446,17 @@ export class Ketch {
     })
 
     if (reason !== 'setConsent') {
-      return this.retrieveConsent().then(consent => {
-        if (this._config.purposes) {
-          for (const p of this._config.purposes) {
-            if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
-              consent.purposes[p.code] = false
-            }
+      const consent = await this.retrieveConsent()
+
+      if (this._config.purposes) {
+        for (const p of this._config.purposes) {
+          if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
+            consent.purposes[p.code] = false
           }
         }
-        return this.setConsent(consent)
-      })
+      }
+
+      return this.setConsent(consent)
     }
 
     return Promise.resolve({ purposes: {}, vendors: [] } as Consent)
@@ -1539,61 +1508,59 @@ export class Ketch {
   async refreshIdentityConsent(): Promise<void> {
     log.debug('refreshIdentityConsent')
 
+    const pageIdentities = await this.collectIdentities()
+    const previousIdentities = await this.getIdentities()
+
     // compare identities currently on page with those previously retrieved
-    return Promise.all([this.collectIdentities(), this.getIdentities()]).then(
-      ([pageIdentities, previousIdentities]) => {
-        // check if identity value the same
-        if (pageIdentities.size === previousIdentities.size) {
-          let identityMatch = true
-          Object.keys(pageIdentities).forEach(key => {
-            if (pageIdentities[key] !== previousIdentities[key]) {
-              // different identities
-              identityMatch = false
-            }
-          })
-          if (identityMatch) {
-            // no change in identities so no action needed
-            return
-          }
+    // check if identity value the same
+    if (pageIdentities.size === previousIdentities.size) {
+      let identityMatch = true
+      Object.keys(pageIdentities).forEach(key => {
+        if (pageIdentities[key] !== previousIdentities[key]) {
+          // different identities
+          identityMatch = false
         }
+      })
+      if (identityMatch) {
+        // no change in identities so no action needed
+        return
+      }
+    }
 
-        // change in identities found so set new identities found on page and check for consent
-        return this.setIdentities(pageIdentities).then(identities => {
-          // if experience is currently displayed only update identities and they return to wait for user input
-          if (this._isExperienceDisplayed) {
-            return
-          }
-          // compare consent stored in permits for identities to last known consent
-          return Promise.all([this.fetchConsent(identities), this.retrieveConsent()]).then(
-            ([permitConsent, localConsent]) => {
-              // check if consent value the same
-              if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
-                let newConsent = false
-                for (const key in permitConsent) {
-                  if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
-                    // different consent values
-                    newConsent = true
-                    break
-                  }
-                }
-                if (!newConsent) {
-                  // no change in consent so no further action necessary
-                  return
-                }
-              }
+    const identities = await this.setIdentities(pageIdentities)
 
-              // if experience has been displayed in session, update permits with already collected consent
-              if (this._hasExperienceBeenDisplayed) {
-                return this.updateConsent(identities, localConsent) as Promise<undefined>
-              }
+    // change in identities found so set new identities found on page and check for consent
+    // if experience is currently displayed only update identities and they return to wait for user input
+    if (this._isExperienceDisplayed) {
+      return
+    }
 
-              // show experience for first time in session
-              return this.showConsentExperience()
-            },
-          ) as Promise<void>
-        })
-      },
-    )
+    const permitConsent = await this.fetchConsent(identities)
+    const localConsent = await this.retrieveConsent()
+
+    // check if consent value the same
+    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
+      let newConsent = false
+      for (const key in permitConsent) {
+        if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
+          // different consent values
+          newConsent = true
+          break
+        }
+      }
+      if (!newConsent) {
+        // no change in consent so no further action necessary
+        return
+      }
+    }
+
+    // if experience has been displayed in session, update permits with already collected consent
+    if (this._hasExperienceBeenDisplayed) {
+      return this.updateConsent(identities, localConsent)
+    }
+
+    // show experience for first time in session
+    await this.showConsentExperience()
   }
 
   /**
