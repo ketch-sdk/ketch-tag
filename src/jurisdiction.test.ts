@@ -1,10 +1,10 @@
-import errors from '../src/internal/errors'
-import parameters from '../src/internal/parameters'
-import { Ketch } from '../src/'
+import errors from './errors'
+import parameters from './parameters'
+import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
-jest.mock('../src/internal/parameters')
+jest.mock('./parameters')
 
 describe('jurisdiction', () => {
   const mockParametersGet = jest.mocked(parameters.get)

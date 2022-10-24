@@ -1,5 +1,5 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
-import { Ketch } from '../src/'
+import { Ketch } from './'
 import fetchMock from 'jest-fetch-mock'
 
 describe('gangplank', () => {

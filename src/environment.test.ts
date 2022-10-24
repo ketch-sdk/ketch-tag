@@ -1,9 +1,9 @@
-import errors from '../src/internal/errors'
-import parameters from '../src/internal/parameters'
-import { Ketch } from '../src/'
+import errors from './errors'
+import parameters from './parameters'
+import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
 
-jest.mock('../src/internal/parameters')
+jest.mock('./parameters')
 
 const mockParametersGet = jest.mocked(parameters.get)
 

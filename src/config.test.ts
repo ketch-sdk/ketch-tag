@@ -1,7 +1,7 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
-import { Ketch } from '../src/'
+import { Ketch } from './'
 
-jest.mock('../src/internal/parameters')
+jest.mock('./parameters')
 
 describe('config', () => {
   describe('getConfig', () => {

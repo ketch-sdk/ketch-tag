@@ -1,5 +1,5 @@
-import { getCookie, setCookie } from '../src/internal/cookie'
-import errors from '../src/internal/errors'
+import { getCookie, setCookie } from './cookie'
+import errors from './errors'
 
 describe('cookie', () => {
   describe('getItem', () => {

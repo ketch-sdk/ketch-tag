@@ -1,5 +1,5 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
-import { Ketch } from '../src/'
+import { Ketch } from './'
 
 describe('preferences', () => {
   describe('showPreferences', () => {
