@@ -214,91 +214,10 @@ export class Ketch {
    * Registers a plugin
    *
    * @param plugin The plugin to register
+   * @param config The plugin config
    */
-  async registerPlugin(plugin: Plugin): Promise<void> {
-    if (plugin.init) {
-      plugin.init(this, this._config)
-    }
-
-    if (plugin.environmentLoaded) {
-      await this.onEnvironment(env => {
-        if (plugin.environmentLoaded) {
-          return plugin.environmentLoaded(this, this._config, env)
-        }
-      })
-    }
-
-    if (plugin.geoIPLoaded) {
-      await this.onGeoIP(ipInfo => {
-        if (plugin.geoIPLoaded) {
-          return plugin.geoIPLoaded(this, this._config, ipInfo)
-        }
-      })
-    }
-
-    if (plugin.identitiesLoaded) {
-      await this.onIdentities(identities => {
-        if (plugin.identitiesLoaded) {
-          return plugin.identitiesLoaded(this, this._config, identities)
-        }
-      })
-    }
-
-    if (plugin.jurisdictionLoaded) {
-      await this.onJurisdiction(jurisdiction => {
-        if (plugin.jurisdictionLoaded) {
-          return plugin.jurisdictionLoaded(this, this._config, jurisdiction)
-        }
-      })
-    }
-
-    if (plugin.regionInfoLoaded) {
-      await this.onRegionInfo(region => {
-        if (plugin.regionInfoLoaded) {
-          return plugin.regionInfoLoaded(this, this._config, region)
-        }
-      })
-    }
-
-    if (plugin.showConsentExperience) {
-      await this.onShowConsentExperience(plugin.showConsentExperience)
-    }
-
-    if (plugin.showPreferenceExperience) {
-      await this.onShowPreferenceExperience(plugin.showPreferenceExperience)
-    }
-
-    if (plugin.willShowExperience) {
-      await this.onWillShowExperience(() => {
-        if (plugin.willShowExperience) {
-          return plugin.willShowExperience(this, this._config)
-        }
-      })
-    }
-
-    if (plugin.experienceHidden) {
-      await this.onHideExperience(reason => {
-        if (plugin.experienceHidden) {
-          return plugin.experienceHidden(this, this._config, reason)
-        }
-      })
-    }
-
-    if (plugin.consentChanged) {
-      await this.onConsent(consent => {
-        if (plugin.consentChanged) {
-          return plugin.consentChanged(this, this._config, consent)
-        }
-      })
-    }
-
-    if (plugin.rightInvoked) {
-      await this.onInvokeRight(request => {
-        if (plugin.rightInvoked) {
-          return plugin.rightInvoked(this, this._config, request)
-        }
-      })
-    }
+  async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
+    return plugin(this, config)
   }
 
   /**
@@ -834,7 +753,7 @@ export class Ketch {
       for (let i = 0; i < this._config.environments.length; i++) {
         const e = this._config.environments[i]
 
-        if (specifiedEnv && e.code === specifiedEnv) {
+        if (e && specifiedEnv && e.code === specifiedEnv) {
           log.debug('found', e)
           return this.setEnvironment(e)
         }
@@ -1507,7 +1426,7 @@ export class Ketch {
     const identities = await this.setIdentities(pageIdentities)
 
     // change in identities found so set new identities found on page and check for consent
-    // if experience is currently displayed only update identities and they return to wait for user input
+    // if experience is currently displayed only update identities, and they return to wait for user input
     if (this._isExperienceDisplayed) {
       return
     }
