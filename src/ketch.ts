@@ -1,5 +1,6 @@
+import { EventEmitter } from 'events'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
-import Future from './future'
+import Future from '@ketch-com/future'
 import {
   AppDiv,
   Callback,
@@ -78,7 +79,7 @@ declare global {
 /**
  * Ketch class is the public interface to the Ketch web infrastructure services.
  */
-export class Ketch {
+export class Ketch extends EventEmitter {
   /**
    * @internal
    */
@@ -87,32 +88,32 @@ export class Ketch {
   /**
    * @internal
    */
-  private _consent: Future<Consent>
+  private readonly _consent: Future<Consent>
 
   /**
    * @internal
    */
-  private _environment: Future<Environment>
+  private readonly _environment: Future<Environment>
 
   /**
    * @internal
    */
-  private _geoip: Future<IPInfo>
+  private readonly _geoip: Future<IPInfo>
 
   /**
    * @internal
    */
-  private _identities: Future<Identities>
+  private readonly _identities: Future<Identities>
 
   /**
    * @internal
    */
-  private _jurisdiction: Future<string>
+  private readonly _jurisdiction: Future<string>
 
   /**
    * @internal
    */
-  private _regionInfo: Future<string>
+  private readonly _regionInfo: Future<string>
 
   /**
    * @internal
@@ -130,41 +131,6 @@ export class Ketch {
    * @internal
    */
   private _appDivs: AppDiv[]
-
-  /**
-   * hideExperience is the list of functions registered with onHideExperience
-   *
-   * @internal
-   */
-  private _hideExperience: Callback[]
-
-  /**
-   * willShowExperience is the list of functions registered with onWillShowExperience
-   *
-   * @internal
-   */
-  private _willShowExperience: Callback[]
-
-  /**
-   * invokeRights is the list of functions registered with onInvokeRight
-   *
-   * @internal
-   */
-  private readonly _invokeRights: Callback[]
-
-  /**
-   * showPreferenceExperience is the function registered with onShowPreferenceExperience
-   *
-   * @internal
-   */
-  private _showPreferenceExperience?: ShowPreferenceExperience
-
-  /**
-   * showConsentExperience is the function registered with onShowConsentExperience
-   *
-   * @internal
-   */
-  private _showConsentExperience?: ShowConsentExperience
 
   /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
@@ -192,19 +158,15 @@ export class Ketch {
    * @param config Ketch configuration
    */
   constructor(config: Configuration) {
+    super()
     this._config = config
-    this._consent = new Future<Consent>('consent')
-    this._environment = new Future<Environment>('environment')
-    this._geoip = new Future('geoip')
-    this._identities = new Future<Identities>('identities')
-    this._jurisdiction = new Future<string>('jurisdiction')
-    this._regionInfo = new Future<string>('regionInfo')
+    this._consent = new Future<Consent>({ name: 'consent', emitter: this })
+    this._environment = new Future<Environment>({ name: 'environment', emitter: this })
+    this._geoip = new Future({ name: 'geoip', emitter: this })
+    this._identities = new Future<Identities>({ name: 'identities', emitter: this })
+    this._jurisdiction = new Future<string>({ name: 'jurisdiction', emitter: this })
+    this._regionInfo = new Future<string>({ name: 'regionInfo', emitter: this })
     this._appDivs = []
-    this._hideExperience = []
-    this._willShowExperience = []
-    this._invokeRights = []
-    this._showPreferenceExperience = undefined
-    this._showConsentExperience = undefined
     this._shouldConsentExperienceShow = false
     this._provisionalConsent = undefined
     this._api = new KetchWebAPI(getApiUrl(config))
@@ -295,7 +257,7 @@ export class Ketch {
     }
 
     // Call functions registered using onWillShowExperience
-    this._willShowExperience.forEach(func => func(type))
+    this.emit('willShowExperience', type)
 
     // update isExperienceDisplayed flag when experience displayed
     this._isExperienceDisplayed = true
@@ -307,13 +269,11 @@ export class Ketch {
   async showConsentExperience(): Promise<Consent> {
     log.info('showConsentExperience')
 
-    const consent = this._consent.hasValue()
-      ? await this._consent.getValue()
-      : ({ purposes: {}, vendors: [] } as Consent)
+    const consent = this._consent.isFulfilled() ? this._consent.value : ({ purposes: {}, vendors: [] } as Consent)
 
-    if (this._showConsentExperience) {
+    if (this.listenerCount('showConsentExperience') > 0) {
       this.willShowExperience(ExperienceType.Consent)
-      this._showConsentExperience(this, this._config, consent, { displayHint: this.selectExperience() })
+      this.emit('showConsentExperience', this, this._config, consent, { displayHint: this.selectExperience() })
     }
 
     return consent
@@ -323,7 +283,7 @@ export class Ketch {
    * Returns true if the consent is available.
    */
   hasConsent(): boolean {
-    return this._consent.hasValue()
+    return this._consent.isFulfilled()
   }
 
   /**
@@ -375,13 +335,13 @@ export class Ketch {
     log.info('updateClientConsent', c)
 
     if (!c || isEmpty(c)) {
-      await this._consent.clearValue()
+      this._consent.reset()
       return {} as Consent
     }
 
     // Merge new consent into existing consent
     if (this.hasConsent()) {
-      const existingConsent = this._consent.getRawValue()
+      const existingConsent = this._consent.value
       if (existingConsent) {
         for (const key in existingConsent) {
           if (
@@ -400,7 +360,8 @@ export class Ketch {
     // TODO server side signing
     sessionStorage.setItem('consent', JSON.stringify(c))
 
-    return this._consent.setValue(c)
+    this._consent.value = c
+    return c
   }
 
   /**
@@ -512,7 +473,7 @@ export class Ketch {
     log.info('getConsent')
 
     if (this.hasConsent()) {
-      return this._consent.getValue()
+      return this._consent.fulfilled
     }
 
     // get session consent
@@ -552,11 +513,9 @@ export class Ketch {
     }
 
     // experience will not show - call functions registered using onHideExperience
-    this._hideExperience.forEach(callback => {
-      callback(ExperienceHidden.WillNotShow)
-    })
+    this.emit('hideExperience', ExperienceHidden.WillNotShow)
 
-    return this._consent.getValue()
+    return this._consent.value
   }
 
   /**
@@ -565,8 +524,8 @@ export class Ketch {
   async retrieveConsent(): Promise<Consent> {
     log.info('retrieveConsent')
 
-    if (this._consent.hasValue()) {
-      return this._consent.getValue()
+    if (this._consent.isFulfilled()) {
+      return this._consent.fulfilled
     }
 
     return { purposes: {}, vendors: [] }
@@ -578,7 +537,7 @@ export class Ketch {
    * @param callback The consent callback to register
    */
   async onConsent(callback: Callback): Promise<void> {
-    this._consent.subscribe(callback)
+    this.on('consent', callback)
   }
 
   /**
@@ -587,7 +546,7 @@ export class Ketch {
    * @param callback The right callback to register
    */
   async onInvokeRight(callback: Callback): Promise<void> {
-    this._invokeRights.push(callback)
+    this.on('rightInvoked', callback)
   }
 
   /**
@@ -731,7 +690,8 @@ export class Ketch {
    */
   async setEnvironment(env: Environment): Promise<Environment> {
     log.info('setEnvironment', env)
-    return this._environment.setValue(env)
+    this._environment.value = env
+    return this._environment.fulfilled
   }
 
   /**
@@ -803,8 +763,8 @@ export class Ketch {
   async getEnvironment(): Promise<Environment> {
     log.info('getEnvironment')
 
-    if (this._environment.hasValue()) {
-      return this._environment.getValue()
+    if (this._environment.isFulfilled()) {
+      return this._environment.fulfilled
     } else {
       const env = await this.detectEnvironment()
       return this.setEnvironment(env)
@@ -817,7 +777,7 @@ export class Ketch {
    * @param callback Environment callback to register
    */
   async onEnvironment(callback: Callback): Promise<void> {
-    this._environment.subscribe(callback)
+    this.on('environment', callback)
   }
 
   /**
@@ -846,7 +806,7 @@ export class Ketch {
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
     log.info('setGeoIP', g)
     this.pushGeoIP(g)
-    return this._geoip.setValue(g)
+    return this._geoip.fulfilled
   }
 
   /**
@@ -864,8 +824,8 @@ export class Ketch {
   async getGeoIP(): Promise<IPInfo> {
     log.info('getGeoIP')
 
-    if (this._geoip.hasValue()) {
-      return this._geoip.getValue()
+    if (this._geoip.isFulfilled()) {
+      return this._geoip.fulfilled
     } else {
       const r = await this.loadGeoIP()
       return this.setGeoIP(r.location)
@@ -878,7 +838,7 @@ export class Ketch {
    * @param callback GeoIP callback to register
    */
   async onGeoIP(callback: Callback): Promise<void> {
-    this._geoip.subscribe(callback)
+    this.on('geoip', callback)
   }
 
   /**
@@ -889,7 +849,8 @@ export class Ketch {
   async setIdentities(id: Identities): Promise<Identities> {
     log.info('setIdentities', id)
 
-    return await this._identities.setValue(id)
+    this._identities.value = id
+    return this._identities.fulfilled
   }
 
   /**
@@ -1050,8 +1011,8 @@ export class Ketch {
   async getIdentities(): Promise<Identities> {
     log.info('getIdentities')
 
-    if (this._identities.hasValue()) {
-      return this._identities.getValue()
+    if (this._identities.isFulfilled()) {
+      return this._identities.fulfilled
     } else {
       const id = await this.collectIdentities()
       return this.setIdentities(id)
@@ -1064,7 +1025,7 @@ export class Ketch {
    * @param callback Identities callback to register
    */
   async onIdentities(callback: Callback): Promise<void> {
-    this._identities.subscribe(callback)
+    this.on('identities', callback)
   }
 
   /**
@@ -1092,7 +1053,8 @@ export class Ketch {
     log.info('setJurisdiction', ps)
 
     this.pushJurisdiction(ps)
-    return this._jurisdiction.setValue(ps)
+    this._jurisdiction.value = ps
+    return this._jurisdiction.fulfilled
   }
 
   /**
@@ -1101,8 +1063,8 @@ export class Ketch {
   async getJurisdiction(): Promise<string> {
     log.info('getJurisdiction')
 
-    if (this._jurisdiction.hasValue()) {
-      return this._jurisdiction.getValue()
+    if (this._jurisdiction.isFulfilled()) {
+      return this._jurisdiction.fulfilled
     } else {
       const ps = await this.loadJurisdiction()
       return this.setJurisdiction(ps)
@@ -1115,7 +1077,7 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onJurisdiction(callback: Callback): Promise<void> {
-    this._jurisdiction.subscribe(callback)
+    this.on('jurisdiction', callback)
   }
 
   /**
@@ -1165,7 +1127,8 @@ export class Ketch {
    */
   async setRegionInfo(info: string): Promise<string> {
     log.info('setRegionInfo', info)
-    return this._regionInfo.setValue(info)
+    this._regionInfo.value = info
+    return this._regionInfo.fulfilled
   }
 
   /**
@@ -1207,8 +1170,8 @@ export class Ketch {
    */
   async getRegionInfo(): Promise<string> {
     log.info('getRegionInfo')
-    if (this._regionInfo.hasValue()) {
-      return this._regionInfo.getValue()
+    if (this._regionInfo.isFulfilled()) {
+      return this._regionInfo.fulfilled
     } else {
       const info = await this.loadRegionInfo()
       return this.setRegionInfo(info)
@@ -1221,7 +1184,7 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onRegionInfo(callback: Callback): Promise<void> {
-    this._regionInfo.subscribe(callback)
+    this.on('regionInfo', callback)
   }
 
   /**
@@ -1240,14 +1203,14 @@ export class Ketch {
       return consent
     }
 
-    if (this._showPreferenceExperience) {
+    if (this.listenerCount('showPreferenceExperience') > 0) {
       const modifiedConfig: Configuration = config
       // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
       if (params && params.showRightsTab === false) {
         modifiedConfig.rights = undefined
       }
       this.willShowExperience(ExperienceType.Preference)
-      this._showPreferenceExperience(this, modifiedConfig, consent)
+      this.emit('showPreferenceExperience', this, modifiedConfig, consent)
     }
 
     return consent
@@ -1266,9 +1229,9 @@ export class Ketch {
       return Promise.resolve()
     }
 
-    let identities = this._identities._value
-    if (identities === undefined) {
-      identities = {} as Identities
+    let identities: Identities = {}
+    if (this._identities.isFulfilled()) {
+      identities = this._identities.value
     }
     // add email identity from rights form
     identities['email'] = eventData.rightsEmail
@@ -1309,9 +1272,7 @@ export class Ketch {
       user: user,
     }
 
-    for (const callback of this._invokeRights) {
-      callback(request)
-    }
+    this.emit('rightInvoked', request)
 
     return this._api.invokeRight(request)
   }
@@ -1337,9 +1298,7 @@ export class Ketch {
     this._hasExperienceBeenDisplayed = true
 
     // Call functions registered using onHideExperience
-    this._hideExperience.forEach(function (func) {
-      func(reason)
-    })
+    this.emit('hideExperience', reason)
 
     if (reason !== 'setConsent') {
       const consent = await this.retrieveConsent()
@@ -1365,7 +1324,7 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onWillShowExperience(callback: Callback): Promise<void> {
-    this._willShowExperience.push(callback)
+    this.on('willShowExperience', callback)
   }
 
   /**
@@ -1375,7 +1334,7 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onHideExperience(callback: Callback): Promise<void> {
-    this._hideExperience.push(callback)
+    this.on('hideExperience', callback)
   }
 
   /**
@@ -1384,7 +1343,8 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onShowPreferenceExperience(callback: ShowPreferenceExperience): Promise<void> {
-    this._showPreferenceExperience = callback
+    this.removeAllListeners('showPreferenceExperience')
+    this.on('showPreferenceExperience', callback)
   }
 
   /**
@@ -1393,7 +1353,8 @@ export class Ketch {
    * @param callback Callback to register
    */
   async onShowConsentExperience(callback: ShowConsentExperience): Promise<void> {
-    this._showConsentExperience = callback
+    this.removeAllListeners('showConsentExperience')
+    this.on('showConsentExperience', callback)
   }
 
   /**
