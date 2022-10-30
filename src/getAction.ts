@@ -53,8 +53,8 @@ export default function getAction(action: string): Function | undefined {
       return ketch.showPreferenceExperience
     case 'registerPlugin':
       return ketch.registerPlugin
-    case 'fireNativeEvent':
-      return ketch.fireNativeEvent
+    case 'emit':
+      return ketch.emit
   }
 
   return undefined

@@ -1358,11 +1358,70 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Synchronously calls each of the listeners registered for the event named`eventName`, in the order they
+   * were registered, passing the supplied arguments to each.
+   *
+   * Returns `true` if the event had listeners, `false` otherwise.
+   *
+   * ```js
+   * const EventEmitter = require('events');
+   * const myEmitter = new EventEmitter();
+   *
+   * // First listener
+   * myEmitter.on('event', function firstListener() {
+   *   console.log('Helloooo! first listener');
+   * });
+   * // Second listener
+   * myEmitter.on('event', function secondListener(arg1, arg2) {
+   *   console.log(`event with parameters ${arg1}, ${arg2} in second listener`);
+   * });
+   * // Third listener
+   * myEmitter.on('event', function thirdListener(...args) {
+   *   const parameters = args.join(', ');
+   *   console.log(`event with parameters ${parameters} in third listener`);
+   * });
+   *
+   * console.log(myEmitter.listeners('event'));
+   *
+   * myEmitter.emit('event', 1, 2, 3, 4, 5);
+   *
+   * // Prints:
+   * // [
+   * //   [Function: firstListener],
+   * //   [Function: secondListener],
+   * //   [Function: thirdListener]
+   * // ]
+   * // Helloooo! first listener
+   * // event with parameters 1, 2 in second listener
+   * // event with parameters 1, 2, 3, 4, 5 in third listener
+   * ```
+   */
+  emit(eventName: string | symbol, ...args: any[]): boolean {
+    if (window.androidListener) {
+      const listener = window.androidListener[name]
+      if (listener) {
+        listener(JSON.stringify(args))
+      } else {
+        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+      }
+    } else if (window.webkit?.messageHandlers) {
+      const listener = window.webkit.messageHandlers[name]
+      if (listener) {
+        listener.postMessage(JSON.stringify(args))
+      } else {
+        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+      }
+    }
+
+    return super.emit(eventName, ...args)
+  }
+
+  /**
    * Retrieves the current identities on the page.
    * If previously collected values for identity and consent are different,
    * show the experience or if experience already shown, update permits
    */
-  async refreshIdentityConsent(): Promise<void> {
+  private async refreshIdentityConsent(): Promise<void> {
     log.debug('refreshIdentityConsent')
 
     const pageIdentities = await this.collectIdentities()
@@ -1425,34 +1484,10 @@ export class Ketch extends EventEmitter {
    *
    * @param interval - array of intervals in milliseconds from first call that refreshIdentityConsent
    */
-  pollIdentity(interval: number[]): void {
+  private pollIdentity(interval: number[]): void {
     log.info('pollIdentity')
     for (const t of interval) {
       setTimeout(this.refreshIdentityConsent.bind(this), t)
-    }
-  }
-
-  /**
-   * Fires an event to the native listeners
-   *
-   * @param name Name of the event
-   * @param args Arguments to pass to the event
-   */
-  async fireNativeEvent(name: string, args?: any): Promise<void> {
-    if (window.androidListener) {
-      const listener = window.androidListener[name]
-      if (listener) {
-        listener(JSON.stringify(args))
-      } else {
-        console.error(`Can't pass message to native code because ${name} handler is not registered`)
-      }
-    } else if (window.webkit?.messageHandlers) {
-      const listener = window.webkit.messageHandlers[name]
-      if (listener) {
-        listener.postMessage(JSON.stringify(args))
-      } else {
-        console.error(`Can't pass message to native code because ${name} handler is not registered`)
-      }
     }
   }
 }
