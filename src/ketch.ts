@@ -1398,18 +1398,18 @@ export class Ketch extends EventEmitter {
    */
   emit(eventName: string | symbol, ...args: any[]): boolean {
     if (window.androidListener) {
-      const listener = window.androidListener[name]
+      const listener = window.androidListener[eventName.toString()]
       if (listener) {
         listener(JSON.stringify(args))
       } else {
-        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+        console.error(`Can't pass message to native code because ${eventName.toString()} handler is not registered`)
       }
     } else if (window.webkit?.messageHandlers) {
-      const listener = window.webkit.messageHandlers[name]
+      const listener = window.webkit.messageHandlers[eventName.toString()]
       if (listener) {
         listener.postMessage(JSON.stringify(args))
       } else {
-        console.error(`Can't pass message to native code because ${name} handler is not registered`)
+        console.error(`Can't pass message to native code because ${eventName.toString()} handler is not registered`)
       }
     }
 
@@ -1484,7 +1484,7 @@ export class Ketch extends EventEmitter {
    *
    * @param interval - array of intervals in milliseconds from first call that refreshIdentityConsent
    */
-  private pollIdentity(interval: number[]): void {
+  pollIdentity(interval: number[]): void {
     log.info('pollIdentity')
     for (const t of interval) {
       setTimeout(this.refreshIdentityConsent.bind(this), t)
