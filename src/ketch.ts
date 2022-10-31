@@ -13,7 +13,7 @@ import {
   InvokeRightsEvent,
   IPInfo,
   Plugin,
-  PreferenceExperienceParams,
+  ShowPreferenceOptions,
   SetConsentRequest,
   ShowConsentExperience,
   ShowPreferenceExperience,
@@ -35,6 +35,15 @@ import getApiUrl from './getApiUrl'
 export enum ExperienceType {
   Consent = 'experiences.consent',
   Preference = 'experiences.preference',
+}
+
+/**
+ * ConsentExperienceType is the type of consent experience that will be shown
+ */
+export enum ConsentExperienceType {
+  Banner = 'experiences.consent.banner',
+  Modal = 'experiences.consent.modal',
+  JIT = 'experiences.consent.jit',
 }
 
 /**
@@ -223,20 +232,20 @@ export class Ketch extends EventEmitter {
    * Selects the correct experience.
    *
    */
-  selectExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
+  selectExperience(): ConsentExperienceType {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
           if (this._config.experiences?.consent?.experienceDefault == 2) {
             log.debug('selectExperience', 'experiences.consent.modal')
-            return 'experiences.consent.modal'
+            return ConsentExperienceType.Modal
           }
         }
       }
     }
 
     log.debug('selectExperience', 'experiences.consent.banner')
-    return 'experiences.consent.banner'
+    return ConsentExperienceType.Banner
   }
 
   /**
@@ -1192,7 +1201,7 @@ export class Ketch extends EventEmitter {
    *
    * @param params Preferences Manager preferences
    */
-  async showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
+  async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
     log.info('showPreference')
 
     const config = await this.getConfig()

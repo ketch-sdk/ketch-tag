@@ -17,5 +17,6 @@ export default {
   REGION: prefixed('region'),
   LANGUAGE: prefixed('l'),
   serviceNamed: (name: string): string => prefixed(`s_${name}`),
+  has: jest.fn(),
   get: jest.fn(),
 }

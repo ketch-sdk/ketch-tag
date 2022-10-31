@@ -19,6 +19,11 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
 
   const k = new Ketch(boot)
 
+  // Check if we have been given an already resolved Configuration
+  if (boot.property && boot.environment) {
+    return k
+  }
+
   const env = await k.detectEnvironment()
   const jurisdiction = await k.loadJurisdiction()
 
