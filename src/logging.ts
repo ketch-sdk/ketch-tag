@@ -8,7 +8,7 @@ const levels: { [key: string]: number } = {
   warn: 4,
   error: 5,
 }
-let logLevel = levels.log
+let logLevel = levels.warn
 
 // Set up the log level based on a query string parameter.
 if (parameters.get(parameters.DEBUG, window.location.search)) {

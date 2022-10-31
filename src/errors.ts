@@ -1,6 +1,5 @@
 export default {
   actionNotFoundError: (fnName: string): Error => new Error(`action "${fnName}" not found`),
-  missingArgumentsError: (fnName: string): Error => new Error(`action "${fnName}" missing arguments`),
   expectedFunctionError: (fnName: string): Error => new Error(`action "${fnName}" expected a function`),
   unrecognizedLocationError: new Error('unrecognized location'),
   noIdentitiesError: new Error('no identities'),
@@ -8,6 +7,5 @@ export default {
   noEnvironmentError: new Error('no environment'),
   noJurisdictionError: new Error('no jurisdiction'),
   notImplementedError: new Error('not implemented'),
-  timedOutError: (ms: number): Error => new Error(`Timed out in ${ms} ms.`),
   itemNotFoundError: new Error('item not found'),
 }

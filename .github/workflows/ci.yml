@@ -13,7 +13,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       version: ${{ steps.version.outputs.version }}
       version-major: ${{ steps.version.outputs.version-major-only }}
@@ -32,12 +32,21 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
+          node-version: 16
+          cache: "npm"
+      - name: Setup npmrc for ketch-sdk
+        uses: conventional-actions/setup-npmrc@v1
+        with:
           always-auth: true
           registry-url: https://registry.npmjs.com/
           scope: ketch-sdk
-          node-version: 16
-          cache: "npm"
           token: ${{ secrets.NPM_TOKEN }}
+      - name: Setup npmrc for ketch-com
+        uses: conventional-actions/setup-npmrc@v1
+        with:
+          always-auth: true
+          scope: ketch-com
+          token: ${{ secrets.GH_TOKEN }}
       - name: Setup Node version
         uses: conventional-actions/write-version@v1
         with:
