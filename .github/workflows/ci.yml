@@ -45,9 +45,8 @@ jobs:
         uses: conventional-actions/setup-npmrc@v1
         with:
           always-auth: true
-          registry-url: https://registry.npmjs.com/
           scope: ketch-com
-          token: ${{ secrets.NPM_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
       - name: Setup Node version
         uses: conventional-actions/write-version@v1
         with:
