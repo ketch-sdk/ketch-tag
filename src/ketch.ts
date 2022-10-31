@@ -542,7 +542,7 @@ export class Ketch extends EventEmitter {
 
   /**
    * Registers a callback for right invocations.
-
+   *
    * @param callback The right callback to register
    */
   async onInvokeRight(callback: Callback): Promise<void> {

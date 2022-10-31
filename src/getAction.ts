@@ -21,6 +21,7 @@ export default function getAction(action: string): Function | undefined {
       return ketch.getJurisdiction
     case 'getRegionInfo':
       return ketch.getRegionInfo
+
     case 'onConsent':
       return ketch.onConsent
     case 'onEnvironment':
@@ -37,6 +38,7 @@ export default function getAction(action: string): Function | undefined {
       return ketch.onJurisdiction
     case 'onRegionInfo':
       return ketch.onRegionInfo
+
     case 'setEnvironment':
       return ketch.setEnvironment
     case 'setGeoIP':
@@ -47,6 +49,7 @@ export default function getAction(action: string): Function | undefined {
       return ketch.setJurisdiction
     case 'setRegionInfo':
       return ketch.setRegionInfo
+
     case 'showConsent':
       return ketch.showConsentExperience
     case 'showPreferences':
@@ -55,6 +58,10 @@ export default function getAction(action: string): Function | undefined {
       return ketch.registerPlugin
     case 'emit':
       return ketch.emit
+    case 'on':
+      return ketch.on
+    case 'once':
+      return ketch.once
   }
 
   return undefined
