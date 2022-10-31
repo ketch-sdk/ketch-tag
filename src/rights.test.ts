@@ -52,12 +52,13 @@ describe('gangplank', () => {
   }
   const data = {
     right: 'portability',
-    firstName: 'first',
-    lastName: 'last',
-    rightsEmail: 'rights@email.com',
-    country: 'United States',
-    stateRegion: 'California',
-    details: '',
+    subject: {
+      email: 'rights@email.com',
+      firstName: 'first',
+      lastName: 'last',
+      country: 'United States',
+      stateRegion: 'California',
+    }
   }
   const ketch = new Ketch(config)
 
@@ -90,12 +91,11 @@ describe('gangplank', () => {
 
     const dataNoEmail = {
       right: 'portability',
-      firstName: '',
-      lastName: '',
-      rightsEmail: '',
-      country: '',
-      state: '',
-      details: '',
+      subject: {
+        firstName: '',
+        lastName: '',
+        email: '',
+      }
     }
 
     it('skips if no rightsEmail', () => {
@@ -112,12 +112,11 @@ describe('gangplank', () => {
 
     const dataNoRight = {
       right: '',
-      firstName: '',
-      lastName: '',
-      rightsEmail: 'rights@email.com',
-      country: '',
-      state: '',
-      details: '',
+      subject: {
+        firstName: '',
+        lastName: '',
+        email: 'rights@email.com',
+      },
     }
 
     it('skips if no rights', () => {

@@ -10,7 +10,7 @@ import {
   GetLocationResponse,
   Identities,
   InvokeRightRequest,
-  InvokeRightsEvent,
+  InvokeRightEvent,
   IPInfo,
   Plugin,
   ShowPreferenceOptions,
@@ -1216,7 +1216,7 @@ export class Ketch extends EventEmitter {
       const modifiedConfig: Configuration = config
       // if showRightsTab false then do not send rights. If undefined or true, functionality is unaffected
       if (params && params.showRightsTab === false) {
-        modifiedConfig.rights = undefined
+        modifiedConfig.rights = []
       }
       this.willShowExperience(ExperienceType.Preference)
       this.emit('showPreferenceExperience', this, modifiedConfig, consent)
@@ -1230,11 +1230,11 @@ export class Ketch extends EventEmitter {
    *
    * @param eventData Event data to invoke right with
    */
-  async invokeRight(eventData: InvokeRightsEvent): Promise<void> {
+  async invokeRight(eventData: InvokeRightEvent): Promise<void> {
     log.debug('invokeRights', eventData)
 
     // If no identities or rights defined, skip the call.
-    if (!eventData.rightsEmail || eventData.rightsEmail === '' || !eventData.right || eventData.right === '') {
+    if (!eventData.subject || !eventData.subject.email || eventData.subject.email === '' || !eventData.right || eventData.right === '') {
       return Promise.resolve()
     }
 
@@ -1243,7 +1243,7 @@ export class Ketch extends EventEmitter {
       identities = this._identities.value
     }
     // add email identity from rights form
-    identities['email'] = eventData.rightsEmail
+    identities['email'] = eventData.subject.email
 
     if (
       !this._config ||
@@ -1257,18 +1257,7 @@ export class Ketch extends EventEmitter {
       return Promise.resolve()
     }
 
-    const user: DataSubject = {
-      email: eventData.rightsEmail,
-      first: eventData.firstName,
-      last: eventData.lastName,
-      country: eventData.country,
-      stateRegion: eventData.stateRegion,
-      description: eventData.details,
-      phone: eventData.phoneNumber,
-      postalCode: eventData.postalCode,
-      addressLine1: eventData.addressLine1,
-      addressLine2: eventData.addressLine2,
-    }
+    const user: DataSubject = eventData.subject
 
     const request: InvokeRightRequest = {
       organizationCode: this._config.organization.code || '',
