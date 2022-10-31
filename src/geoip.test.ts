@@ -19,7 +19,7 @@ describe('geoip', () => {
   })
 
   describe('loadGeoIP', () => {
-    it('loads the location information', () => {
+    it('loads the location information', async () => {
       const ip: GetLocationResponse = {
         // @ts-ignore
         location: {
