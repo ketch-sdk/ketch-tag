@@ -56,17 +56,5 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
 
   const cfg = await api.getFullConfiguration(request)
 
-  if (boot && boot.services) {
-    let lanyardPath = boot.services[constants.LANYARD]
-    if (lanyardPath) {
-      if (lanyardPath.slice(-1) === '/') {
-        lanyardPath = lanyardPath + `lanyard.${cfg.language}.js`
-      } else if (lanyardPath.slice(-3) === '.js') {
-        lanyardPath = lanyardPath.slice(0, -3) + `.${cfg.language}.js`
-      }
-      return load(lanyardPath).then(() => new Ketch(cfg))
-    }
-  }
-
   return new Ketch(cfg)
 }

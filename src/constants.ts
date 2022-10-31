@@ -11,6 +11,5 @@ export default {
   CONSENT_BANNER: 'experiences.consent.banner',
   PREFERENCE: 'experiences.preference',
   SHORELINE: 'shoreline',
-  LANYARD: 'lanyard',
   SEMAPHORE: 'semaphore',
 }
