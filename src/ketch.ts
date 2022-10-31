@@ -38,6 +38,15 @@ export enum ExperienceType {
 }
 
 /**
+ * ConsentExperienceType is the type of consent experience that will be shown
+ */
+export enum ConsentExperienceType {
+  Banner = 'experiences.consent.banner',
+  Modal = 'experiences.consent.modal',
+  JIT = 'experiences.consent.jit',
+}
+
+/**
  * ExperienceHidden is the reason for which the experience is hidden
  *
  * A plugin that displays an experience will indicate whether an experience
@@ -223,20 +232,20 @@ export class Ketch extends EventEmitter {
    * Selects the correct experience.
    *
    */
-  selectExperience(): 'experiences.consent.jit' | 'experiences.consent.modal' | 'experiences.consent.banner' {
+  selectExperience(): ConsentExperienceType {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
           if (this._config.experiences?.consent?.experienceDefault == 2) {
             log.debug('selectExperience', 'experiences.consent.modal')
-            return 'experiences.consent.modal'
+            return ConsentExperienceType.Modal
           }
         }
       }
     }
 
     log.debug('selectExperience', 'experiences.consent.banner')
-    return 'experiences.consent.banner'
+    return ConsentExperienceType.Banner
   }
 
   /**
