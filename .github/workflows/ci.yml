@@ -21,7 +21,6 @@ jobs:
       version-patch: ${{ format('{0}.{1}.{2}', steps.version.outputs.version-major-only, steps.version.outputs.version-minor-only, steps.version.outputs.version-patch-only) }}
     permissions:
       contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -46,8 +45,9 @@ jobs:
         uses: conventional-actions/setup-npmrc@v1
         with:
           always-auth: true
+          registry-url: https://registry.npmjs.com/
           scope: ketch-com
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.NPM_TOKEN }}
       - name: Setup Node version
         uses: conventional-actions/write-version@v1
         with:
