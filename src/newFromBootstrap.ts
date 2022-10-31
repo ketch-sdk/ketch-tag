@@ -5,8 +5,6 @@ import errors from './errors'
 import parameters from './parameters'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import getApiUrl from './getApiUrl'
-import constants from './constants'
-import { load } from './scripts'
 
 /**
  * Loads the config.
