@@ -53,7 +53,7 @@ export function setCookie(key: string, value: any, ttl?: number): Promise<string
           encodeURIComponent(value) +
           '; expires=' +
           expires +
-          '; path=/; domain=' +
+          '; path=/; SameSite=None; Secure; domain=' +
           hostnameParts.slice(-1 * i).join('.')
 
         // get cookie
