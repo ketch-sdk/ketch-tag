@@ -13,7 +13,7 @@ import {
   InvokeRightsEvent,
   IPInfo,
   Plugin,
-  PreferenceExperienceParams,
+  ShowPreferenceOptions,
   SetConsentRequest,
   ShowConsentExperience,
   ShowPreferenceExperience,
@@ -1192,7 +1192,7 @@ export class Ketch extends EventEmitter {
    *
    * @param params Preferences Manager preferences
    */
-  async showPreferenceExperience(params?: PreferenceExperienceParams): Promise<Consent> {
+  async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
     log.info('showPreference')
 
     const config = await this.getConfig()
