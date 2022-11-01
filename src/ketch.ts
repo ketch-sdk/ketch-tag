@@ -1234,7 +1234,13 @@ export class Ketch extends EventEmitter {
     log.debug('invokeRights', eventData)
 
     // If no identities or rights defined, skip the call.
-    if (!eventData.subject || !eventData.subject.email || eventData.subject.email === '' || !eventData.right || eventData.right === '') {
+    if (
+      !eventData.subject ||
+      !eventData.subject.email ||
+      eventData.subject.email === '' ||
+      !eventData.right ||
+      eventData.right === ''
+    ) {
       return Promise.resolve()
     }
 

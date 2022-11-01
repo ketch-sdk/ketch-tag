@@ -58,7 +58,7 @@ describe('gangplank', () => {
       lastName: 'last',
       country: 'United States',
       stateRegion: 'California',
-    }
+    },
   }
   const ketch = new Ketch(config)
 
@@ -95,7 +95,7 @@ describe('gangplank', () => {
         firstName: '',
         lastName: '',
         email: '',
-      }
+      },
     }
 
     it('skips if no rightsEmail', () => {
