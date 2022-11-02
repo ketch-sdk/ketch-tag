@@ -126,7 +126,9 @@ module.exports = {
   testEnvironment: 'jest-environment-jsdom',
 
   // Options that will be passed to the testEnvironment
-  // testEnvironmentOptions: {},
+  testEnvironmentOptions: {
+    // url: 'http://localhost?swb_log=trace',
+  },
 
   // Adds a location field to test results
   // testLocationInResults: false,

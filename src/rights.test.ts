@@ -76,7 +76,7 @@ describe('gangplank', () => {
         if (property && jurisdiction && organization && environment) {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/rights/org/invoke', {
-            body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"email":"rights@email.com"},"jurisdictionCode":"ps","rightCode":"portability","user":{"email":"rights@email.com","first":"first","last":"last","country":"United States","stateRegion":"California","description":""}}',
+            body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"email":"rights@email.com"},"jurisdictionCode":"ps","rightCode":"portability","user":{"email":"rights@email.com","firstName":"first","lastName":"last","country":"United States","stateRegion":"California"}}',
             credentials: 'omit',
             headers: {
               Accept: 'application/json',
