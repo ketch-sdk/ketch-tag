@@ -814,6 +814,7 @@ export class Ketch extends EventEmitter {
    */
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
     log.info('setGeoIP', g)
+    this._geoip.value = g
     this.pushGeoIP(g)
     return this._geoip.fulfilled
   }
