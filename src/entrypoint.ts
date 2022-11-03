@@ -20,7 +20,7 @@ export default function entrypoint(fnName: string, ...args: any[]): Promise<any>
     return Promise.reject(errors.actionNotFoundError(fnName))
   }
 
-  const fnDef = fns[1]
+  const fnDef = fns[2]
   let argDecl = fnDef.split(',')
   if (fnDef === '') {
     argDecl = []
