@@ -668,10 +668,6 @@ export class Ketch extends EventEmitter {
       vendors: consent.vendors,
     }
 
-    if (this._config.options) {
-      request.migrationOption = parseInt(String(this._config.options.migration))
-    }
-
     if (this._config.purposes && consent) {
       for (const p of this._config.purposes) {
         if (consent.purposes[p.code] !== undefined) {
