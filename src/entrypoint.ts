@@ -15,7 +15,7 @@ export default function entrypoint(fnName: string, ...args: any[]): Promise<any>
     return Promise.reject(errors.actionNotFoundError(fnName))
   }
 
-  const fns = fn.toString().match(/^function\s*[^(]*\(\s*([^)]*)\)/m)
+  const fns = fn.toString().match(/^(function)?\s*[^(]*\(\s*([^)]*)\)/m)
   if (fns === null) {
     return Promise.reject(errors.actionNotFoundError(fnName))
   }
