@@ -1,9 +1,14 @@
-import { getCookie } from './cookie'
+import { getCookie } from '@ketch-sdk/ketch-data-layer'
 import { Ketch } from './'
-import { Configuration } from '@ketch-sdk/ketch-types'
+import { Configuration, IdentityType } from '@ketch-sdk/ketch-types'
 
 describe('identity', () => {
   describe('getIdentities', () => {
+    const organization = {
+      ID: 'orgID1',
+      code: 'org1',
+    }
+
     it('returns one item list', () => {
       const ketch = new Ketch({} as Configuration)
 
@@ -19,22 +24,16 @@ describe('identity', () => {
         return expect(ketch.getIdentities()).resolves.toEqual({ space1: 'id1', space2: 'id2' })
       })
     })
-  })
 
-  describe('collectIdentities', () => {
-    const organization = {
-      ID: 'orgID1',
-      code: 'org1',
-    }
+    jest.setTimeout(100000)
 
     // config.identities
     it('handles no identities defined', () => {
       const ketch = new Ketch({} as Configuration)
 
-      const r = ketch.collectIdentities().then(ids => {
+      return ketch.getIdentities().then(ids => {
         expect(ids).toEqual({})
       })
-      return r
     })
 
     it('handles window properties', () => {
@@ -80,10 +79,9 @@ describe('identity', () => {
       // @ts-ignore
       window['foo6'] = { bar: null }
 
-      const r = ketch.collectIdentities().then(ids => {
+      return ketch.getIdentities().then(ids => {
         return expect(ids).toEqual({ f1: 'wfv1', f5: '123' })
       })
-      return r
     })
 
     it('handles dataLayer properties', () => {
@@ -124,17 +122,16 @@ describe('identity', () => {
         },
       ]
 
-      const r = ketch.collectIdentities().then(ids => {
+      return ketch.getIdentities().then(ids => {
         return expect(ids).toEqual({
           f1: 'dlfv1',
           f2: 'dlfv2',
           f4: 'dlfv4',
         })
       })
-      return r
     })
 
-    it('handles cookie properties', () => {
+    it('handles cookie properties', async () => {
       const config = {
         organization,
         identities: {
@@ -151,7 +148,7 @@ describe('identity', () => {
       const ketch = new Ketch(config as any as Configuration)
 
       document.cookie = 'cookie1=cfv1'
-      expect(ketch.collectIdentities()).resolves.toEqual({ f1: 'cfv1' })
+      return expect(ketch.getIdentities()).resolves.toEqual({ f1: 'cfv1' })
     })
 
     it('handles managed cookie properties', () => {
@@ -159,33 +156,20 @@ describe('identity', () => {
         organization,
         identities: {
           f1: {
-            type: 'managedCookie',
+            type: IdentityType.IDENTITY_TYPE_MANAGED,
             variable: 'mc1',
-          },
-          f2: {
-            type: 'managedCookie',
-            variable: 'mc2',
           },
         },
       }
       const ketch = new Ketch(config as any as Configuration)
 
-      document.cookie = 'mc1=mcfv1'
+      return ketch.getIdentities().then(ids => {
+        const mc2 = getCookie(window, '_swb')
 
-      const r = ketch.collectIdentities().then(ids => {
-        getCookie('mc2').then(
-          mc2 => {
-            return expect(ids).toEqual({
-              f1: 'mcfv1',
-              f2: mc2,
-            })
-          },
-          error => {
-            return expect(error).toBeNull()
-          },
-        )
+        return expect(ids).toEqual({
+          f1: mc2,
+        })
       })
-      return r
     })
 
     it('contains unique ids', () => {
@@ -193,28 +177,19 @@ describe('identity', () => {
         organization,
         identities: {
           f1: {
-            type: 'managedCookie',
+            type: IdentityType.IDENTITY_TYPE_MANAGED,
             variable: 'uuid',
-          },
-          f2: {
-            type: 'managedCookie',
-            variable: 'uuid2',
           },
         },
       }
       const ketch = new Ketch(config as any as Configuration)
 
-      const r = ketch.collectIdentities().then(() => {
-        getCookie('uuid').then(uuid => {
-          expect(uuid).toBeDefined()
-          expect(uuid).toMatch(/[a-z0-9-]/g)
+      return ketch.getIdentities().then(() => {
+        const uuid = getCookie(window, '_swb')
 
-          getCookie('uuid2').then(uuid2 => {
-            expect(uuid).not.toEqual(uuid2)
-          })
-        })
+        expect(uuid).toBeDefined()
+        expect(uuid).toMatch(/[a-z0-9-]/g)
       })
-      return r
     })
   })
 })

@@ -46,8 +46,6 @@ export default function init(): Promise<any> {
 
     p.push(ketch.getConsent())
 
-    return Promise.all(p).then(() => {
-      k.pollIdentity([1000, 2000, 4000, 8000])
-    })
+    return Promise.all(p)
   })
 }

@@ -112,9 +112,7 @@ module.exports = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: [
-    './test/fetch.js'
-  ],
+  setupFiles: ['./test/fetch.js'],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],
@@ -127,16 +125,14 @@ module.exports = {
 
   // Options that will be passed to the testEnvironment
   testEnvironmentOptions: {
-    // url: 'http://localhost?swb_log=trace',
+    url: 'https://localhost.localdomain/index.html?foo_qs=bar_qs', // &swb_log=trace
   },
 
   // Adds a location field to test results
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  testMatch: [
-    "**/*.(spec|test).ts"
-  ],
+  testMatch: ['**/*.(spec|test).ts'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: ['/node_modules/'],
@@ -165,7 +161,7 @@ module.exports = {
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   unmockedModulePathPatterns: [
     // '@ketch-sdk/ketch-web-api'
-  ]
+  ],
 
   // Indicates whether each individual test should be reported during the run
   // verbose: null,
@@ -175,4 +171,4 @@ module.exports = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
-};
+}

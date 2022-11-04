@@ -231,7 +231,7 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
-              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":3,"vendors":["1"]}',
+              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":0,"vendors":["1"]}',
               credentials: 'omit',
               headers: {
                 Accept: 'application/json',
@@ -492,7 +492,7 @@ describe('overrideWithProvisionalConsent', () => {
       expect(x).toEqual(result)
     })
   })
-  it('overrideWithProvisionalConsent  when provisional consent empty ', () => {
+  it('overrideWithProvisionalConsent  when provisional consent empty', () => {
     const serverConsent = {
       purposes: {
         analytics: true,
