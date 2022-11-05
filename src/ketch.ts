@@ -158,54 +158,7 @@ export class Ketch extends EventEmitter {
       interval: 2000,
       timeout: 10000,
     })
-    this._watcher.on('identity', this.updateIdentities.bind(this))
-  }
-
-  /**
-   * Retrieves the current identities on the page.
-   * If previously collected values for identity and consent are different,
-   * show the experience or if experience already shown, update permits
-   *
-   * @param identities
-   * @private
-   */
-  private async updateIdentities(identities: Identities) {
-    log.info('identities', identities)
-
-    await this.setIdentities(identities)
-
-    // change in identities found so set new identities found on page and check for consent
-    // if experience is currently displayed only update identities, and they return to wait for user input
-    if (this._isExperienceDisplayed) {
-      return
-    }
-
-    const permitConsent = await this.fetchConsent(identities)
-    const localConsent = await this.retrieveConsent()
-
-    // check if consent value the same
-    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
-      let newConsent = false
-      for (const key in permitConsent) {
-        if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
-          // different consent values
-          newConsent = true
-          break
-        }
-      }
-      if (!newConsent) {
-        // no change in consent so no further action necessary
-        return
-      }
-    }
-
-    // if experience has been displayed in session, update permits with already collected consent
-    if (this._hasExperienceBeenDisplayed) {
-      return this.updateConsent(identities, localConsent)
-    }
-
-    // show experience for first time in session
-    await this.showConsentExperience()
+    this._watcher.on('identity', this.setIdentities.bind(this))
   }
 
   /**
@@ -876,51 +829,47 @@ export class Ketch extends EventEmitter {
   /**
    * Sets the identities.
    *
-   * @param id Identities to set
+   * @param identities Identities to set
    */
-  async setIdentities(id: Identities): Promise<Identities> {
-    log.info('setIdentities', id)
+  async setIdentities(identities: Identities): Promise<Identities> {
+    log.info('setIdentities', identities)
 
-    this._identities.value = id
-    return this._identities.fulfilled
-  }
+    this._identities.value = identities
 
-  /**
-   * Get a window property.
-   *
-   * @param p Property name
-   */
-  getProperty(p: string): string | null {
-    const parts: string[] = p.split('.')
-    let context: any = window
-    let previousContext: any = null
+    // change in identities found so set new identities found on page and check for consent
+    // if experience is currently displayed only update identities, and they return to wait for user input
+    if (this._isExperienceDisplayed) {
+      return identities
+    }
 
-    while (parts.length > 0) {
-      if (parts[0] === 'window') {
-        parts.shift()
-      } else if (typeof context === 'object') {
-        if (parts[0].slice(-2) === '()') {
-          previousContext = context
-          context = context[(parts[0] as string).slice(0, -2)]
-        } else {
-          previousContext = context
-          context = context[parts.shift() as string]
+    const permitConsent = await this.fetchConsent(identities)
+    const localConsent = await this.retrieveConsent()
+
+    // check if consent value the same
+    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
+      let newConsent = false
+      for (const key in permitConsent) {
+        if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
+          // different consent values
+          newConsent = true
+          break
         }
-      } else if (typeof context === 'function') {
-        const newContext = context.call(previousContext)
-        previousContext = context
-        context = newContext
-        parts.shift()
-      } else {
-        return null
+      }
+      if (!newConsent) {
+        // no change in consent so no further action necessary
+        return identities
       }
     }
 
-    if (context && typeof context === 'number') {
-      context = context.toString()
+    // if experience has been displayed in session, update permits with already collected consent
+    if (this._hasExperienceBeenDisplayed) {
+      await this.updateConsent(identities, localConsent)
+      return identities
     }
 
-    return context
+    // show experience for first time in session
+    await this.showConsentExperience()
+    return identities
   }
 
   /**
