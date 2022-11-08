@@ -20,7 +20,7 @@ import {
   DataSubject,
   GetConsentRequest,
 } from '@ketch-sdk/ketch-types'
-import dataLayer, { tealiumKetchPermitData } from './datalayer'
+import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
 import log from './logging'
 import errors from './errors'
@@ -310,13 +310,12 @@ export class Ketch extends EventEmitter {
     const swbPermitChangedEvent: { [key: string]: any } = {
       event: 'switchbitPermitChanged',
     }
-
-    let tealiumKetchDataLayer: any = tealiumKetchPermitData()
+    let ketchPermitPref: any = ketchPermitPreferences()
 
     for (const purposeCode in c.purposes) {
       permitChangedEvent[purposeCode] = c.purposes[purposeCode]
       swbPermitChangedEvent[purposeCode] = c.purposes[purposeCode]
-      tealiumKetchDataLayer[purposeCode] = c.purposes[purposeCode] ? '1' : '0'
+      ketchPermitPref[purposeCode] = c.purposes[purposeCode] ? '1' : '0'
     }
 
     dataLayer().push(permitChangedEvent)
