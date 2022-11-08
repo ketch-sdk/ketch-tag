@@ -16,6 +16,9 @@ export default {
   POLICY_SCOPE: prefixed('p'),
   LANGUAGE: prefixed('l'),
   SHOW: prefixed('show'),
+  PREFERENCES_TAB: prefixed('preferences_tab'),
+  CONSENT: 'cd',
+  PREFERENCES: 'preferences',
   get: (key: string, input: string): string => new URLSearchParams(input).get(key) || '',
   has: (key: string, input: string): boolean => new URLSearchParams(input).has(key),
 }
