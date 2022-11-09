@@ -1,4 +1,4 @@
-import { Configuration, IdentityFormat, IdentityType } from '@ketch-sdk/ketch-types'
+import { Configuration, IdentityFormat, IdentityType, ExperienceType } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
@@ -144,7 +144,7 @@ describe('consent', () => {
     space1: 'id1',
   }
 
-  describe('getConsent', () => {
+  describe('fetchConsent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config)
 
@@ -305,9 +305,8 @@ describe('consent', () => {
   })
 
   describe('getConsent', () => {
-    const ketch = new Ketch(config)
-
     it('returns the existing consent', () => {
+      const ketch = new Ketch(config)
       const c = {
         purposes: {
           ip: true,
@@ -340,6 +339,18 @@ describe('consent', () => {
           })
         })
     })
+
+    it('fetches if no consent', () => {
+      const ketch = new Ketch(config)
+      ketch.setIdentities(identities)
+      fetchMock.mockResponse(async (): Promise<string> => {
+        return '{}'
+      })
+
+      return ketch.getConsent().then(() => {
+        expect(fetchMock).toHaveBeenCalled()
+      })
+    })
   })
 
   describe('selectExperience', () => {
@@ -361,7 +372,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
     })
 
     it('returns banner if any purposes requires opt in and defaultExperience is not modal', () => {
@@ -377,7 +388,7 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
     })
 
     it('returns banner if none of the purposes requires opt in', () => {
@@ -393,13 +404,13 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
     })
 
     it('returns banner no purposes', () => {
       const ketch = new Ketch(config2)
 
-      expect(ketch.selectExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
     })
   })
 
@@ -407,7 +418,7 @@ describe('consent', () => {
     it('shows when missing options', () => {
       const ketch = new Ketch(config2)
 
-      expect(ketch.shouldShowConsent({ purposes: {} })).toBeTruthy()
+      expect(ketch.selectExperience({ purposes: {} })).toEqual(ExperienceType.Consent)
     })
 
     it('does not show when no purposes', () => {
@@ -420,7 +431,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.shouldShowConsent({ purposes: { analytics: true } })).not.toBeTruthy()
+      expect(ketch.selectExperience({ purposes: { analytics: true } })).toEqual(undefined)
     })
 
     it('still shows when no consent experience', () => {
@@ -436,19 +447,19 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.shouldShowConsent({ purposes: {} })).toBeTruthy()
+      expect(ketch.selectExperience({ purposes: {} })).toEqual(ExperienceType.Consent)
     })
 
     it('shows when options', () => {
       const ketch = new Ketch(config2)
 
       expect(
-        ketch.shouldShowConsent({
+        ketch.selectExperience({
           purposes: {
             datasales: true,
           },
         }),
-      ).toBeTruthy()
+      ).toEqual(ExperienceType.Consent)
     })
   })
 
@@ -503,6 +514,76 @@ describe('overrideWithProvisionalConsent', () => {
     const provisionConsent = undefined
     return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent!).then(x => {
       expect(x).toEqual(serverConsent)
+    })
+  })
+})
+
+describe('mergeSessionConsent', () => {
+  const ketch = new Ketch({
+      purposes: [
+        {
+          code: 'analytics',
+        },
+        {
+          code: 'advertising',
+        },
+        {
+          code: 'data_sales',
+        }
+    ]} as any as Configuration)
+  it('mergeSessionConsent when server side consent and session consent both have value', () => {
+    const serverConsent = {
+      purposes: {
+        analytics: true,
+        advertising: true,
+      },
+    }
+
+    const sessionConsent = {
+      purposes: {
+        advertising: false,
+        data_sales: false,
+      },
+    }
+
+    const result = {
+      purposes: {
+        analytics: true,
+        advertising: false,
+        data_sales: false,
+      },
+    }
+
+    return ketch.mergeSessionConsent(serverConsent, sessionConsent).then(x => {
+      expect(x).toEqual(result)
+    })
+  })
+})
+
+describe('experience consent', () => {
+  const ketch = new Ketch({
+    purposes: [
+      {
+        code: 'analytics',
+      },
+      {
+        code: 'advertising',
+      },
+      {
+        code: 'data_sales',
+      }
+    ]} as any as Configuration)
+  const c = {
+    purposes: {
+      ip: true,
+    },
+    vendors: ['1'],
+  }
+  it('retrieve consent on experience closed', () => {
+    return ketch.setConsent(c).then(() => {
+      ketch.experienceClosed('close').then(consent => {
+        expect(consent).toEqual(c)
+      })
     })
   })
 })

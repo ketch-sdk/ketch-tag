@@ -7,6 +7,7 @@ import { ketch } from './init'
 /**
  * This is the entrypoint for all calls into the platform calling actions from outside.
  */
+// TODO test
 export default function entrypoint(fnName: string, ...args: any[]): Promise<any> {
   log.trace(fnName, args)
 
@@ -53,3 +54,4 @@ export default function entrypoint(fnName: string, ...args: any[]): Promise<any>
 
   return fn.apply(ketch, args).then(resolve).catch(reject)
 }
+// TODO test

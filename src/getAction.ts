@@ -1,5 +1,6 @@
 import { ketch } from './init'
 
+// TODO test
 export default function getAction(action: string): Function | undefined {
   if (ketch === undefined) {
     return undefined
