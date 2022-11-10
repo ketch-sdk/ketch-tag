@@ -1,7 +1,7 @@
 import { ketch } from './init'
-import getAction from "./getAction";
-import {Configuration} from "@ketch-sdk/ketch-types";
-import {Ketch} from "./ketch";
+import getAction from './getAction'
+import { Configuration } from '@ketch-sdk/ketch-types'
+import { Ketch } from './ketch'
 
 describe('getAction', () => {
   describe('no ketch', () => {
