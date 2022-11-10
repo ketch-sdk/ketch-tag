@@ -4,4 +4,5 @@ See [CONTRIBUTING.md](https://github.com/ketch-sdk/ketch-tag/blob/main/.github/C
 for general contribution guidelines.
 
 ## Maintainers (in alphabetical order)
+
 - [sethyates](https://github.com/sethyates), Ketch Kloud, Inc.

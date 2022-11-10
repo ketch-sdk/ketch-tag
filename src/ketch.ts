@@ -21,7 +21,7 @@ import {
   GetConsentRequest,
   ExperienceType,
   ConsentExperienceType,
-  isTab
+  isTab,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
@@ -447,8 +447,10 @@ export class Ketch extends EventEmitter {
     for (const key in sessionConsent.purposes) {
       // check if sessionConsent has additional values or different values
       if (
-        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) && !Object.prototype.hasOwnProperty.call(c.purposes, key) ||
-        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) && sessionConsent.purposes[key] !== c.purposes[key]
+        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+          !Object.prototype.hasOwnProperty.call(c.purposes, key)) ||
+        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+          sessionConsent.purposes[key] !== c.purposes[key])
       ) {
         // confirm purpose code in config
         if (configPurposes[key]) {
@@ -1107,8 +1109,8 @@ export class Ketch extends EventEmitter {
       // check if experience show parameter override set
       const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
       // override with url param
-      if ( isTab(tab) ) {
-        if ( !params ) {
+      if (isTab(tab)) {
+        if (!params) {
           params = {}
         }
         params.tab = tab

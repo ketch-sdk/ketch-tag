@@ -520,17 +520,18 @@ describe('overrideWithProvisionalConsent', () => {
 
 describe('mergeSessionConsent', () => {
   const ketch = new Ketch({
-      purposes: [
-        {
-          code: 'analytics',
-        },
-        {
-          code: 'advertising',
-        },
-        {
-          code: 'data_sales',
-        }
-    ]} as any as Configuration)
+    purposes: [
+      {
+        code: 'analytics',
+      },
+      {
+        code: 'advertising',
+      },
+      {
+        code: 'data_sales',
+      },
+    ],
+  } as any as Configuration)
   it('mergeSessionConsent when server side consent and session consent both have value', () => {
     const serverConsent = {
       purposes: {
@@ -571,8 +572,9 @@ describe('experience consent', () => {
       },
       {
         code: 'data_sales',
-      }
-    ]} as any as Configuration)
+      },
+    ],
+  } as any as Configuration)
   const c = {
     purposes: {
       ip: true,

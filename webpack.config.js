@@ -1,5 +1,5 @@
-const path = require('path');
-const webpack = require('webpack');
+const path = require('path')
+const webpack = require('webpack')
 
 module.exports = {
   entry: './src/test.ts',
@@ -8,15 +8,15 @@ module.exports = {
     clean: true,
     iife: true,
     filename: 'ketch.js',
-    path: path.resolve(__dirname, 'build')
+    path: path.resolve(__dirname, 'build'),
   },
 
   resolve: {
     extensions: ['.ts', '.json', '.js'],
     fallback: {
-      'crypto': require.resolve('./polyfill/crypto.ts'),
-      'util': require.resolve('util/'),
-    }
+      crypto: require.resolve('./polyfill/crypto.ts'),
+      util: require.resolve('util/'),
+    },
   },
 
   module: {
@@ -39,9 +39,9 @@ module.exports = {
 
   devServer: {
     static: {
-      directory: path.join(__dirname, 'test', 'fixtures')
+      directory: path.join(__dirname, 'test', 'fixtures'),
     },
     compress: true,
     port: 9000,
-  }
-};
+  },
+}
