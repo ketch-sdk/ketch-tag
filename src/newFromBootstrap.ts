@@ -13,12 +13,13 @@ import getApiUrl from './getApiUrl'
  * @param boot The bootstrap configuration.
  */
 export default async function newFromBootstrap(boot: Configuration): Promise<Ketch> {
-  log.info('loadConfig')
+  log.info('loadConfig', boot)
 
   const k = new Ketch(boot)
 
   // Check if we have been given an already resolved Configuration
   if (boot.property && boot.environment) {
+    log.debug('full configuration')
     return k
   }
 

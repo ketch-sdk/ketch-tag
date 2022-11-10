@@ -19,57 +19,26 @@ import {
   ShowPreferenceExperience,
   DataSubject,
   GetConsentRequest,
-  isTab
+  ExperienceType,
+  ConsentExperienceType,
+  isTab,
+  ExperienceClosedReason,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
 import log from './logging'
 import errors from './errors'
 import parameters from './parameters'
-import { getCookie, setCookie } from './cookie'
-import { v4 as uuidv4 } from 'uuid'
 import getApiUrl from './getApiUrl'
-
-/**
- * ExperienceType is the type of experience that will be shown
- */
-export enum ExperienceType {
-  Consent = 'experiences.consent',
-  Preference = 'experiences.preference',
-}
-
-/**
- * ConsentExperienceType is the type of consent experience that will be shown
- */
-export enum ConsentExperienceType {
-  Banner = 'experiences.consent.banner',
-  Modal = 'experiences.consent.modal',
-  JIT = 'experiences.consent.jit',
-}
-
-/**
- * ExperienceHidden is the reason for which the experience is hidden
- *
- * A plugin that displays an experience will indicate whether an experience
- * is closed after a user sets consent, invokes a right, or closes the experience
- * without taking an explicit action
- *
- * ketch-tag will determine if an experience will not be shown
- */
-export enum ExperienceHidden {
-  SetConsent = 'setConsent',
-  InvokeRight = 'invokeRight',
-  Close = 'close',
-  WillNotShow = 'willNotShow',
-}
+import Watcher from '@ketch-sdk/ketch-data-layer'
 
 declare global {
-  type AndroidListeners = {
-    [name: string]: AndroidListener
-  }
-
   type AndroidListener = {
     (args?: any): void
+  }
+
+  type AndroidListeners = {
+    [name: string]: AndroidListener
   }
 
   type WKHandler = {
@@ -162,6 +131,13 @@ export class Ketch extends EventEmitter {
   private _api: KetchWebAPI
 
   /**
+   * Identity watcher
+   *
+   * @internal
+   */
+  private _watcher: Watcher
+
+  /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
    * provided.
    *
@@ -180,6 +156,11 @@ export class Ketch extends EventEmitter {
     this._shouldConsentExperienceShow = false
     this._provisionalConsent = undefined
     this._api = new KetchWebAPI(getApiUrl(config))
+    this._watcher = new Watcher(window, {
+      interval: 2000,
+      timeout: 10000,
+    })
+    this._watcher.on('identity', this.setIdentities.bind(this))
   }
 
   /**
@@ -340,7 +321,8 @@ export class Ketch extends EventEmitter {
    */
   async changeConsent(consent: Consent): Promise<any> {
     // check for new identifiers for tags that may fire after consent collected
-    this.pollIdentity([4000, 8000])
+    this._watcher.stop()
+    await this._watcher.start()
 
     return this.setConsent(consent)
   }
@@ -376,7 +358,6 @@ export class Ketch extends EventEmitter {
     // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
     this.triggerPermitChangedEvent(c)
 
-    // TODO server side signing
     sessionStorage.setItem('consent', JSON.stringify(c))
 
     this._consent.value = c
@@ -465,10 +446,12 @@ export class Ketch extends EventEmitter {
 
     let shouldCreatePermits = false
     for (const key in sessionConsent.purposes) {
-      // check if sessionConsent has additional values
+      // check if sessionConsent has additional values or different values
       if (
-        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
-        !Object.prototype.hasOwnProperty.call(c.purposes, key)
+        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+          !Object.prototype.hasOwnProperty.call(c.purposes, key)) ||
+        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+          sessionConsent.purposes[key] !== c.purposes[key])
       ) {
         // confirm purpose code in config
         if (configPurposes[key]) {
@@ -496,7 +479,6 @@ export class Ketch extends EventEmitter {
     }
 
     // get session consent
-    // TODO server side signing
     const sessionConsentString = sessionStorage.getItem('consent')
     const sessionConsent = sessionConsentString ? JSON.parse(sessionConsentString) : undefined
 
@@ -535,7 +517,7 @@ export class Ketch extends EventEmitter {
     }
 
     // experience will not show - call functions registered using onHideExperience
-    this.emit('hideExperience', ExperienceHidden.WillNotShow)
+    this.emit('hideExperience', ExperienceClosedReason.WILL_NOT_SHOW)
 
     return this._consent.value
   }
@@ -577,7 +559,7 @@ export class Ketch extends EventEmitter {
    * @param identities Identities to fetch consent for
    */
   async fetchConsent(identities: Identities): Promise<Consent> {
-    log.debug('getConsent', identities)
+    log.debug('fetchConsent', identities)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
@@ -679,10 +661,6 @@ export class Ketch extends EventEmitter {
       purposes: {},
       migrationOption: 0,
       vendors: consent.vendors,
-    }
-
-    if (this._config.options) {
-      request.migrationOption = parseInt(String(this._config.options.migration))
     }
 
     if (this._config.purposes && consent) {
@@ -867,165 +845,68 @@ export class Ketch extends EventEmitter {
   /**
    * Sets the identities.
    *
-   * @param id Identities to set
+   * @param identities Identities to set
    */
-  async setIdentities(id: Identities): Promise<Identities> {
-    log.info('setIdentities', id)
+  async setIdentities(identities: Identities): Promise<Identities> {
+    log.info('setIdentities', identities)
 
-    this._identities.value = id
-    return this._identities.fulfilled
-  }
+    this._identities.value = identities
 
-  /**
-   * Get a window property.
-   *
-   * @param p Property name
-   */
-  getProperty(p: string): string | null {
-    const parts: string[] = p.split('.')
-    let context: any = window
-    let previousContext: any = null
+    // change in identities found so set new identities found on page and check for consent
+    // if experience is currently displayed only update identities, and they return to wait for user input
+    if (this._isExperienceDisplayed) {
+      return identities
+    }
 
-    while (parts.length > 0) {
-      if (parts[0] === 'window') {
-        parts.shift()
-      } else if (typeof context === 'object') {
-        if (parts[0].slice(-2) === '()') {
-          previousContext = context
-          context = context[(parts[0] as string).slice(0, -2)]
-        } else {
-          previousContext = context
-          context = context[parts.shift() as string]
+    const permitConsent = await this.fetchConsent(identities)
+    const localConsent = await this.retrieveConsent()
+
+    // check if consent value the same
+    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
+      let newConsent = false
+      for (const key in permitConsent) {
+        if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
+          // different consent values
+          newConsent = true
+          break
         }
-      } else if (typeof context === 'function') {
-        const newContext = context.call(previousContext)
-        previousContext = context
-        context = newContext
-        parts.shift()
-      } else {
-        return null
+      }
+      if (!newConsent) {
+        // no change in consent so no further action necessary
+        return identities
       }
     }
 
-    if (context && typeof context === 'number') {
-      context = context.toString()
+    // if experience has been displayed in session, update permits with already collected consent
+    if (this._hasExperienceBeenDisplayed) {
+      await this.updateConsent(identities, localConsent)
+      return identities
     }
 
-    return context
+    // show experience for first time in session
+    await this.showConsentExperience()
+    return identities
   }
 
   /**
    * Collect identities.
    */
-  async collectIdentities(): Promise<Identities> {
-    log.info('collectIdentities')
+  async collectIdentities(): Promise<void> {
+    log.info('collectIdentities', this._config.identities)
 
     const configIDs = this._config.identities
 
     if (!this._config || !this._config.organization || configIDs === undefined || isEmpty(configIDs)) {
-      return Promise.resolve({})
+      this._identities.value = {}
+      return
     }
 
-    const windowProperties: any[] = []
-    const dataLayerProperties: any[] = []
-    const cookieProperties: any[] = []
-    const managedCookieProperties: any[] = []
-    const promises: Promise<string[]>[] = []
-
-    for (const id in configIDs) {
-      if (Object.prototype.hasOwnProperty.call(configIDs, id)) {
-        switch (configIDs[id].type) {
-          case 'window':
-            windowProperties.push([id, configIDs[id].variable])
-            break
-
-          case 'cookie':
-            cookieProperties.push([id, configIDs[id].variable])
-            break
-
-          case 'managedCookie':
-            managedCookieProperties.push([id, configIDs[id].variable])
-            break
-
-          default:
-            dataLayerProperties.push([id, configIDs[id].variable])
-            break
-        }
-      }
+    for (const name of Object.keys(configIDs)) {
+      this._watcher.add(name, configIDs[name])
     }
 
-    if (windowProperties.length > 0) {
-      for (const p of windowProperties) {
-        const pv = this.getProperty(p[1])
-        if (!pv) continue
-
-        promises.push(Promise.resolve([p[0], pv]))
-      }
-    }
-
-    if (dataLayerProperties.length > 0) {
-      for (const dl of dataLayer()) {
-        for (const p of dataLayerProperties) {
-          if (Object.prototype.hasOwnProperty.call(dl, p[1])) {
-            const pv = dl[p[1]]
-            if (!pv) continue
-
-            promises.push(Promise.resolve([p[0], pv]))
-          }
-        }
-      }
-    }
-
-    if (cookieProperties.length > 0) {
-      for (const p of cookieProperties) {
-        promises.push(
-          getCookie(p[1]).then(
-            pv => {
-              return [p[0], pv]
-            },
-            error => {
-              log.trace(error)
-              return []
-            },
-          ),
-        )
-      }
-    }
-
-    if (managedCookieProperties.length > 0) {
-      for (const p of managedCookieProperties) {
-        promises.push(
-          getCookie(p[1]).then(
-            pv => {
-              return [p[0], pv]
-            },
-            () => {
-              return setCookie(p[1], uuidv4(), 730).then(
-                pv => {
-                  return [p[0], pv]
-                },
-                error => {
-                  log.trace(error)
-                  return []
-                },
-              )
-            },
-          ),
-        )
-      }
-    }
-
-    const identities = {} as Identities
-    return Promise.all(promises).then(items => {
-      for (const item of items) {
-        if (item.length === 2) {
-          if (!!item[1] && item[1] !== '0') {
-            identities[item[0]] = item[1]
-          }
-        }
-      }
-      return identities
-    })
+    log.info('starting watcher')
+    await this._watcher.start()
   }
 
   /**
@@ -1034,12 +915,11 @@ export class Ketch extends EventEmitter {
   async getIdentities(): Promise<Identities> {
     log.info('getIdentities')
 
-    if (this._identities.isFulfilled()) {
-      return this._identities.fulfilled
-    } else {
-      const id = await this.collectIdentities()
-      return this.setIdentities(id)
+    if (!this._identities.isFulfilled()) {
+      await this.collectIdentities()
     }
+
+    return this._identities.fulfilled
   }
 
   /**
@@ -1230,8 +1110,8 @@ export class Ketch extends EventEmitter {
       // check if experience show parameter override set
       const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
       // override with url param
-      if ( isTab(tab) ) {
-        if ( !params ) {
+      if (isTab(tab)) {
+        if (!params) {
           params = {}
         }
         params.tab = tab
@@ -1382,41 +1262,6 @@ export class Ketch extends EventEmitter {
   /**
    * Synchronously calls each of the listeners registered for the event named`eventName`, in the order they
    * were registered, passing the supplied arguments to each.
-   *
-   * Returns `true` if the event had listeners, `false` otherwise.
-   *
-   * ```js
-   * const EventEmitter = require('events');
-   * const myEmitter = new EventEmitter();
-   *
-   * // First listener
-   * myEmitter.on('event', function firstListener() {
-   *   console.log('Helloooo! first listener');
-   * });
-   * // Second listener
-   * myEmitter.on('event', function secondListener(arg1, arg2) {
-   *   console.log(`event with parameters ${arg1}, ${arg2} in second listener`);
-   * });
-   * // Third listener
-   * myEmitter.on('event', function thirdListener(...args) {
-   *   const parameters = args.join(', ');
-   *   console.log(`event with parameters ${parameters} in third listener`);
-   * });
-   *
-   * console.log(myEmitter.listeners('event'));
-   *
-   * myEmitter.emit('event', 1, 2, 3, 4, 5);
-   *
-   * // Prints:
-   * // [
-   * //   [Function: firstListener],
-   * //   [Function: secondListener],
-   * //   [Function: thirdListener]
-   * // ]
-   * // Helloooo! first listener
-   * // event with parameters 1, 2 in second listener
-   * // event with parameters 1, 2, 3, 4, 5 in third listener
-   * ```
    */
   emit(eventName: string | symbol, ...args: any[]): boolean {
     if (window.androidListener) {
@@ -1436,80 +1281,5 @@ export class Ketch extends EventEmitter {
     }
 
     return super.emit(eventName, ...args)
-  }
-
-  /**
-   * Retrieves the current identities on the page.
-   * If previously collected values for identity and consent are different,
-   * show the experience or if experience already shown, update permits
-   */
-  private async refreshIdentityConsent(): Promise<void> {
-    log.debug('refreshIdentityConsent')
-
-    const pageIdentities = await this.collectIdentities()
-    const previousIdentities = await this.getIdentities()
-
-    // compare identities currently on page with those previously retrieved
-    // check if identity value the same
-    if (pageIdentities.size === previousIdentities.size) {
-      let identityMatch = true
-      Object.keys(pageIdentities).forEach(key => {
-        if (pageIdentities[key] !== previousIdentities[key]) {
-          // different identities
-          identityMatch = false
-        }
-      })
-      if (identityMatch) {
-        // no change in identities so no action needed
-        return
-      }
-    }
-
-    const identities = await this.setIdentities(pageIdentities)
-
-    // change in identities found so set new identities found on page and check for consent
-    // if experience is currently displayed only update identities, and they return to wait for user input
-    if (this._isExperienceDisplayed) {
-      return
-    }
-
-    const permitConsent = await this.fetchConsent(identities)
-    const localConsent = await this.retrieveConsent()
-
-    // check if consent value the same
-    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
-      let newConsent = false
-      for (const key in permitConsent) {
-        if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
-          // different consent values
-          newConsent = true
-          break
-        }
-      }
-      if (!newConsent) {
-        // no change in consent so no further action necessary
-        return
-      }
-    }
-
-    // if experience has been displayed in session, update permits with already collected consent
-    if (this._hasExperienceBeenDisplayed) {
-      return this.updateConsent(identities, localConsent)
-    }
-
-    // show experience for first time in session
-    await this.showConsentExperience()
-  }
-
-  /**
-   * Calls refreshIdentityConsent at an interval specified in the param.
-   *
-   * @param interval - array of intervals in milliseconds from first call that refreshIdentityConsent
-   */
-  pollIdentity(interval: number[]): void {
-    log.info('pollIdentity')
-    for (const t of interval) {
-      setTimeout(this.refreshIdentityConsent.bind(this), t)
-    }
   }
 }

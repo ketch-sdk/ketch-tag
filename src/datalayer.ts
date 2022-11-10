@@ -3,7 +3,6 @@ declare global {
     dataLayer: any[]
     ketchPermitPreferences: any
   }
-
 }
 
 export default function datalayer(): any[] {

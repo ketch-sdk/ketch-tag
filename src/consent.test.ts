@@ -1,7 +1,6 @@
-import { Configuration, IdentityFormat, IdentityType } from '@ketch-sdk/ketch-types'
+import { Configuration, IdentityFormat, IdentityType, ExperienceType } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
-import { ExperienceType } from './ketch'
 import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
 
@@ -145,7 +144,7 @@ describe('consent', () => {
     space1: 'id1',
   }
 
-  describe('getConsent', () => {
+  describe('fetchConsent', () => {
     it('handles a call with full config', () => {
       const ketch = new Ketch(config)
 
@@ -232,7 +231,7 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
-              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":3,"vendors":["1"]}',
+              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":0,"vendors":["1"]}',
               credentials: 'omit',
               headers: {
                 Accept: 'application/json',
@@ -306,9 +305,8 @@ describe('consent', () => {
   })
 
   describe('getConsent', () => {
-    const ketch = new Ketch(config)
-
     it('returns the existing consent', () => {
+      const ketch = new Ketch(config)
       const c = {
         purposes: {
           ip: true,
@@ -340,6 +338,18 @@ describe('consent', () => {
             vendors: ['1'],
           })
         })
+    })
+
+    it('fetches if no consent', () => {
+      const ketch = new Ketch(config)
+      ketch.setIdentities(identities)
+      fetchMock.mockResponse(async (): Promise<string> => {
+        return '{}'
+      })
+
+      return ketch.getConsent().then(() => {
+        expect(fetchMock).toHaveBeenCalled()
+      })
     })
   })
 
@@ -493,7 +503,7 @@ describe('overrideWithProvisionalConsent', () => {
       expect(x).toEqual(result)
     })
   })
-  it('overrideWithProvisionalConsent  when provisional consent empty ', () => {
+  it('overrideWithProvisionalConsent  when provisional consent empty', () => {
     const serverConsent = {
       purposes: {
         analytics: true,
@@ -504,6 +514,78 @@ describe('overrideWithProvisionalConsent', () => {
     const provisionConsent = undefined
     return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent!).then(x => {
       expect(x).toEqual(serverConsent)
+    })
+  })
+})
+
+describe('mergeSessionConsent', () => {
+  const ketch = new Ketch({
+    purposes: [
+      {
+        code: 'analytics',
+      },
+      {
+        code: 'advertising',
+      },
+      {
+        code: 'data_sales',
+      },
+    ],
+  } as any as Configuration)
+  it('mergeSessionConsent when server side consent and session consent both have value', () => {
+    const serverConsent = {
+      purposes: {
+        analytics: true,
+        advertising: true,
+      },
+    }
+
+    const sessionConsent = {
+      purposes: {
+        advertising: false,
+        data_sales: false,
+      },
+    }
+
+    const result = {
+      purposes: {
+        analytics: true,
+        advertising: false,
+        data_sales: false,
+      },
+    }
+
+    return ketch.mergeSessionConsent(serverConsent, sessionConsent).then(x => {
+      expect(x).toEqual(result)
+    })
+  })
+})
+
+describe('experience consent', () => {
+  const ketch = new Ketch({
+    purposes: [
+      {
+        code: 'analytics',
+      },
+      {
+        code: 'advertising',
+      },
+      {
+        code: 'data_sales',
+      },
+    ],
+  } as any as Configuration)
+  const c = {
+    purposes: {
+      ip: true,
+    },
+    vendors: ['1'],
+  }
+  it('retrieve consent on experience closed', () => {
+    return ketch.setConsent(c).then(() => {
+      ketch.experienceClosed('close').then(consent => {
+        expect(consent).toEqual(c)
+      })
     })
   })
 })

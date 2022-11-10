@@ -10,6 +10,7 @@ export let ketch: Ketch | undefined
 /**
  * This is the entry point when this package is first loaded.
  */
+
 export default function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 
@@ -46,8 +47,6 @@ export default function init(): Promise<any> {
 
     p.push(ketch.getConsent())
 
-    return Promise.all(p).then(() => {
-      k.pollIdentity([1000, 2000, 4000, 8000])
-    })
+    return Promise.all(p)
   })
 }

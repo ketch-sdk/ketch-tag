@@ -54,6 +54,12 @@ jobs:
           version: ${{ format('{0}.{1}.{2}', steps.version.outputs.version-major-only, steps.version.outputs.version-minor-only, steps.version.outputs.version-patch-only) }}
       - name: Install dependencies
         run: npm ci
+      - name: Check format
+        run: npm run format-check
+      - name: Check lint
+        run: npm run lint
+      - name: Check test
+        run: npm run test
       - name: Build
         run: npm run build
       - name: Publish
