@@ -21,7 +21,8 @@ import {
   GetConsentRequest,
   ExperienceType,
   ConsentExperienceType,
-  isTab, ExperienceClosedReason,
+  isTab,
+  ExperienceClosedReason,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
