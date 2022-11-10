@@ -11,7 +11,6 @@ export let ketch: Ketch | undefined
  * This is the entry point when this package is first loaded.
  */
 
-// TODO test
 export default function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 

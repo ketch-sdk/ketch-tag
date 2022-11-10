@@ -21,7 +21,7 @@ import {
   GetConsentRequest,
   ExperienceType,
   ConsentExperienceType,
-  isTab,
+  isTab, ExperienceClosedReason,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
@@ -516,7 +516,7 @@ export class Ketch extends EventEmitter {
     }
 
     // experience will not show - call functions registered using onHideExperience
-    this.emit('hideExperience', 'willNotShow') // TODO: ExperienceClosedReason.WILL_NOT_SHOW)
+    this.emit('hideExperience', ExperienceClosedReason.WILL_NOT_SHOW)
 
     return this._consent.value
   }
