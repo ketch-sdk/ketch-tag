@@ -858,11 +858,17 @@ export class Ketch extends EventEmitter {
       return identities
     }
 
-    const permitConsent = await this.fetchConsent(identities)
     const localConsent = await this.retrieveConsent()
+    // if there is not yet local consent then return identities
+    // no reprompting of the user is applicable until local consent is set
+    if (Object.keys(localConsent.purposes).length == 0) {
+      return identities
+    }
+
+    const permitConsent = await this.fetchConsent(identities)
 
     // check if consent value the same
-    if (Object.keys(permitConsent).length === Object.keys(localConsent).length) {
+    if (Object.keys(permitConsent.purposes).length === Object.keys(localConsent.purposes).length) {
       let newConsent = false
       for (const key in permitConsent) {
         if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
