@@ -1,6 +1,6 @@
-import { ketch } from './init'
+import { Ketch } from '@ketch-sdk/ketch-types'
 
-export default function getAction(action: string): Function | undefined {
+export default function getAction(ketch: Ketch | undefined, action: string): Function | undefined {
   if (ketch === undefined) {
     return undefined
   }
