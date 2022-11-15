@@ -15,7 +15,7 @@
     "noUnusedParameters": true,
     "outDir": "./dist",
     "removeComments": false,
-    "rootDir": ".",
+    "rootDir": "./src",
     "declarationDir": "./dist",
     "strict": true,
     "target": "ES2015"

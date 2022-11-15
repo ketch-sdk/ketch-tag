@@ -170,7 +170,11 @@ export class Ketch extends EventEmitter {
    * @param config The plugin config
    */
   async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
-    return plugin(this, config)
+    if (plugin instanceof Function) {
+      return plugin(this, config)
+    } else {
+      return plugin.init(this, await this.getConfig())
+    }
   }
 
   /**
@@ -302,7 +306,7 @@ export class Ketch extends EventEmitter {
     const swbPermitChangedEvent: { [key: string]: any } = {
       event: 'switchbitPermitChanged',
     }
-    let ketchPermitPref: any = ketchPermitPreferences()
+    const ketchPermitPref: any = ketchPermitPreferences()
 
     for (const purposeCode in c.purposes) {
       permitChangedEvent[purposeCode] = c.purposes[purposeCode]

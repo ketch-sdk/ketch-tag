@@ -10,7 +10,7 @@ import { ketch } from './init'
 export default function entrypoint(fnName: string, ...args: any[]): Promise<any> {
   log.trace(fnName, args)
 
-  const fn = getAction(fnName)
+  const fn = getAction(ketch, fnName)
   if (fn === undefined) {
     return Promise.reject(errors.actionNotFoundError(fnName))
   }

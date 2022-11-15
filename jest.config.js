@@ -21,7 +21,7 @@ module.exports = {
   coverageDirectory: './test-reports/coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: ['/node_modules/', 'src/lib/'],
+  coveragePathIgnorePatterns: ['/node_modules/', 'src/polyfill/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ['json', 'text', 'lcov', 'clover'],
@@ -51,9 +51,7 @@ module.exports = {
   // globalTeardown: null,
 
   // A set of global variables that need to be available in all test environments
-  globals: {
-    _VERSION: true,
-  },
+  globals: {},
 
   // An array of directory names to be searched recursively up from the requiring module's location
   moduleDirectories: ['node_modules'],
@@ -141,7 +139,7 @@ module.exports = {
   // testRegex: [],
 
   // This option allows the use of a custom results processor
-  // testResultsProcessor: "jest-junit",
+  testResultsProcessor: 'jest-junit',
 
   // This option allows use of a custom test runner
   // testRunner: "jasmine2",
