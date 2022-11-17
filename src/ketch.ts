@@ -489,11 +489,10 @@ export class Ketch extends EventEmitter {
     const identities = await this.getIdentities()
 
     let c = await this.fetchConsent(identities)
-    c = await this.overrideWithProvisionalConsent(c, this._provisionalConsent!)
     if (sessionConsent) {
       c = await this.mergeSessionConsent(c, sessionConsent)
     }
-
+    c = await this.overrideWithProvisionalConsent(c, this._provisionalConsent!)
     this._provisionalConsent = undefined
     let shouldCreatePermits = false
 
