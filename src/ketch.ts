@@ -42,6 +42,7 @@ declare global {
   }
 
   type WKHandler = {
+    (args?: any): void
     postMessage(args?: any): void
   }
 
@@ -1307,23 +1308,28 @@ export class Ketch extends EventEmitter {
    * Synchronously calls each of the listeners registered for the event named`eventName`, in the order they
    * were registered, passing the supplied arguments to each.
    */
-  emit(eventName: string | symbol, ...args: any[]): boolean {
+  emit(event: string | symbol, ...args: any[]): boolean {
+    const eventName = event.toString()
     if (window.androidListener) {
-      const listener = window.androidListener[eventName.toString()]
-      if (listener) {
-        listener(JSON.stringify(args))
+      if (eventName in window.androidListener) {
+        if (args.length === 0) {
+          window.androidListener[eventName]()
+        } else if (args.length === 1) {
+          window.androidListener[eventName](JSON.stringify(args[0]))
+        } else {
+          window.androidListener[eventName](JSON.stringify(args))
+        }
       } else {
-        console.error(`Can't pass message to native code because ${eventName.toString()} handler is not registered`)
+        console.warn(`Can't pass message to native code because ${eventName} handler is not registered`)
       }
     } else if (window.webkit?.messageHandlers) {
-      const listener = window.webkit.messageHandlers[eventName.toString()]
-      if (listener) {
-        listener.postMessage(JSON.stringify(args))
+      if (eventName in window.webkit.messageHandlers) {
+        window.webkit.messageHandlers[eventName].postMessage(JSON.stringify(args))
       } else {
-        console.error(`Can't pass message to native code because ${eventName.toString()} handler is not registered`)
+        console.warn(`Can't pass message to native code because ${eventName} handler is not registered`)
       }
     }
 
-    return super.emit(eventName, ...args)
+    return super.emit(event, ...args)
   }
 }
