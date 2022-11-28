@@ -173,7 +173,42 @@ export class Ketch extends EventEmitter {
     if (plugin instanceof Function) {
       return plugin(this, config)
     } else {
-      return plugin.init(this, await this.getConfig())
+      if (plugin.willShowExperience !== undefined) {
+        this.on('willShowExperience', plugin.willShowExperience)
+      }
+      if (plugin.showConsentExperience !== undefined) {
+        this.on('showConsentExperience', plugin.showConsentExperience)
+      }
+      if (plugin.showPreferenceExperience !== undefined) {
+        this.on('showPreferenceExperience', plugin.showPreferenceExperience)
+      }
+      if (plugin.consentChanged !== undefined) {
+        this.on('consent', plugin.consentChanged)
+      }
+      if (plugin.environmentLoaded !== undefined) {
+        this.on('environment', plugin.environmentLoaded)
+      }
+      if (plugin.experienceHidden !== undefined) {
+        this.on('hideExperience', plugin.experienceHidden)
+      }
+      if (plugin.geoIPLoaded !== undefined) {
+        this.on('geoip', plugin.geoIPLoaded)
+      }
+      if (plugin.identitiesLoaded !== undefined) {
+        this.on('identities', plugin.identitiesLoaded)
+      }
+      if (plugin.jurisdictionLoaded !== undefined) {
+        this.on('jurisdiction', plugin.jurisdictionLoaded)
+      }
+      if (plugin.regionInfoLoaded !== undefined) {
+        this.on('regionInfo', plugin.regionInfoLoaded)
+      }
+      if (plugin.rightInvoked !== undefined) {
+        this.on('rightInvoked', plugin.rightInvoked)
+      }
+      if (plugin.init !== undefined) {
+        return plugin.init(this, await this.getConfig())
+      }
     }
   }
 
