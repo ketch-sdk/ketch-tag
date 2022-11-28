@@ -71,3 +71,4 @@ test-reports/
 .npmrc
 
 /.vscode
+junit.xml
