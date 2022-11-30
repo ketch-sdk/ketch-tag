@@ -1312,18 +1312,18 @@ export class Ketch extends EventEmitter {
     if (window.androidListener || window.webkit?.messageHandlers) {
       const eventName = event.toString()
 
-      let argument;
+      let argument
       if (args.length === 1 && typeof args[0] === 'string') {
-        argument = args[0];
+        argument = args[0]
       } else if (args.length === 1) {
-        argument = JSON.stringify(args[0]);
+        argument = JSON.stringify(args[0])
       } else {
-        argument = JSON.stringify(args);
+        argument = JSON.stringify(args)
       }
 
       if (window.androidListener) {
         if (eventName in window.androidListener) {
-          window.androidListener[eventName](argument);
+          window.androidListener[eventName](argument)
         } else {
           console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
         }
