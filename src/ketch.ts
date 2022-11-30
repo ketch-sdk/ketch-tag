@@ -1309,27 +1309,32 @@ export class Ketch extends EventEmitter {
    * were registered, passing the supplied arguments to each.
    */
   emit(event: string | symbol, ...args: any[]): boolean {
-    const eventName = event.toString()
-    if (window.androidListener) {
-      if (eventName in window.androidListener) {
-        if (args.length === 0) {
-          window.androidListener[eventName]()
-        } else if (args.length === 1) {
-          window.androidListener[eventName](JSON.stringify(args[0]))
-        } else {
-          window.androidListener[eventName](JSON.stringify(args))
-        }
+    if (window.androidListener || window.webkit?.messageHandlers) {
+      const eventName = event.toString()
+
+      let argument;
+      if (args.length === 1 && typeof args[0] === 'string') {
+        argument = args[0];
+      } else if (args.length === 1) {
+        argument = JSON.stringify(args[0]);
       } else {
-        console.warn(`Can't pass message to native code because ${eventName} handler is not registered`)
+        argument = JSON.stringify(args);
       }
-    } else if (window.webkit?.messageHandlers) {
-      if (eventName in window.webkit.messageHandlers) {
-        window.webkit.messageHandlers[eventName].postMessage(JSON.stringify(args))
-      } else {
-        console.warn(`Can't pass message to native code because ${eventName} handler is not registered`)
+
+      if (window.androidListener) {
+        if (eventName in window.androidListener) {
+          window.androidListener[eventName](argument);
+        } else {
+          console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
+        }
+      } else if (window.webkit?.messageHandlers) {
+        if (eventName in window.webkit.messageHandlers) {
+          window.webkit.messageHandlers[eventName].postMessage(argument)
+        } else {
+          console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
+        }
       }
     }
-
     return super.emit(event, ...args)
   }
 }
