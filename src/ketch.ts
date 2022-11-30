@@ -1317,22 +1317,20 @@ export class Ketch extends EventEmitter {
         argument = args[0]
       } else if (args.length === 1) {
         argument = JSON.stringify(args[0])
-      } else {
+      } else if (args.length > 1) {
         argument = JSON.stringify(args)
       }
 
-      if (window.androidListener) {
-        if (eventName in window.androidListener) {
+      if (window.androidListener && eventName in window.androidListener) {
+        if (args.length === 0) {
+          window.androidListener[eventName]()
+        } else {
           window.androidListener[eventName](argument)
-        } else {
-          console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
         }
-      } else if (window.webkit?.messageHandlers) {
-        if (eventName in window.webkit.messageHandlers) {
-          window.webkit.messageHandlers[eventName].postMessage(argument)
-        } else {
-          console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
-        }
+      } else if (window.webkit?.messageHandlers && eventName in window.webkit.messageHandlers) {
+        window.webkit.messageHandlers[eventName].postMessage(argument)
+      } else {
+        console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
       }
     }
     return super.emit(event, ...args)
