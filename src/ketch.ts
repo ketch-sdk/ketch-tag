@@ -298,7 +298,7 @@ export class Ketch extends EventEmitter {
     }
 
     // Call functions registered using onWillShowExperience
-    this.emit('willShowExperience', type)
+    this.emit('willShowExperience', this, this._config, type)
 
     // update isExperienceDisplayed flag when experience displayed
     this._isExperienceDisplayed = true
@@ -556,7 +556,7 @@ export class Ketch extends EventEmitter {
     }
 
     // experience will not show - call functions registered using onHideExperience
-    this.emit('hideExperience', ExperienceClosedReason.WILL_NOT_SHOW)
+    this.emit('hideExperience', this, this._config, ExperienceClosedReason.WILL_NOT_SHOW)
 
     return this._consent.value
   }
@@ -1218,7 +1218,7 @@ export class Ketch extends EventEmitter {
       user: user,
     }
 
-    this.emit('rightInvoked', request)
+    this.emit('rightInvoked', this, this._config, request)
 
     return this._api.invokeRight(request)
   }
@@ -1244,7 +1244,7 @@ export class Ketch extends EventEmitter {
     this._hasExperienceBeenDisplayed = true
 
     // Call functions registered using onHideExperience
-    this.emit('hideExperience', reason)
+    this.emit('hideExperience', this, this._config, reason)
 
     if (reason !== 'setConsent') {
       const consent = await this.retrieveConsent()
