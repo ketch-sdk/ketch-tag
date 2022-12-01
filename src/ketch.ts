@@ -208,7 +208,7 @@ export class Ketch extends EventEmitter {
         this.on('rightInvoked', plugin.rightInvoked)
       }
       if (plugin.init !== undefined) {
-        return plugin.init(this, await this.getConfig())
+        return plugin.init(this, this._config)
       }
     }
   }
@@ -1143,11 +1143,10 @@ export class Ketch extends EventEmitter {
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
     log.info('showPreference')
 
-    const config = await this.getConfig()
     const consent = await this.getConsent()
 
     // if no preference experience configured do not show
-    if (!config.experiences?.preference) {
+    if (!this._config.experiences?.preference) {
       return consent
     }
 
@@ -1162,7 +1161,7 @@ export class Ketch extends EventEmitter {
         params.tab = tab
       }
       this.willShowExperience(ExperienceType.Preference)
-      this.emit('showPreferenceExperience', this, config, consent, params)
+      this.emit('showPreferenceExperience', this, this._config, consent, params)
     }
 
     return consent
@@ -1312,17 +1311,24 @@ export class Ketch extends EventEmitter {
     if (window.androidListener || window.webkit?.messageHandlers) {
       const eventName = event.toString()
 
+      const filteredArgs: any[] = []
+      for (const arg of args) {
+        if (arg !== this) {
+          filteredArgs.push(arg)
+        }
+      }
+
       let argument
-      if (args.length === 1 && typeof args[0] === 'string') {
-        argument = args[0]
-      } else if (args.length === 1) {
-        argument = JSON.stringify(args[0])
-      } else if (args.length > 1) {
-        argument = JSON.stringify(args)
+      if (filteredArgs.length === 1 && typeof filteredArgs[0] === 'string') {
+        argument = filteredArgs[0]
+      } else if (filteredArgs.length === 1) {
+        argument = JSON.stringify(filteredArgs[0])
+      } else if (filteredArgs.length > 1) {
+        argument = JSON.stringify(filteredArgs)
       }
 
       if (window.androidListener && eventName in window.androidListener) {
-        if (args.length === 0) {
+        if (filteredArgs.length === 0) {
           window.androidListener[eventName]()
         } else {
           window.androidListener[eventName](argument)
