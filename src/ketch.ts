@@ -1311,10 +1311,10 @@ export class Ketch extends EventEmitter {
     if (window.androidListener || window.webkit?.messageHandlers) {
       const eventName = event.toString()
 
-      let filteredArgs: any[] = []
+      const filteredArgs: any[] = []
       for (const arg of args) {
         if (arg !== this) {
-          filteredArgs = filteredArgs.concat(arg)
+          filteredArgs.push(arg)
         }
       }
 
