@@ -15,14 +15,13 @@ import {
   Plugin,
   ShowPreferenceOptions,
   SetConsentRequest,
-  ShowConsentExperience,
-  ShowPreferenceExperience,
   DataSubject,
   GetConsentRequest,
   ExperienceType,
   ConsentExperienceType,
   isTab,
   ExperienceClosedReason,
+  ShowConsentOptions,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences } from './datalayer'
 import isEmpty from './isEmpty'
@@ -175,37 +174,81 @@ export class Ketch extends EventEmitter {
       return plugin(this, config)
     } else {
       if (plugin.willShowExperience !== undefined) {
-        this.on('willShowExperience', plugin.willShowExperience)
+        this.on('willShowExperience', expType => {
+          if (plugin.willShowExperience !== undefined) {
+            plugin.willShowExperience(this, this._config, expType)
+          }
+        })
       }
       if (plugin.showConsentExperience !== undefined) {
-        this.on('showConsentExperience', plugin.showConsentExperience)
+        this.on('showConsentExperience', (consents, options) => {
+          if (plugin.showConsentExperience !== undefined) {
+            plugin.showConsentExperience(this, this._config, consents, options)
+          }
+        })
       }
       if (plugin.showPreferenceExperience !== undefined) {
-        this.on('showPreferenceExperience', plugin.showPreferenceExperience)
+        this.on('showPreferenceExperience', (consents, options) => {
+          if (plugin.showPreferenceExperience !== undefined) {
+            plugin.showPreferenceExperience(this, this._config, consents, options)
+          }
+        })
       }
       if (plugin.consentChanged !== undefined) {
-        this.on('consent', plugin.consentChanged)
+        this.on('consent', consent => {
+          if (plugin.consentChanged !== undefined) {
+            plugin.consentChanged(this, this._config, consent)
+          }
+        })
       }
       if (plugin.environmentLoaded !== undefined) {
-        this.on('environment', plugin.environmentLoaded)
+        this.on('environment', env => {
+          if (plugin.environmentLoaded !== undefined) {
+            plugin.environmentLoaded(this, this._config, env)
+          }
+        })
       }
       if (plugin.experienceHidden !== undefined) {
-        this.on('hideExperience', plugin.experienceHidden)
+        this.on('hideExperience', reason => {
+          if (plugin.experienceHidden !== undefined) {
+            plugin.experienceHidden(this, this._config, reason)
+          }
+        })
       }
       if (plugin.geoIPLoaded !== undefined) {
-        this.on('geoip', plugin.geoIPLoaded)
+        this.on('geoip', geoip => {
+          if (plugin.geoIPLoaded !== undefined) {
+            plugin.geoIPLoaded(this, this._config, geoip)
+          }
+        })
       }
       if (plugin.identitiesLoaded !== undefined) {
-        this.on('identities', plugin.identitiesLoaded)
+        this.on('identities', identities => {
+          if (plugin.identitiesLoaded !== undefined) {
+            plugin.identitiesLoaded(this, this._config, identities)
+          }
+        })
       }
       if (plugin.jurisdictionLoaded !== undefined) {
-        this.on('jurisdiction', plugin.jurisdictionLoaded)
+        this.on('jurisdiction', jurisdiction => {
+          if (plugin.jurisdictionLoaded !== undefined) {
+            plugin.jurisdictionLoaded(this, this._config, jurisdiction)
+          }
+        })
       }
       if (plugin.regionInfoLoaded !== undefined) {
-        this.on('regionInfo', plugin.regionInfoLoaded)
+        this.on('regionInfo', regionInfo => {
+          if (plugin.regionInfoLoaded !== undefined) {
+            plugin.regionInfoLoaded(this, this._config, regionInfo)
+          }
+        })
       }
       if (plugin.rightInvoked !== undefined) {
-        this.on('rightInvoked', plugin.rightInvoked)
+        this.on('rightInvoked', request => {
+          if (plugin.rightInvoked !== undefined) {
+            plugin.rightInvoked(this, this._config, request)
+          }
+        })
       }
       if (plugin.init !== undefined) {
         return plugin.init(this, this._config)
@@ -314,7 +357,7 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount('showConsentExperience') > 0) {
       this.willShowExperience(ExperienceType.Consent)
-      this.emit('showConsentExperience', this, this._config, consent, { displayHint: this.selectConsentExperience() })
+      this.emit('showConsentExperience', consent, { displayHint: this.selectConsentExperience() })
     }
 
     return consent
@@ -1161,7 +1204,7 @@ export class Ketch extends EventEmitter {
         params.tab = tab
       }
       this.willShowExperience(ExperienceType.Preference)
-      this.emit('showPreferenceExperience', this, this._config, consent, params)
+      this.emit('showPreferenceExperience', consent, params)
     }
 
     return consent
@@ -1288,7 +1331,9 @@ export class Ketch extends EventEmitter {
    *
    * @param callback Callback to register
    */
-  async onShowPreferenceExperience(callback: ShowPreferenceExperience): Promise<void> {
+  async onShowPreferenceExperience(
+    callback: (consents: Consent, options?: ShowPreferenceOptions) => void,
+  ): Promise<void> {
     this.removeAllListeners('showPreferenceExperience')
     this.on('showPreferenceExperience', callback)
   }
@@ -1298,7 +1343,7 @@ export class Ketch extends EventEmitter {
    *
    * @param callback Callback to register
    */
-  async onShowConsentExperience(callback: ShowConsentExperience): Promise<void> {
+  async onShowConsentExperience(callback: (consents: Consent, options?: ShowConsentOptions) => void): Promise<void> {
     this.removeAllListeners('showConsentExperience')
     this.on('showConsentExperience', callback)
   }
