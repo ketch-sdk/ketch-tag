@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "all": "npm run lint && npm run format-check && npm run test && npm run docs && npm run build",
     "build": "npm run build:lib && npm run build:web",
     "build:lib": "ncc build --minify --license licenses.txt src/index.ts",
     "build:web": "webpack --config webpack.config.js --mode production",
@@ -13,7 +14,7 @@
     "test": "jest --runInBand --passWithNoTests",
     "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
     "format-check": "prettier --check '**/*.ts'",
-    "docs": "typedoc --githubPages true --excludeInternal src/index.ts"
+    "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts"
   },
   "browserslist": {
     "production": [
@@ -32,13 +33,13 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "devDependencies": {
-    "@ketch-com/future": "^1.0.3",
-    "@ketch-sdk/ketch-data-layer": "^0.0.4",
-    "@ketch-sdk/ketch-types": "^1.1.3",
-    "@ketch-sdk/ketch-web-api": "^1.0.8",
+    "@ketch-com/future": "^1.0.4",
+    "@ketch-sdk/ketch-data-layer": "^1.0.0",
+    "@ketch-sdk/ketch-types": "^1.1.5",
+    "@ketch-sdk/ketch-web-api": "^1.0.9",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.2.3",
-    "@types/uuid": "^8.3.4",
+    "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "@vercel/ncc": "^0.34.0",
@@ -59,7 +60,7 @@
     "typescript": "^4.9.3",
     "uuid": "^9.0.0",
     "webpack": "^5.75.0",
-    "webpack-cli": "^4.10.0",
+    "webpack-cli": "^5.0.0",
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {

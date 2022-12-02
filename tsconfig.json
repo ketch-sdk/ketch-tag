@@ -18,6 +18,7 @@
     "rootDir": "./src",
     "declarationDir": "./dist",
     "strict": true,
+    "skipLibCheck": true,
     "target": "ES2015"
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
