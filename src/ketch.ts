@@ -396,6 +396,7 @@ export class Ketch extends EventEmitter {
 
     dataLayer().push(permitChangedEvent)
     dataLayer().push(swbPermitChangedEvent)
+    
     adobeDataLayer().push(permitChangedEvent)
   }
 
