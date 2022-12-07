@@ -23,7 +23,7 @@ import {
   ExperienceClosedReason,
   ShowConsentOptions,
 } from '@ketch-sdk/ketch-types'
-import dataLayer, { ketchPermitPreferences } from './datalayer'
+import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
 import log from './logging'
 import errors from './errors'
@@ -385,6 +385,7 @@ export class Ketch extends EventEmitter {
     const swbPermitChangedEvent: { [key: string]: any } = {
       event: 'switchbitPermitChanged',
     }
+
     const ketchPermitPref: any = ketchPermitPreferences()
 
     for (const purposeCode in c.purposes) {
@@ -395,6 +396,7 @@ export class Ketch extends EventEmitter {
 
     dataLayer().push(permitChangedEvent)
     dataLayer().push(swbPermitChangedEvent)
+    adobeDataLayer().push(permitChangedEvent)
   }
 
   /**
