@@ -14,7 +14,6 @@ export function ketchPermitPreferences(): any {
   return (window.ketchPermitPreferences = window.ketchPermitPreferences || {})
 }
 
-
 export function adobeDataLayer(): any[] {
   return (window.adobeDataLayer = window.adobeDataLayer || [])
 }
