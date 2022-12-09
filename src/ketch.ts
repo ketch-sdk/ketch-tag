@@ -170,7 +170,7 @@ export class Ketch extends EventEmitter {
    * @param config The plugin config
    */
   async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
-    if ( !config ) {
+    if (!config) {
       config = await this.getConfig()
     }
 
