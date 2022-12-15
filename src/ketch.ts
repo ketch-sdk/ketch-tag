@@ -537,8 +537,8 @@ export class Ketch extends EventEmitter {
     for (const key in sessionConsent.purposes) {
       // check if sessionConsent has additional values
       if (
-        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
-          !Object.prototype.hasOwnProperty.call(c.purposes, key))
+        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+        !Object.prototype.hasOwnProperty.call(c.purposes, key)
       ) {
         // confirm purpose code in config
         if (configPurposes[key]) {
