@@ -1261,6 +1261,7 @@ export class Ketch extends EventEmitter {
       jurisdictionCode: this._config.jurisdiction.code || '',
       rightCode: eventData.right,
       user: user,
+      recaptchaToken: eventData.recaptchaToken,
     }
 
     this.emit('rightInvoked', request)
