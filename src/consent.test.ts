@@ -550,7 +550,7 @@ describe('mergeSessionConsent', () => {
     const result = {
       purposes: {
         analytics: true,
-        advertising: false,
+        advertising: true,
         data_sales: false,
       },
     }

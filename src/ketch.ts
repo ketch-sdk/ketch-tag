@@ -170,6 +170,10 @@ export class Ketch extends EventEmitter {
    * @param config The plugin config
    */
   async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
+    if (!config) {
+      config = await this.getConfig()
+    }
+
     if (plugin instanceof Function) {
       return plugin(this, config)
     } else {
@@ -251,7 +255,7 @@ export class Ketch extends EventEmitter {
         })
       }
       if (plugin.init !== undefined) {
-        return plugin.init(this, this._config)
+        return plugin.init(this, config)
       }
     }
   }
@@ -504,8 +508,8 @@ export class Ketch extends EventEmitter {
   /**
    * Merge session consent.
    *
-   * This will merge consent retrieved from the server with consent stored in the client side session
-   * to ensure that consent is consistent within a client session. If the session consent has consent
+   * This will augment consent retrieved from the server with consent stored in the client side session
+   * for values that exist in the client consent but not the server consent. If the session consent has consent
    * values that the server consent does not contain, setConsent will be called to update the server.
    *
    * Otherwise, the client consent object and the session consent will be updated by calling
@@ -531,12 +535,10 @@ export class Ketch extends EventEmitter {
 
     let shouldCreatePermits = false
     for (const key in sessionConsent.purposes) {
-      // check if sessionConsent has additional values or different values
+      // check if sessionConsent has additional values
       if (
-        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
-          !Object.prototype.hasOwnProperty.call(c.purposes, key)) ||
-        (Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
-          sessionConsent.purposes[key] !== c.purposes[key])
+        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
+        !Object.prototype.hasOwnProperty.call(c.purposes, key)
       ) {
         // confirm purpose code in config
         if (configPurposes[key]) {
