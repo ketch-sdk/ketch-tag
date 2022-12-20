@@ -35,7 +35,7 @@
   "devDependencies": {
     "@ketch-com/future": "^1.0.4",
     "@ketch-sdk/ketch-data-layer": "^1.0.0",
-    "@ketch-sdk/ketch-web-api": "^1.0.9",
+    "@ketch-sdk/ketch-web-api": "^1.0.10",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.2.3",
     "@types/uuid": "^9.0.0",
