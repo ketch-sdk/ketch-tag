@@ -48,6 +48,7 @@ describe('identities', () => {
       migration: '3',
     },
   }
+
   const identities = {
     space1: 'id1',
   }
@@ -77,7 +78,7 @@ describe('identities', () => {
             expect(x).toEqual({
               space1: 'newid1',
               space2: 'id2',
-              space3: 'id3'
+              space3: 'id3',
             })
           })
         })
