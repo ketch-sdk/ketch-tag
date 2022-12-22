@@ -326,7 +326,7 @@ window.semaphore.push([
       lanyard: {},
       optimizely: {},
       shopify: {},
-      // tcf: {},
+      tcf: {},
       usprivacy: {},
     },
     privacyPolicy: {
