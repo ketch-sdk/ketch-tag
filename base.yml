@@ -1,0 +1,47 @@
+version: "3.9"
+
+networks:
+  ketch:
+    name: ketch
+    driver: bridge
+
+services:
+  nats:
+    image: ghcr.io/ketch-com/nats
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    depends_on:
+      vault-loader:
+        condition: service_completed_successfully
+    networks:
+      - ketch
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ketch
+      VAULT_PREFIX: secret
+
+  vault:
+    image: ghcr.io/ketch-com/vault
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    networks:
+      - ketch
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ketch
+
+  vault-loader:
+    image: ghcr.io/ketch-com/vault-loader
+    depends_on:
+      vault:
+        condition: service_started
+    networks:
+      - ketch
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ketch
+      VAULT_PREFIX: secret
+      VAULT_PKI_SERVICES: nats

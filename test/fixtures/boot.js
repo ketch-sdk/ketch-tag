@@ -11,7 +11,7 @@ window.semaphore.push([
       behavioral_advertising: {
         code: 'behavioral_advertising',
         name: 'behavioral_advertising',
-        purposeCodes: ['advertising', 'behavioral_advertising_vlabs'],
+        purposeCodes: ['advertising', 'behavioral_advertising_vlabs', 'behavioral_advertising'],
       },
       data_broking: {
         code: 'data_broking',
@@ -92,6 +92,7 @@ window.semaphore.push([
           bodyTitle: 'Privacy Choices',
           buttonText: 'Accept',
           consentTitle: 'asdsadasdsadsad',
+          showCloseIcon: true,
           switchOffText: 'NUUUUUUU',
           switchOnText: 'YISSSSSS',
           switchTextRenderLogic: 1,

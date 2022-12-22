@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  ketchtag:
+    build:
+      context: .
+      dockerfile: docker/ketchtag/Dockerfile
+    ports:
+      - "8080:5000"
+    networks:
+      - ketch
+    depends_on:
+      vault-loader:
+        condition: service_completed_successfully
+    volumes:
+      - "./build/ketch.js:/ketch/public/ketch.js"
+      - "./test/fixtures:/ketch/public/test"
+    environment:
+      DECKHAND_LOGLEVEL: trace
+      DECKHAND_SERVER_LISTEN: 5000
+      DECKHAND_SERVER_TLS_ENABLED: true
+      DECKHAND_SERVER_TLS_CERT_ID: keys/deckhand-tls
+      DECKHAND_SERVER_TLS_KEY_ID: keys/deckhand-tls
+      DECKHAND_SERVER_MIDDLEWARE_LOGGING_ENABLED: true
+      DECKHAND_VAULT_ENABLED: true
+      DECKHAND_VAULT_ADDRESS: http://vault:8200
+      DECKHAND_VAULT_PREFIX: secret
+      DECKHAND_VAULT_TLS_ENABLED: false
+      DECKHAND_VAULT_TOKEN: ketch
+      DECKHAND_REDIRECT: false
+
+  vault-loader:
+    image: ghcr.io/ketch-com/vault-loader
+    networks:
+      - ketch
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: ketch
+      VAULT_PREFIX: secret
+      VAULT_PKI_SERVICES: deckhand
+
+networks:
+  ketch:
+    name: ketch
+    driver: bridge
