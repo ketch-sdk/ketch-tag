@@ -1312,7 +1312,10 @@ export class Ketch extends EventEmitter {
 
       const res = await this.setConsent(consent)
       // Call functions registered using onHideExperience
-      this.emit('hideExperience', reason)
+      // In setTimeout to push to bottom of event queue
+      setTimeout(() => {
+        this.emit('hideExperience', reason)
+      }, 0)
       return res
     }
 
