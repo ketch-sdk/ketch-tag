@@ -933,9 +933,17 @@ export class Ketch extends EventEmitter {
    *
    * @param identities Identities to set
    */
-  async setIdentities(identities: Identities): Promise<Identities> {
-    log.info('setIdentities', identities)
+  async setIdentities(newIdentities: Identities): Promise<Identities> {
+    log.info('setIdentities', newIdentities)
 
+    // update current identities with new identities but do not overwrite previously found identities
+    let identities: Identities = {}
+    if (this._identities.isFulfilled()) {
+      identities = await this._identities.fulfilled
+    }
+    for (const key in newIdentities) {
+      identities[key] = newIdentities[key]
+    }
     this._identities.value = identities
 
     // change in identities found so set new identities found on page and check for consent
