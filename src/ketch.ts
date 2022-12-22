@@ -1291,9 +1291,6 @@ export class Ketch extends EventEmitter {
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = true
 
-    // Call functions registered using onHideExperience
-    this.emit('hideExperience', reason)
-
     if (reason !== 'setConsent') {
       const consent = await this.retrieveConsent()
 
@@ -1305,8 +1302,17 @@ export class Ketch extends EventEmitter {
         }
       }
 
-      return this.setConsent(consent)
+      const res = await this.setConsent(consent)
+      // Call functions registered using onHideExperience
+      this.emit('hideExperience', reason)
+      return res
     }
+    
+    // Call functions registered using onHideExperience
+    // In setTimeout to push to bottom of event queue
+    setTimeout(() => {
+      this.emit('hideExperience', reason)
+    }, 0)
 
     return Promise.resolve({ purposes: {}, vendors: [] } as Consent)
   }

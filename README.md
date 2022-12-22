@@ -2,6 +2,29 @@
 
 Ketch web infrastructure tag
 
+# Prerequisites
+- [NCC](https://www.npmjs.com/package/@vercel/ncc) `npm i -g @vercel/ncc`
+
+# Local DX
+
+1. `npm install`
+2. `npm run build`
+3. `docker compose -f base.yml -f docker-compose.yml up --build`
+4. Navigate to [https://localhost:8080/ketchtag/test/?swb_debug](https://localhost:8080/ketchtag/test/?swb_debug)
+
+### Optional
+You can test [ketch-plugins](https://github.com/ketch-com/ketch-plugins/) or [lanyard](https://github.com/ketch-com/lanyard) locally by including the following in `./docker-compose.yml` under `volumes`.
+
+```
+- "{path-to-local-directory}/dist/plugins.js:/ketch/public/plugins.js"
+```
+
+Then update `./test/fixtures/index.html` to point to the new file:
+
+```
+<script src="../plugins.js"></script>
+```
+
 ## Showing Consent Experience
 
 The consent experience can be shown to a data subject using the following:
