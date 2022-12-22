@@ -1315,7 +1315,7 @@ export class Ketch extends EventEmitter {
       this.emit('hideExperience', reason)
       return res
     }
-    
+
     // Call functions registered using onHideExperience
     // In setTimeout to push to bottom of event queue
     setTimeout(() => {
