@@ -22,6 +22,7 @@ import {
   isTab,
   ExperienceClosedReason,
   ShowConsentOptions,
+  IdentityType,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
@@ -30,7 +31,6 @@ import errors from './errors'
 import parameters from './parameters'
 import getApiUrl from './getApiUrl'
 import Watcher from '@ketch-sdk/ketch-data-layer'
-let identityProviders: (() => Promise<Identities>)[]
 
 declare global {
   type AndroidListener = {
@@ -266,8 +266,8 @@ export class Ketch extends EventEmitter {
    *
    * @param provider The provider to register
    */
-  async registerIdentityProvider(provider: () => Promise<Identities>): Promise<void> {
-    identityProviders.push(provider)
+  async registerIdentityProvider(name: string, provider: () => Promise<string[]>): Promise<void> {
+    this._watcher.add(name, provider)
   }
 
   /**
@@ -1011,28 +1011,10 @@ export class Ketch extends EventEmitter {
       return
     }
 
-    // collect provider identities
-    // update current identities with new identities but do not overwrite previously found identities
-    let identities: Identities = {}
-    if (this._identities.isFulfilled()) {
-      identities = await this._identities.fulfilled
-    }
-
-    for (const provider of identityProviders) {
-      await provider().then((newIdentities) => {
-          for (const key in newIdentities) {
-            identities[key] = newIdentities[key]
-          }
-        }
-      )
-    }
-    if (Object.keys(identities).length > 0 ) {
-      this._identities.value = identities
-    }
-
-    // look for identities on page
     for (const name of Object.keys(configIDs)) {
-      this._watcher.add(name, configIDs[name])
+      if (!this._config.property?.proxy || configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
+        this._watcher.add(name, configIDs[name])
+      }
     }
 
     log.info('starting watcher')
