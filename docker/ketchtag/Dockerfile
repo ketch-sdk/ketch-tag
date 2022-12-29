@@ -6,12 +6,12 @@ FROM ghcr.io/ketch-com/deckhand
 ENV DECKHAND_CONTENT_DIR /ketch/public/
 ENV DECKHAND_REDIRECT true
 ENV DECKHAND_PREFIX /ketchtag
-ENV DECKHAND_CACHE_CONTROL "max-age=1200"
-ENV DECKHAND_REDIRECT_CACHE_CONTROL "public, max-age=31536000"
+ENV DECKHAND_HEADER_CACHE_CONTROL "max-age=1200"
+ENV DECKHAND_REDIRECT_HEADER_CACHE_CONTROL "public, max-age=31536000"
 ENV DECKHAND_STATIC /
 
 # CIS Docker 4.9 Ensure that COPY is used instead of ADD in Dockerfiles
-COPY dist/ $DECKHAND_CONTENT_DIR
+COPY build/ $DECKHAND_CONTENT_DIR
 
 # Finish hardening of the container after setting up the application
 RUN /harden.sh

@@ -3,7 +3,7 @@ import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
-import { CACHED_CONSENT_KEY, CACHED_CONSENT_TTL, getCachedConsent } from './consent'
+import { CACHED_CONSENT_KEY, getCachedConsent } from './consent'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
 
 describe('consent', () => {
@@ -628,17 +628,6 @@ describe('cached consent', () => {
 
   it('reads empty object from localStorage', async () => {
     window.localStorage.setItem(CACHED_CONSENT_KEY, JSON.stringify({}))
-    const consent = await getCachedConsent(request)
-    window.localStorage.removeItem(CACHED_CONSENT_KEY)
-    expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
-  })
-
-  it('reads empty if expired from localStorage', async () => {
-    const collectedAt = Math.floor((Date.now() - (CACHED_CONSENT_TTL + 1) * 864e5) / 1000)
-    window.localStorage.setItem(
-      CACHED_CONSENT_KEY,
-      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
-    )
     const consent = await getCachedConsent(request)
     window.localStorage.removeItem(CACHED_CONSENT_KEY)
     expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
