@@ -1,8 +1,10 @@
-import { Configuration, IdentityFormat, IdentityType, ExperienceType } from '@ketch-sdk/ketch-types'
+import { Configuration, IdentityFormat, IdentityType, ExperienceType, GetConsentRequest } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
+import { CACHED_CONSENT_KEY, CACHED_CONSENT_TTL, getCachedConsent } from './consent'
+import { setCookie } from '@ketch-sdk/ketch-data-layer'
 
 describe('consent', () => {
   // @ts-ignore
@@ -231,7 +233,9 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
-              body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":0,"vendors":["1"]}',
+              body: `{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":0,"vendors":["1"],"collectedAt":${Math.floor(
+                Date.now() / 1000,
+              )}}`,
               credentials: 'omit',
               headers: {
                 Accept: 'application/json',
@@ -431,7 +435,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.selectExperience({ purposes: { analytics: true } })).toEqual(undefined)
+      expect(ketch.selectExperience({ purposes: { analytics: true } })).toBeUndefined()
     })
 
     it('still shows when no consent experience', () => {
@@ -581,11 +585,89 @@ describe('experience consent', () => {
     },
     vendors: ['1'],
   }
+
   it('retrieve consent on experience closed', () => {
     return ketch.setConsent(c).then(() => {
       ketch.experienceClosed('close').then(consent => {
         expect(consent).toEqual(c)
       })
     })
+  })
+})
+
+describe('cached consent', () => {
+  const request: GetConsentRequest = {
+    organizationCode: 'org',
+    propertyCode: 'prop',
+    environmentCode: 'production',
+    identities: {},
+    jurisdictionCode: 'us_ca',
+    purposes: { analytics: { legalBasisCode: 'disclosure' } },
+  }
+
+  it('reads empty', async () => {
+    setCookie(window, CACHED_CONSENT_KEY, '', -1)
+    window.localStorage.removeItem(CACHED_CONSENT_KEY)
+    window.sessionStorage.removeItem(CACHED_CONSENT_KEY)
+    const consent = await getCachedConsent(request)
+    expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
+  })
+
+  it('reads from localStorage', async () => {
+    const collectedAt = Math.floor(Date.now() / 1000)
+    window.localStorage.setItem(
+      CACHED_CONSENT_KEY,
+      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+    const consent = await getCachedConsent(request)
+    window.localStorage.removeItem(CACHED_CONSENT_KEY)
+    expect(consent).toEqual(
+      expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+  })
+
+  it('reads empty object from localStorage', async () => {
+    window.localStorage.setItem(CACHED_CONSENT_KEY, JSON.stringify({}))
+    const consent = await getCachedConsent(request)
+    window.localStorage.removeItem(CACHED_CONSENT_KEY)
+    expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
+  })
+
+  it('reads empty if expired from localStorage', async () => {
+    const collectedAt = Math.floor((Date.now() - (CACHED_CONSENT_TTL + 1) * 864e5) / 1000)
+    window.localStorage.setItem(
+      CACHED_CONSENT_KEY,
+      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+    const consent = await getCachedConsent(request)
+    window.localStorage.removeItem(CACHED_CONSENT_KEY)
+    expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
+  })
+
+  it('reads from sessionStorage', async () => {
+    const collectedAt = Math.floor(Date.now() / 1000)
+    window.sessionStorage.setItem(
+      CACHED_CONSENT_KEY,
+      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+    const consent = await getCachedConsent(request)
+    window.sessionStorage.removeItem(CACHED_CONSENT_KEY)
+    expect(consent).toEqual(
+      expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+  })
+
+  it('reads from cookie', async () => {
+    const collectedAt = Math.floor(Date.now() / 1000)
+    setCookie(
+      window,
+      CACHED_CONSENT_KEY,
+      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
+    const consent = await getCachedConsent(request)
+    setCookie(window, CACHED_CONSENT_KEY, '', -1)
+    expect(consent).toEqual(
+      expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+    )
   })
 })
