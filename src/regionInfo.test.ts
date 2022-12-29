@@ -60,7 +60,7 @@ describe('regionInfo', () => {
         }),
       )
 
-      return expect(ketch.loadRegionInfo()).resolves.toEqual('UK')
+      return expect(ketch.loadRegionInfo()).resolves.toBe('UK')
     })
 
     it('handles no region', () => {
@@ -75,7 +75,7 @@ describe('regionInfo', () => {
         }),
       )
 
-      return expect(ketch.loadRegionInfo()).resolves.toEqual('AU')
+      return expect(ketch.loadRegionInfo()).resolves.toBe('AU')
     })
 
     it('handles sub region', () => {
@@ -91,7 +91,7 @@ describe('regionInfo', () => {
         }),
       )
 
-      return expect(ketch.loadRegionInfo()).resolves.toEqual('US-CA')
+      return expect(ketch.loadRegionInfo()).resolves.toBe('US-CA')
     })
 
     it('handles region on the query', () => {
@@ -111,7 +111,7 @@ describe('regionInfo', () => {
         return ''
       })
 
-      return expect(ketch.loadRegionInfo()).resolves.toEqual('FOO')
+      return expect(ketch.loadRegionInfo()).resolves.toBe('FOO')
     })
   })
 })
