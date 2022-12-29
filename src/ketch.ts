@@ -23,6 +23,7 @@ import {
   ExperienceClosedReason,
   ShowConsentOptions,
   GetConsentResponse,
+  IdentityType,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
@@ -260,6 +261,15 @@ export class Ketch extends EventEmitter {
         return plugin.init(this, config)
       }
     }
+  }
+
+  /**
+   * Registers an identity provider
+   *
+   * @param provider The provider to register
+   */
+  async registerIdentityProvider(name: string, provider: () => Promise<string[]>): Promise<void> {
+    this._watcher.add(name, provider)
   }
 
   /**
@@ -1037,7 +1047,9 @@ export class Ketch extends EventEmitter {
     }
 
     for (const name of Object.keys(configIDs)) {
-      this._watcher.add(name, configIDs[name])
+      if (!this._config.property?.proxy || configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
+        this._watcher.add(name, configIDs[name])
+      }
     }
 
     log.info('starting watcher')
