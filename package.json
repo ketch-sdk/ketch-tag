@@ -63,7 +63,7 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
-    "@ketch-sdk/ketch-types": "^1.1.8",
+    "@ketch-sdk/ketch-types": "^1.3.1",
     "process": "^0.11.10",
     "util": "^0.12.5"
   },

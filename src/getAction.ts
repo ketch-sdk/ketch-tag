@@ -56,6 +56,8 @@ export default function getAction(ketch: Ketch | undefined, action: string): Fun
       return ketch.showPreferenceExperience
     case 'registerPlugin':
       return ketch.registerPlugin
+    case 'registerIdentityProvider':
+      return ketch.registerIdentityProvider
     case 'emit':
       return ketch.emit
     case 'on':
