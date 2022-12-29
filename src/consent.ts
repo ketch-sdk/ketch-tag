@@ -15,26 +15,31 @@ export async function getCachedConsent(request: GetConsentRequest): Promise<GetC
     collectedAt: 0,
   }
 
-  // First attempt to get from localStorage
-  let cachedConsent: string | null
-  try {
-    cachedConsent = window.localStorage.getItem(CACHED_CONSENT_KEY)
-  } catch (e) {
-    cachedConsent = null
-  }
+  let cachedConsent: string | null = null
 
-  // Next attempt to get from sessionStorage
-  if (!cachedConsent) {
-    try {
-      cachedConsent = window.sessionStorage.getItem(CACHED_CONSENT_KEY)
-    } catch (e) {
-      cachedConsent = null
-    }
-  }
+  // // First attempt to get from sessionStorage
+  // if (!cachedConsent) {
+  //   try {
+  //     cachedConsent = window.sessionStorage.getItem(CACHED_CONSENT_KEY)
+  //   } catch (e) {
+  //     cachedConsent = null
+  //   }
+  // }
+  //
+  // // Next attempt to get from localStorage
+  // try {
+  //   cachedConsent = window.localStorage.getItem(CACHED_CONSENT_KEY)
+  // } catch (e) {
+  //   cachedConsent = null
+  // }
+  //
 
   // Finally attempt to get from cookie
   if (!cachedConsent) {
     cachedConsent = getCookie(window, CACHED_CONSENT_KEY)
+    if (cachedConsent) {
+      cachedConsent = atob(cachedConsent)
+    }
   }
 
   if (!cachedConsent) {
@@ -65,26 +70,26 @@ export async function setCachedConsent(
 
   const cachedConsent: string = JSON.stringify(input)
 
-  // first attempt to save in localStorage
-  try {
-    window.localStorage.setItem(CACHED_CONSENT_KEY, cachedConsent)
-    if (cachedConsent === window.localStorage.getItem(CACHED_CONSENT_KEY)) {
-      return
-    }
-  } catch (e) {
-    //
-  }
+  // first attempt to save to cookie
+  setCookie(window, CACHED_CONSENT_KEY, btoa(cachedConsent), 730)
 
-  // next attempt to save in localStorage
-  try {
-    window.sessionStorage.setItem(CACHED_CONSENT_KEY, cachedConsent)
-    if (cachedConsent === window.sessionStorage.getItem(CACHED_CONSENT_KEY)) {
-      return
-    }
-  } catch (e) {
-    //
-  }
-
-  // finally attempt to save to cookie
-  setCookie(window, CACHED_CONSENT_KEY, cachedConsent, CACHED_CONSENT_TTL)
+  // // next attempt to save in localStorage
+  // try {
+  //   window.localStorage.setItem(CACHED_CONSENT_KEY, cachedConsent)
+  //   if (cachedConsent === window.localStorage.getItem(CACHED_CONSENT_KEY)) {
+  //     return
+  //   }
+  // } catch (e) {
+  //   //
+  // }
+  //
+  // // final attempt to save in sessionStorage
+  // try {
+  //   window.sessionStorage.setItem(CACHED_CONSENT_KEY, cachedConsent)
+  //   if (cachedConsent === window.sessionStorage.getItem(CACHED_CONSENT_KEY)) {
+  //     return
+  //   }
+  // } catch (e) {
+  //   //
+  // }
 }

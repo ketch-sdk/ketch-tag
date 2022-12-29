@@ -613,45 +613,45 @@ describe('cached consent', () => {
     expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
   })
 
-  it('reads from localStorage', async () => {
-    const collectedAt = Math.floor(Date.now() / 1000)
-    window.localStorage.setItem(
-      CACHED_CONSENT_KEY,
-      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
-    )
-    const consent = await getCachedConsent(request)
-    window.localStorage.removeItem(CACHED_CONSENT_KEY)
-    expect(consent).toEqual(
-      expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
-    )
-  })
-
-  it('reads empty object from localStorage', async () => {
-    window.localStorage.setItem(CACHED_CONSENT_KEY, JSON.stringify({}))
-    const consent = await getCachedConsent(request)
-    window.localStorage.removeItem(CACHED_CONSENT_KEY)
-    expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
-  })
-
-  it('reads from sessionStorage', async () => {
-    const collectedAt = Math.floor(Date.now() / 1000)
-    window.sessionStorage.setItem(
-      CACHED_CONSENT_KEY,
-      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
-    )
-    const consent = await getCachedConsent(request)
-    window.sessionStorage.removeItem(CACHED_CONSENT_KEY)
-    expect(consent).toEqual(
-      expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
-    )
-  })
+  // it('reads from localStorage', async () => {
+  //   const collectedAt = Math.floor(Date.now() / 1000)
+  //   window.localStorage.setItem(
+  //     CACHED_CONSENT_KEY,
+  //     JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+  //   )
+  //   const consent = await getCachedConsent(request)
+  //   window.localStorage.removeItem(CACHED_CONSENT_KEY)
+  //   expect(consent).toEqual(
+  //     expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+  //   )
+  // })
+  //
+  // it('reads empty object from localStorage', async () => {
+  //   window.localStorage.setItem(CACHED_CONSENT_KEY, JSON.stringify({}))
+  //   const consent = await getCachedConsent(request)
+  //   window.localStorage.removeItem(CACHED_CONSENT_KEY)
+  //   expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
+  // })
+  //
+  // it('reads from sessionStorage', async () => {
+  //   const collectedAt = Math.floor(Date.now() / 1000)
+  //   window.sessionStorage.setItem(
+  //     CACHED_CONSENT_KEY,
+  //     JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+  //   )
+  //   const consent = await getCachedConsent(request)
+  //   window.sessionStorage.removeItem(CACHED_CONSENT_KEY)
+  //   expect(consent).toEqual(
+  //     expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+  //   )
+  // })
 
   it('reads from cookie', async () => {
     const collectedAt = Math.floor(Date.now() / 1000)
     setCookie(
       window,
       CACHED_CONSENT_KEY,
-      JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
+      btoa(JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt })),
     )
     const consent = await getCachedConsent(request)
     setCookie(window, CACHED_CONSENT_KEY, '', -1)
