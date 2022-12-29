@@ -29,7 +29,7 @@ describe('jurisdiction', () => {
         return ''
       })
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('FOO')
+      return expect(ketch.loadJurisdiction()).resolves.toBe('FOO')
     })
 
     it('handles null regionInfo', () => {
@@ -60,7 +60,7 @@ describe('jurisdiction', () => {
         foobar: 'ccpa',
       })
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
+      return expect(ketch.loadJurisdiction()).resolves.toBe('ccpa')
     })
 
     it('locates specified policy scope', () => {
@@ -83,7 +83,7 @@ describe('jurisdiction', () => {
         }),
       )
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('ccpa')
+      return expect(ketch.loadJurisdiction()).resolves.toBe('ccpa')
     })
 
     it('defaults policy scope if not found', () => {
@@ -106,7 +106,7 @@ describe('jurisdiction', () => {
           }),
       )
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
+      return expect(ketch.loadJurisdiction()).resolves.toBe('default')
     })
 
     it('defaults policy scope on reject', () => {
@@ -122,7 +122,7 @@ describe('jurisdiction', () => {
 
       fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({}))
 
-      return expect(ketch.loadJurisdiction()).resolves.toEqual('default')
+      return expect(ketch.loadJurisdiction()).resolves.toBe('default')
     })
   })
 

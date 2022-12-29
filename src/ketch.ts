@@ -22,6 +22,7 @@ import {
   isTab,
   ExperienceClosedReason,
   ShowConsentOptions,
+  GetConsentResponse,
   IdentityType,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
@@ -31,6 +32,7 @@ import errors from './errors'
 import parameters from './parameters'
 import getApiUrl from './getApiUrl'
 import Watcher from '@ketch-sdk/ketch-data-layer'
+import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './consent'
 
 declare global {
   type AndroidListener = {
@@ -679,7 +681,6 @@ export class Ketch extends EventEmitter {
       propertyCode: this._config.property.code || '',
       environmentCode: this._config.environment.code,
       jurisdictionCode: this._config.jurisdiction.code || '',
-      controllerCode: '',
       identities: identities,
       purposes: {},
     }
@@ -691,7 +692,37 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    const consent = await this._api.getConsent(request)
+    let consent = await getCachedConsent(request)
+
+    const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
+
+    const normalizeConsent = (input: GetConsentResponse): GetConsentResponse => {
+      for (const purpose of Object.keys(input.purposes)) {
+        const x = input.purposes[purpose]
+        if (typeof x === 'string') {
+          input.purposes[purpose] = {
+            allowed: x,
+            legalBasisCode: request.purposes[purpose]?.legalBasisCode,
+          }
+        }
+      }
+
+      return input
+    }
+
+    // If purposes is empty, fetch
+    if (Object.keys(consent.purposes).length === 0) {
+      log.debug('cached consent is empty')
+      consent = normalizeConsent(await this._api.getConsent(request))
+      await setCachedConsent(consent)
+    } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
+      log.debug('revalidating cached consent')
+      consent = normalizeConsent(await this._api.getConsent(request))
+      await setCachedConsent(consent)
+    } else {
+      log.debug('using cached consent')
+    }
+
     const newConsent: Consent = { purposes: {} }
 
     if (this._config.purposes && consent.purposes) {
@@ -757,6 +788,7 @@ export class Ketch extends EventEmitter {
       purposes: {},
       migrationOption: 0,
       vendors: consent.vendors,
+      collectedAt: Math.floor(Date.now() / 1000),
     }
 
     if (this._config.purposes && consent) {
@@ -775,6 +807,9 @@ export class Ketch extends EventEmitter {
       log.debug('updateConsent', 'calculated consents empty')
       return Promise.resolve()
     }
+
+    // Save a locally cached consent
+    await setCachedConsent(request)
 
     return this._api.setConsent(request)
   }
@@ -1415,7 +1450,7 @@ export class Ketch extends EventEmitter {
       } else if (window.webkit?.messageHandlers && eventName in window.webkit.messageHandlers) {
         window.webkit.messageHandlers[eventName].postMessage(argument)
       } else {
-        console.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
+        log.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
       }
     }
     return super.emit(event, ...args)
