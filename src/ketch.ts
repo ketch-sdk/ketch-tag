@@ -285,7 +285,7 @@ export class Ketch extends EventEmitter {
    * @param c Consent to be used
    */
   selectExperience(c: Consent): ExperienceType | undefined {
-    // if experience has already showed, do not show again
+    // if experience has already shown, do not show again
     if (this._hasExperienceBeenDisplayed) {
       log.debug('selectExperience', 'none')
       return
@@ -306,6 +306,7 @@ export class Ketch extends EventEmitter {
       this._shouldConsentExperienceShow = false
       return ExperienceType.Consent
     }
+
     if (this._config.purposes) {
       for (const p of this._config.purposes) {
         if (c.purposes[p.code] === undefined) {
@@ -328,14 +329,14 @@ export class Ketch extends EventEmitter {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
           if (this._config.experiences?.consent?.experienceDefault == 2) {
-            log.debug('selectExperience', 'experiences.consent.modal')
+            log.debug('selectConsentExperience', 'experiences.consent.modal')
             return ConsentExperienceType.Modal
           }
         }
       }
     }
 
-    log.debug('selectExperience', 'experiences.consent.banner')
+    log.debug('selectConsentExperience', 'experiences.consent.banner')
     return ConsentExperienceType.Banner
   }
 
@@ -429,12 +430,12 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Updates the client _consent value.
+   * Sets the consent.
    *
-   * @param c Consent to update
+   * @param c Consent to set
    */
-  async updateClientConsent(c: Consent): Promise<Consent> {
-    log.info('updateClientConsent', c)
+  async setConsent(c: Consent): Promise<Consent> {
+    log.info('setConsent', c)
 
     if (!c || isEmpty(c)) {
       this._consent.reset()
@@ -459,21 +460,7 @@ export class Ketch extends EventEmitter {
     // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
     this.triggerPermitChangedEvent(c)
 
-    sessionStorage.setItem('consent', JSON.stringify(c))
-
     this._consent.value = c
-    return c
-  }
-
-  /**
-   * Sets the consent.
-   *
-   * @param c Consent to set
-   */
-  async setConsent(c: Consent): Promise<Consent> {
-    log.info('setConsent', c)
-
-    await this.updateClientConsent(c)
 
     const identities = await this.getIdentities()
 
@@ -497,74 +484,31 @@ export class Ketch extends EventEmitter {
    */
   async setProvisionalConsent(c: Consent): Promise<void> {
     this._provisionalConsent = c
+    if (this._consent.isFulfilled()) {
+      if (this.overrideWithProvisionalConsent(this._consent.value)) {
+        await this.setConsent(this._consent.value)
+      }
+    }
   }
 
   /**
    * override provisional consent on retrieved consent from the server.
    *
    * @param c current consent
-   * @param provisionalConsent the provisional consent
    */
-  async overrideWithProvisionalConsent(c: Consent, provisionalConsent: Consent): Promise<Consent> {
-    return new Promise(resolve => {
-      if (!provisionalConsent) {
-        resolve(c)
-      }
-      for (const key in provisionalConsent.purposes) {
-        c.purposes[key] = provisionalConsent.purposes[key]
-      }
-      resolve(c)
-    })
-  }
-
-  /**
-   * Merge session consent.
-   *
-   * This will augment consent retrieved from the server with consent stored in the client side session
-   * for values that exist in the client consent but not the server consent. If the session consent has consent
-   * values that the server consent does not contain, setConsent will be called to update the server.
-   *
-   * Otherwise, the client consent object and the session consent will be updated by calling
-   * updateClientConsent.
-   *
-   * @param c current consent
-   * @param sessionConsent sessionConsent
-   */
-  async mergeSessionConsent(c: Consent, sessionConsent: Consent): Promise<Consent> {
-    log.info('mergeSessionConsent', c, sessionConsent)
-
-    if (!sessionConsent || !c) {
-      return this.updateClientConsent(c)
+  overrideWithProvisionalConsent(c: Consent): boolean {
+    let shouldUpdateConsent = false
+    if (!this._provisionalConsent) {
+      return shouldUpdateConsent
     }
-
-    // get possible config purposes as a set
-    const configPurposes: { [key: string]: boolean } = {}
-    if (this._config.purposes) {
-      for (const p of this._config.purposes) {
-        configPurposes[p.code] = true
+    for (const key in this._provisionalConsent.purposes) {
+      if (c.purposes[key] !== this._provisionalConsent.purposes[key]) {
+        c.purposes[key] = this._provisionalConsent.purposes[key]
+        shouldUpdateConsent = true
       }
     }
-
-    let shouldCreatePermits = false
-    for (const key in sessionConsent.purposes) {
-      // check if sessionConsent has additional values
-      if (
-        Object.prototype.hasOwnProperty.call(sessionConsent.purposes, key) &&
-        !Object.prototype.hasOwnProperty.call(c.purposes, key)
-      ) {
-        // confirm purpose code in config
-        if (configPurposes[key]) {
-          c.purposes[key] = sessionConsent.purposes[key]
-          shouldCreatePermits = true
-        }
-      }
-    }
-
-    if (shouldCreatePermits) {
-      return this.setConsent(c)
-    }
-
-    return this.updateClientConsent(c)
+    this._provisionalConsent = undefined
+    return shouldUpdateConsent
   }
 
   /**
@@ -577,19 +521,10 @@ export class Ketch extends EventEmitter {
       return this._consent.fulfilled
     }
 
-    // get session consent
-    const sessionConsentString = sessionStorage.getItem('consent')
-    const sessionConsent = sessionConsentString ? JSON.parse(sessionConsentString) : undefined
-
     const identities = await this.getIdentities()
 
-    let c = await this.fetchConsent(identities)
-    if (sessionConsent) {
-      c = await this.mergeSessionConsent(c, sessionConsent)
-    }
-    c = await this.overrideWithProvisionalConsent(c, this._provisionalConsent!)
-    this._provisionalConsent = undefined
-    let shouldCreatePermits = false
+    const c = await this.fetchConsent(identities)
+    let shouldCreatePermits = this.overrideWithProvisionalConsent(c)
 
     // selectExperience before populating permits
     const experience = this.selectExperience(c)
@@ -604,9 +539,13 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    shouldCreatePermits ? await this.setConsent(c) : await this.updateClientConsent(c)
-
     // first set consent value then proceed to show experience and/or create permits
+    if (shouldCreatePermits) {
+      await this.setConsent(c)
+    } else {
+      this._consent.value = c
+    }
+
     switch (experience) {
       case ExperienceType.Consent:
         return this.showConsentExperience()
@@ -722,6 +661,7 @@ export class Ketch extends EventEmitter {
     } else {
       log.debug('using cached consent')
     }
+    // TODO - also check for identities
 
     const newConsent: Consent = { purposes: {} }
 
@@ -782,11 +722,9 @@ export class Ketch extends EventEmitter {
       organizationCode: this._config.organization.code || '',
       propertyCode: this._config.property.code || '',
       environmentCode: this._config.environment.code,
-      controllerCode: '',
       identities: identities,
       jurisdictionCode: this._config.jurisdiction.code || '',
       purposes: {},
-      migrationOption: 0,
       vendors: consent.vendors,
       collectedAt: Math.floor(Date.now() / 1000),
     }
@@ -976,7 +914,7 @@ export class Ketch extends EventEmitter {
   /**
    * Sets the identities.
    *
-   * @param identities Identities to set
+   * @param newIdentities Identities to set
    */
   async setIdentities(newIdentities: Identities): Promise<Identities> {
     log.info('setIdentities', newIdentities)
@@ -984,7 +922,7 @@ export class Ketch extends EventEmitter {
     // update current identities with new identities but do not overwrite previously found identities
     let identities: Identities = {}
     if (this._identities.isFulfilled()) {
-      identities = await this._identities.fulfilled
+      identities = this._identities.value
     }
     for (const key in newIdentities) {
       identities[key] = newIdentities[key]
@@ -992,12 +930,13 @@ export class Ketch extends EventEmitter {
     this._identities.value = identities
 
     // change in identities found so set new identities found on page and check for consent
-    // if experience is currently displayed only update identities, and they return to wait for user input
+    // if experience is currently displayed only update identities, and then return to wait for user input
     if (this._isExperienceDisplayed) {
       return identities
     }
 
     const localConsent = await this.retrieveConsent()
+
     // if there is not yet local consent then return identities
     // no reprompting of the user is applicable until local consent is set
     if (Object.keys(localConsent.purposes).length == 0) {
@@ -1243,7 +1182,7 @@ export class Ketch extends EventEmitter {
    * @param params Preferences Manager preferences
    */
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
-    log.info('showPreference')
+    log.info('showPreferenceExperience')
 
     const consent = await this.getConsent()
 
