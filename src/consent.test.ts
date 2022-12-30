@@ -147,7 +147,21 @@ describe('consent', () => {
   }
 
   describe('fetchConsent', () => {
-    it('handles a call with full config', () => {
+    it('handles a call with full config and no server consent', () => {
+      const ketch = new Ketch(config)
+
+      fetchMock.mockResponse(async (): Promise<string> => {
+        return JSON.stringify({})
+      })
+
+      return ketch.fetchConsent(identities).then(x => {
+        expect(x).toEqual({
+          purposes: {},
+        })
+      })
+    })
+
+    it('handles a call with full config and server consent', () => {
       const ketch = new Ketch(config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
