@@ -33,6 +33,7 @@ import parameters from './parameters'
 import getApiUrl from './getApiUrl'
 import Watcher from '@ketch-sdk/ketch-data-layer'
 import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './consent'
+import deepEqual from 'deep-equal'
 
 declare global {
   type AndroidListener = {
@@ -649,19 +650,23 @@ export class Ketch extends EventEmitter {
       return input
     }
 
-    // If purposes is empty, fetch
+    // Determine whether we should use cached consent
+    let useCachedConsent = false
     if (Object.keys(consent.purposes).length === 0) {
       log.debug('cached consent is empty')
-      consent = normalizeConsent(await this._api.getConsent(request))
-      await setCachedConsent(consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
       log.debug('revalidating cached consent')
-      consent = normalizeConsent(await this._api.getConsent(request))
-      await setCachedConsent(consent)
+    } else if (!deepEqual(identities, consent.identities)) {
+      log.debug('cached consent discarded due to identity mismatch')
     } else {
       log.debug('using cached consent')
+      useCachedConsent = true
     }
-    // TODO - also check for identities
+
+    if (!useCachedConsent) {
+      consent = normalizeConsent(await this._api.getConsent(request))
+      await setCachedConsent(consent)
+    }
 
     const newConsent: Consent = { purposes: {} }
 
