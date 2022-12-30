@@ -23,7 +23,9 @@ import {
   ExperienceClosedReason,
   ShowConsentOptions,
   GetConsentResponse,
-  IdentityType, IdentityProvider, StorageProvider,
+  IdentityType,
+  IdentityProvider,
+  StorageProvider,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
@@ -274,7 +276,7 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Registers an identity provider
+   * Registers a storage provider
    *
    * @param provider The provider to register
    */
