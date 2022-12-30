@@ -24,6 +24,8 @@ import {
   ShowConsentOptions,
   GetConsentResponse,
   IdentityType,
+  IdentityProvider,
+  StorageProvider,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
@@ -269,9 +271,16 @@ export class Ketch extends EventEmitter {
    *
    * @param provider The provider to register
    */
-  async registerIdentityProvider(name: string, provider: () => Promise<string[]>): Promise<void> {
+  async registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
     this._watcher.add(name, provider)
   }
+
+  /**
+   * Registers a storage provider
+   *
+   * @param provider The provider to register
+   */
+  async registerStorageProvider(_: StorageProvider): Promise<void> {}
 
   /**
    * Returns the configuration.
@@ -996,8 +1005,18 @@ export class Ketch extends EventEmitter {
     }
 
     for (const name of Object.keys(configIDs)) {
-      if (!this._config.property?.proxy || configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
+      // if no proxy add all, otherwise add if not local storage or if same origin
+      if (!this._config.property?.proxy) {
         this._watcher.add(name, configIDs[name])
+      } else {
+        const proxyPage = new URL(this._config.property?.proxy)
+        const currentPage = new URL(window.location.href)
+        if (
+          configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE ||
+          proxyPage.origin === currentPage.origin
+        ) {
+          this._watcher.add(name, configIDs[name])
+        }
       }
     }
 
