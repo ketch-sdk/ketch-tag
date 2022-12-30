@@ -25,7 +25,7 @@ describe('jurisdiction', () => {
       const ketch = new Ketch({} as Configuration)
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.POLICY_SCOPE) return 'FOO'
+        if (key === parameters.JURISDICTION) return 'FOO'
         return ''
       })
 

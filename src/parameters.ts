@@ -8,12 +8,9 @@ function prefixed(param: string): string {
 }
 
 export default {
-  DEBUG: prefixed('debug'),
-  LOG_LEVEL: prefixed('log'),
   ENV: prefixed('env'),
   REGION: prefixed('region'),
-  DEPLOYMENT: prefixed('d'),
-  POLICY_SCOPE: prefixed('p'),
+  JURISDICTION: prefixed('p'),
   LANGUAGE: prefixed('l'),
   SHOW: prefixed('show'),
   PREFERENCES_TAB: prefixed('preferences_tab'),
