@@ -996,8 +996,15 @@ export class Ketch extends EventEmitter {
     }
 
     for (const name of Object.keys(configIDs)) {
-      if (!this._config.property?.proxy || configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
+      // if no proxy add all, otherwise add if not local storage or if same origin
+      if (!this._config.property?.proxy) {
         this._watcher.add(name, configIDs[name])
+      } else {
+        const proxyPage = new URL(this._config.property?.proxy)
+        const currentPage = new URL(window.location.href)
+        if ( configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE || proxyPage.origin === currentPage.origin) {
+          this._watcher.add(name, configIDs[name])
+        }
       }
     }
 
