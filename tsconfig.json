@@ -19,7 +19,8 @@
     "declarationDir": "./dist",
     "strict": true,
     "skipLibCheck": true,
-    "target": "ES2015"
+    "target": "ES2015",
+    "esModuleInterop": true
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["**/*.spec.ts"]

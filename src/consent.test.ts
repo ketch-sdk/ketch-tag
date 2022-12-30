@@ -247,7 +247,7 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
-              body: `{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"migrationOption":0,"vendors":["1"],"collectedAt":${Math.floor(
+              body: `{"organizationCode":"org","propertyCode":"app","environmentCode":"env","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"vendors":["1"],"collectedAt":${Math.floor(
                 Date.now() / 1000,
               )}}`,
               credentials: 'omit',
@@ -489,92 +489,6 @@ describe('consent', () => {
 
       expect(ketch.setConsent(c)).resolves.toBe(c)
       expect(ketch.showConsentExperience()).resolves.toBe(c)
-    })
-  })
-})
-
-describe('overrideWithProvisionalConsent', () => {
-  const ketch = new Ketch({} as any as Configuration)
-  it('overrideWithProvisionalConsent when server side consent and provisional consent both have value', () => {
-    const serverConsent = {
-      purposes: {
-        analytics: true,
-        advertising: true,
-      },
-    }
-
-    const provisionConsent = {
-      purposes: {
-        advertising: false,
-        data_sales: false,
-      },
-    }
-    const result = {
-      purposes: {
-        analytics: true,
-        advertising: false,
-        data_sales: false,
-      },
-    }
-
-    return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent).then(x => {
-      expect(x).toEqual(result)
-    })
-  })
-  it('overrideWithProvisionalConsent  when provisional consent empty', () => {
-    const serverConsent = {
-      purposes: {
-        analytics: true,
-        advertising: true,
-      },
-    }
-
-    const provisionConsent = undefined
-    return ketch.overrideWithProvisionalConsent(serverConsent, provisionConsent!).then(x => {
-      expect(x).toEqual(serverConsent)
-    })
-  })
-})
-
-describe('mergeSessionConsent', () => {
-  const ketch = new Ketch({
-    purposes: [
-      {
-        code: 'analytics',
-      },
-      {
-        code: 'advertising',
-      },
-      {
-        code: 'data_sales',
-      },
-    ],
-  } as any as Configuration)
-  it('mergeSessionConsent when server side consent and session consent both have value', () => {
-    const serverConsent = {
-      purposes: {
-        analytics: true,
-        advertising: true,
-      },
-    }
-
-    const sessionConsent = {
-      purposes: {
-        advertising: false,
-        data_sales: false,
-      },
-    }
-
-    const result = {
-      purposes: {
-        analytics: true,
-        advertising: true,
-        data_sales: false,
-      },
-    }
-
-    return ketch.mergeSessionConsent(serverConsent, sessionConsent).then(x => {
-      expect(x).toEqual(result)
     })
   })
 })
