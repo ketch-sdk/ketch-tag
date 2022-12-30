@@ -338,7 +338,7 @@ window.semaphore.push([
       code: 'vara_labs',
       name: 'Vara Labs',
       platform: 'WEB',
-      proxy: 'test',
+      // proxy: 'test',
     },
     purposes: [
       {

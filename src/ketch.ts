@@ -1009,13 +1009,17 @@ export class Ketch extends EventEmitter {
       if (!this._config.property?.proxy) {
         this._watcher.add(name, configIDs[name])
       } else {
-        const proxyPage = new URL(this._config.property?.proxy)
-        const currentPage = new URL(window.location.href)
-        if (
-          configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE ||
-          proxyPage.origin === currentPage.origin
-        ) {
-          this._watcher.add(name, configIDs[name])
+        try {
+          const proxyPage = new URL(this._config.property?.proxy)
+          const currentPage = new URL(window.location.href)
+          if (
+            configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE ||
+            proxyPage.origin === currentPage.origin
+          ) {
+            this._watcher.add(name, configIDs[name])
+          }
+        } catch (e) {
+          log.error('error checking proxy', e)
         }
       }
     }
@@ -1104,7 +1108,7 @@ export class Ketch extends EventEmitter {
   async loadJurisdiction(): Promise<string> {
     log.info('loadJurisdiction', this._config.jurisdiction)
 
-    const jurisdictionOverride = parameters.get(parameters.POLICY_SCOPE, window.location.search)
+    const jurisdictionOverride = parameters.get(parameters.JURISDICTION, window.location.search)
     if (jurisdictionOverride) {
       return this.setJurisdiction(jurisdictionOverride)
     }
