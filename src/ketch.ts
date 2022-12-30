@@ -637,6 +637,11 @@ export class Ketch extends EventEmitter {
     const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
 
     const normalizeConsent = (input: GetConsentResponse): GetConsentResponse => {
+      if (!input.purposes) {
+        input.purposes = {}
+        return input
+      }
+
       for (const purpose of Object.keys(input.purposes)) {
         const x = input.purposes[purpose]
         if (typeof x === 'string') {
