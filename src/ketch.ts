@@ -23,7 +23,7 @@ import {
   ExperienceClosedReason,
   ShowConsentOptions,
   GetConsentResponse,
-  IdentityType,
+  IdentityType, IdentityProvider, StorageProvider,
 } from '@ketch-sdk/ketch-types'
 import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
 import isEmpty from './isEmpty'
@@ -269,9 +269,16 @@ export class Ketch extends EventEmitter {
    *
    * @param provider The provider to register
    */
-  async registerIdentityProvider(name: string, provider: () => Promise<string[]>): Promise<void> {
+  async registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
     this._watcher.add(name, provider)
   }
+
+  /**
+   * Registers an identity provider
+   *
+   * @param provider The provider to register
+   */
+  async registerStorageProvider(_: StorageProvider): Promise<void> {}
 
   /**
    * Returns the configuration.
