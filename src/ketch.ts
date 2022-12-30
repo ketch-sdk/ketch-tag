@@ -1002,7 +1002,10 @@ export class Ketch extends EventEmitter {
       } else {
         const proxyPage = new URL(this._config.property?.proxy)
         const currentPage = new URL(window.location.href)
-        if ( configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE || proxyPage.origin === currentPage.origin) {
+        if (
+          configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE ||
+          proxyPage.origin === currentPage.origin
+        ) {
           this._watcher.add(name, configIDs[name])
         }
       }
