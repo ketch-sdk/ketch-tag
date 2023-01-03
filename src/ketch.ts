@@ -151,22 +151,24 @@ export class Ketch extends EventEmitter {
    */
   constructor(config: Configuration) {
     super()
+    const maxListeners = parseInt(config.options?.maxListeners || '20')
     this._config = config
-    this._consent = new Future<Consent>({ name: 'consent', emitter: this })
-    this._environment = new Future<Environment>({ name: 'environment', emitter: this })
-    this._geoip = new Future({ name: 'geoip', emitter: this })
-    this._identities = new Future<Identities>({ name: 'identities', emitter: this })
-    this._jurisdiction = new Future<string>({ name: 'jurisdiction', emitter: this })
-    this._regionInfo = new Future<string>({ name: 'regionInfo', emitter: this })
+    this._consent = new Future<Consent>({ name: 'consent', emitter: this, maxListeners })
+    this._environment = new Future<Environment>({ name: 'environment', emitter: this, maxListeners })
+    this._geoip = new Future({ name: 'geoip', emitter: this, maxListeners })
+    this._identities = new Future<Identities>({ name: 'identities', emitter: this, maxListeners })
+    this._jurisdiction = new Future<string>({ name: 'jurisdiction', emitter: this, maxListeners })
+    this._regionInfo = new Future<string>({ name: 'regionInfo', emitter: this, maxListeners })
     this._appDivs = []
     this._shouldConsentExperienceShow = false
     this._provisionalConsent = undefined
     this._api = new KetchWebAPI(getApiUrl(config))
     this._watcher = new Watcher(window, {
-      interval: 2000,
-      timeout: 10000,
+      interval: parseInt(config.options?.watcherInterval || '2000'),
+      timeout: parseInt(config.options?.watcherTimeout || '10000'),
     })
     this._watcher.on('identity', this.setIdentities.bind(this))
+    this.setMaxListeners(maxListeners)
   }
 
   /**
