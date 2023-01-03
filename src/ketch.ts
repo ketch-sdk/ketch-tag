@@ -27,7 +27,7 @@ import {
   IdentityProvider,
   StorageProvider,
 } from '@ketch-sdk/ketch-types'
-import dataLayer, { ketchPermitPreferences, adobeDataLayer } from './datalayer'
+import dataLayer from './datalayer'
 import isEmpty from './isEmpty'
 import log from './logging'
 import errors from './errors'
@@ -398,35 +398,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Trigger ketchPermitChanged event by pushing updated permit values to dataLayer
-   *
-   * @param c Consent
-   */
-  triggerPermitChangedEvent(c: Consent): void {
-    log.info('triggerPermitChangedEvent')
-
-    const permitChangedEvent: { [key: string]: any } = {
-      event: 'ketchPermitChanged',
-    }
-
-    const swbPermitChangedEvent: { [key: string]: any } = {
-      event: 'switchbitPermitChanged',
-    }
-
-    const ketchPermitPref: any = ketchPermitPreferences()
-
-    for (const purposeCode in c.purposes) {
-      permitChangedEvent[purposeCode] = c.purposes[purposeCode]
-      swbPermitChangedEvent[purposeCode] = c.purposes[purposeCode]
-      ketchPermitPref[purposeCode] = c.purposes[purposeCode] ? '1' : '0'
-    }
-
-    dataLayer().push(permitChangedEvent)
-    dataLayer().push(swbPermitChangedEvent)
-    adobeDataLayer().push(permitChangedEvent)
-  }
-
-  /**
    * Called when experience renderer tells us the user has updated consent.
    *
    * @param consent Consent to change
@@ -466,9 +437,6 @@ export class Ketch extends EventEmitter {
         }
       }
     }
-
-    // trigger ketchPermitChanged event by pushing updated permit values to dataLayer
-    this.triggerPermitChangedEvent(c)
 
     this._consent.value = c
 
