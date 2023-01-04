@@ -71,7 +71,7 @@ export async function setCachedConsent(
   const cachedConsent: string = JSON.stringify(input)
 
   // first attempt to save to cookie
-  setCookie(window, CACHED_CONSENT_KEY, btoa(cachedConsent), 730)
+  setCookie(window, CACHED_CONSENT_KEY, btoa(cachedConsent), 7)
 
   // // next attempt to save in localStorage
   // try {
