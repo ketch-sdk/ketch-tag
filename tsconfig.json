@@ -2,12 +2,16 @@
   "compilerOptions": {
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true,
     "declaration": true,
+    "declarationDir": "./dist",
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "inlineSourceMap": true,
-    "module": "ES2015",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noEmit": false,
+    "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
@@ -16,12 +20,11 @@
     "outDir": "./dist",
     "removeComments": false,
     "rootDir": "./src",
-    "declarationDir": "./dist",
-    "strict": true,
     "skipLibCheck": true,
-    "target": "ES2015",
-    "esModuleInterop": true
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2015"
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["**/*.spec.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }

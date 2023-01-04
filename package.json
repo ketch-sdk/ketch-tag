@@ -7,7 +7,7 @@
   "scripts": {
     "all": "npm run lint && npm run format-check && npm run test && npm run docs && npm run build",
     "build": "npm run build:lib && npm run build:web",
-    "build:lib": "ncc build --minify --license licenses.txt src/index.ts",
+    "build:lib": "tsc -p .",
     "build:web": "webpack --config webpack.config.js --mode production",
     "start": "npx webpack serve --devtool eval-source-map --mode development",
     "lint": "eslint src/**/*.ts",
@@ -33,18 +33,17 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "devDependencies": {
-    "@ketch-com/future": "^1.1.0",
-    "@ketch-sdk/ketch-data-layer": "^1.1.1",
-    "@ketch-sdk/ketch-logging": "^0.0.1",
-    "@ketch-sdk/ketch-types": "^1.4.0",
-    "@ketch-sdk/ketch-web-api": "^1.2.0",
+    "@ketch-com/future": "^1.1.2",
+    "@ketch-sdk/ketch-data-layer": "^1.1.2",
+    "@ketch-sdk/ketch-logging": "^1.0.1",
+    "@ketch-sdk/ketch-types": "^1.4.3",
+    "@ketch-sdk/ketch-web-api": "^1.2.2",
     "@types/deep-equal": "^1.0.1",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.2.5",
     "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^5.48.0",
     "@typescript-eslint/parser": "^5.48.0",
-    "@vercel/ncc": "^0.36.0",
     "eslint": "^8.31.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.26.0",
@@ -67,11 +66,11 @@
   },
   "dependencies": {
     "deep-equal": "^2.1.0",
+    "buffer": "^6.0.3",
     "process": "^0.11.10",
     "util": "^0.12.5"
   },
   "files": [
-    "./dist/index.js",
-    "./dist/index.d.ts"
+    "./dist"
   ]
 }
