@@ -7,7 +7,7 @@ import { ketch } from './init'
 /**
  * This is the entrypoint for all calls into the platform calling actions from outside.
  */
-export default function entrypoint(fnName: string, ...args: any[]): Promise<any> {
+export default async function entrypoint(fnName: string, ...args: any[]): Promise<any> {
   log.trace(fnName, args)
 
   const fn = getAction(ketch, fnName)

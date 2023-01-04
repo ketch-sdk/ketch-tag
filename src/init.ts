@@ -11,42 +11,31 @@ export let ketch: Ketch | undefined
  * This is the entry point when this package is first loaded.
  */
 
-export default function init(): Promise<any> {
+export default async function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 
   if (!Array.isArray(initRequest) || initRequest[0] != 'init') {
     log.error('ketch tag command queue is not configured correctly')
-    return Promise.resolve()
+    return
   }
 
   const cfg = initRequest[1]
 
-  return newFromBootstrap(cfg).then(k => {
-    log.trace('init')
+  ketch = await newFromBootstrap(cfg)
 
-    ketch = k
+  log.trace('init')
 
-    const p: Promise<any>[] = []
+  const g = getGlobal(push)
+  while (g.length > 0) {
+    const x = g.shift()
 
-    const g = getGlobal(push)
-    while (g.length > 0) {
-      const x = g.shift()
-
-      let r
-      if (Array.isArray(x)) {
-        const fnName = x.shift()
-        r = entrypoint(fnName, ...x)
-      } else if (x !== undefined) {
-        r = entrypoint(x)
-      }
-
-      if (r) {
-        p.push(r)
-      }
+    if (Array.isArray(x)) {
+      const fnName = x.shift()
+      await entrypoint(fnName, ...x)
+    } else if (x !== undefined) {
+      await entrypoint(x)
     }
+  }
 
-    p.push(ketch.getConsent())
-
-    return Promise.all(p)
-  })
+  return ketch.getConsent()
 }
