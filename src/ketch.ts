@@ -1189,11 +1189,6 @@ export class Ketch extends EventEmitter {
 
     const consent = await this.getConsent()
 
-    // if no preference experience configured do not show
-    if (!this._config.experiences?.preference) {
-      return consent
-    }
-
     if (this.listenerCount('showPreferenceExperience') > 0) {
       // check if experience show parameter override set
       const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
