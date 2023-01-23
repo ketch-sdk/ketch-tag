@@ -14,9 +14,10 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.json', '.js'],
     fallback: {
-      'crypto': require.resolve('./src/polyfill/crypto.ts'),
-      'util': require.resolve('util/'),
-    }
+      crypto: require.resolve('./src/polyfill/crypto.ts'),
+      // util: require.resolve('util/'),
+      // 'process/browser': require.resolve('process/browser'),
+    },
   },
 
   module: {
@@ -24,7 +25,7 @@ module.exports = {
       {
         test: /\.ts$/,
         use: 'ts-loader',
-        exclude: /node_modules/,
+        exclude: /node_modules|__mocks__/,
       },
     ],
   },

@@ -1,4 +1,3 @@
-import { ketch } from './init'
 import getAction from './getAction'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './ketch'
@@ -12,8 +11,7 @@ describe('getAction', () => {
 
   describe('ketch defined', () => {
     const config = {} as Configuration
-    // @ts-ignore
-    ketch = new Ketch(config)
+    const ketch = new Ketch(config)
 
     it('invalid returns undefined', () => {
       return expect(getAction(ketch, 'undefined')).toBeUndefined()

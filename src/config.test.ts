@@ -1,4 +1,4 @@
-import { Configuration } from '@ketch-sdk/ketch-types'
+import type { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 
 jest.mock('./parameters')
