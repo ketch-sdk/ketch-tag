@@ -38,7 +38,13 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
     throw errors.noJurisdictionError
   }
 
-  const language = parameters.get(parameters.LANGUAGE, window.location.search) || config.language
+  const language =
+    parameters.get(parameters.LANG, window.location.search) ||
+    parameters.get(parameters.SWB_LANGUAGE, window.location.search) ||
+    document.documentElement.lang ||
+    document.documentElement.getAttribute('xml:lang') ||
+    config.language ||
+    window.navigator.language
 
   log.info('language', language)
 

@@ -94,7 +94,7 @@ describe('environment', () => {
       }
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.ENV) return 'test'
+        if (key === parameters.SWB_ENV) return 'test'
         return ''
       })
 

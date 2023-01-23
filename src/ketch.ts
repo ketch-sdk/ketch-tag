@@ -312,8 +312,8 @@ export class Ketch extends EventEmitter {
     }
 
     // check if experience show parameter override set
-    const show = parameters.get(parameters.SHOW, window.location.search)
-    if (parameters.has(parameters.SHOW, window.location.search) && (show.length === 0 || show === parameters.CONSENT)) {
+    const show = parameters.get(parameters.SWB_SHOW, window.location.search)
+    if (parameters.has(parameters.SWB_SHOW, window.location.search) && (show.length === 0 || show === parameters.CONSENT)) {
       log.debug('selectExperience', ExperienceType.Consent)
       return ExperienceType.Consent
     } else if (show === parameters.PREFERENCES) {
@@ -774,7 +774,7 @@ export class Ketch extends EventEmitter {
     }
 
     // Try to locate the specifiedEnv
-    const specifiedEnv = parameters.get(parameters.ENV, window.location.search)
+    const specifiedEnv = parameters.get(parameters.SWB_ENV, window.location.search)
     if (specifiedEnv) {
       for (let i = 0; i < this._config.environments.length; i++) {
         const e = this._config.environments[i]
@@ -1086,7 +1086,7 @@ export class Ketch extends EventEmitter {
   async loadJurisdiction(): Promise<string> {
     log.info('loadJurisdiction', this._config.jurisdiction)
 
-    const jurisdictionOverride = parameters.get(parameters.JURISDICTION, window.location.search)
+    const jurisdictionOverride = parameters.get(parameters.SWB_JURISDICTION, window.location.search)
     if (jurisdictionOverride) {
       return this.setJurisdiction(jurisdictionOverride)
     }
@@ -1137,7 +1137,7 @@ export class Ketch extends EventEmitter {
   async loadRegionInfo(): Promise<string> {
     log.info('loadRegionInfo')
 
-    const specifiedRegion = parameters.get(parameters.REGION, window.location.search)
+    const specifiedRegion = parameters.get(parameters.SWB_REGION, window.location.search)
     if (specifiedRegion) {
       return this.setRegionInfo(specifiedRegion)
     }
@@ -1204,7 +1204,7 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount('showPreferenceExperience') > 0) {
       // check if experience show parameter override set
-      const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
+      const tab = parameters.get(parameters.SWB_PREFERENCES_TAB, window.location.search)
       // override with url param
       if (isTab(tab)) {
         if (!params) {
