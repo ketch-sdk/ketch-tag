@@ -15,45 +15,46 @@ import getApiUrl from './getApiUrl'
 export default async function newFromBootstrap(boot: Configuration): Promise<Ketch> {
   log.info('loadConfig', boot)
 
+  if (!boot || !boot.organization) {
+    throw errors.invalidConfigurationError
+  }
+
   const k = new Ketch(boot)
-
-  // Check if we have been given an already resolved Configuration
-  if (boot.property && boot.environment) {
-    log.debug('full configuration')
-    return k
-  }
-
-  const env = await k.detectEnvironment()
-  const jurisdiction = await k.loadJurisdiction()
-
-  if (!env.hash) {
-    return Promise.reject(errors.noEnvironmentError)
-  }
-
-  log.info('loadConfig', env, jurisdiction)
-
-  const config = await k.getConfig()
-
-  if (!config || !config.organization || !config.property || !jurisdiction) {
-    throw errors.noJurisdictionError
-  }
-
   const language =
     parameters.get(parameters.LANG, window.location.search) ||
     parameters.get(parameters.SWB_LANGUAGE, window.location.search) ||
     document.documentElement.lang ||
     document.documentElement.getAttribute('xml:lang') ||
-    config.language ||
-    window.navigator.language
+    boot.language ||
+    window.navigator.language ||
+    'en'
 
-  log.info('language', language)
+  // Check if we have been given an already resolved Configuration
+  if (boot.property && boot.environment && boot.language === language) {
+    log.debug('full configuration')
+    return k
+  }
+
+  const env = await k.detectEnvironment()
+
+  if (!env.hash) {
+    throw errors.noEnvironmentError
+  }
+
+  const jurisdiction = await k.loadJurisdiction()
+
+  if (!jurisdiction) {
+    throw errors.noJurisdictionError
+  }
+
+  log.info('loadConfig', env, jurisdiction, language)
 
   const request: GetFullConfigurationRequest = {
-    organizationCode: config.organization.code || '',
-    propertyCode: config.property.code || '',
+    organizationCode: boot.organization.code || '',
+    propertyCode: boot.property?.code || '',
     environmentCode: env.code,
     hash: env.hash || '',
-    languageCode: language || 'en',
+    languageCode: language,
     jurisdictionCode: jurisdiction,
   }
 

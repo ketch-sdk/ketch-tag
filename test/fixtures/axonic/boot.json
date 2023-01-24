@@ -17,10 +17,10 @@
       "hash": "1392568836159292875"
     }
   ],
-  "policyScope": {
-    "defaultScope": "ccpa",
+  "jurisdiction": {
+    "defaultJurisdictionCode": "ccpa",
     "variable": "scope_tag",
-    "scopes": {
+    "jurisdictions": {
       "AT": "gdpr",
       "BE": "gdpr",
       "BG": "gdpr",
@@ -76,7 +76,7 @@
     "transom": "https://cdn.b10s.io/transom/"
   },
   "options": {
-    "localStorage": 1,
-    "migration": 1
+    "localStorage": "1",
+    "migration": "1"
   }
 }

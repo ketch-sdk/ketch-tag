@@ -313,7 +313,10 @@ export class Ketch extends EventEmitter {
 
     // check if experience show parameter override set
     const show = parameters.get(parameters.SWB_SHOW, window.location.search)
-    if (parameters.has(parameters.SWB_SHOW, window.location.search) && (show.length === 0 || show === parameters.CONSENT)) {
+    if (
+      parameters.has(parameters.SWB_SHOW, window.location.search) &&
+      (show.length === 0 || show === parameters.CONSENT)
+    ) {
       log.debug('selectExperience', ExperienceType.Consent)
       return ExperienceType.Consent
     } else if (show === parameters.PREFERENCES) {
@@ -997,7 +1000,7 @@ export class Ketch extends EventEmitter {
             this._watcher.add(name, configIDs[name])
           }
         } catch (e) {
-          log.error('error checking proxy', e)
+          log.error(`error checking proxy '${this._config.property?.proxy}'`, e)
         }
       }
     }
@@ -1109,14 +1112,15 @@ export class Ketch extends EventEmitter {
 
     try {
       const region = await this.loadRegionInfo()
-      const jurisdiction = ps.scopes && ps.scopes[region] ? ps.scopes[region] : ps.defaultScopeCode || ''
+      log.info('ps', ps, region)
+      const jurisdiction = (ps.jurisdictions || {})[region] ?? ps.defaultJurisdictionCode ?? ''
       if (!jurisdiction) {
         return Promise.reject(errors.noJurisdictionError)
       }
 
       return this.setJurisdiction(jurisdiction)
     } catch (e) {
-      return ps.defaultScopeCode || ''
+      return ps.defaultJurisdictionCode ?? ''
     }
   }
 
