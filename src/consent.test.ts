@@ -25,7 +25,7 @@ describe('consent', () => {
     ],
     jurisdiction: {
       code: 'ccpa',
-      defaultScopeCode: 'ccpa',
+      defaultJurisdictionCode: 'ccpa',
       variable: 'scope_tag',
     },
     identities: {

@@ -8,4 +8,5 @@ export default {
   noJurisdictionError: new Error('no jurisdiction'),
   notImplementedError: new Error('not implemented'),
   itemNotFoundError: new Error('item not found'),
+  invalidConfigurationError: new Error('invalid configuration'),
 }

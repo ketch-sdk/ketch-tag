@@ -2,7 +2,6 @@ import getGlobal from './getGlobal'
 import log from './logging'
 import newFromBootstrap from './newFromBootstrap'
 import push from './push'
-import entrypoint from './entrypoint'
 import { Ketch } from './ketch'
 
 export let ketch: Ketch | undefined
@@ -10,7 +9,6 @@ export let ketch: Ketch | undefined
 /**
  * This is the entry point when this package is first loaded.
  */
-
 export default async function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 
@@ -27,14 +25,7 @@ export default async function init(): Promise<any> {
 
   const g = getGlobal(push)
   while (g.length > 0) {
-    const x = g.shift()
-
-    if (Array.isArray(x)) {
-      const fnName = x.shift()
-      await entrypoint(fnName, ...x)
-    } else if (x !== undefined) {
-      await entrypoint(x)
-    }
+    push(g.shift())
   }
 
   return ketch.getConsent()

@@ -2,7 +2,6 @@ import { EventEmitter } from 'events'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import Future from '@ketch-com/future'
 import {
-  AppDiv,
   Callback,
   Configuration,
   Consent,
@@ -35,7 +34,7 @@ import parameters from './parameters'
 import getApiUrl from './getApiUrl'
 import Watcher from '@ketch-sdk/ketch-data-layer'
 import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './consent'
-import deepEqual from 'deep-equal'
+import deepEqual from 'nano-equal'
 
 declare global {
   type AndroidListener = {
@@ -60,6 +59,14 @@ declare global {
     webkit: WebKit
   }
 }
+
+const FULFILLED_EVENT = 'fulfilled'
+const CONSENT_EVENT = 'consent'
+const ENVIRONMENT_EVENT = 'environment'
+const GEOIP_EVENT = 'geoip'
+const IDENTITIES_EVENT = 'identities'
+const JURISDICTION_EVENT = 'jurisdiction'
+const REGION_INFO_EVENT = 'regionInfo'
 
 /**
  * Ketch class is the public interface to the Ketch web infrastructure services.
@@ -111,13 +118,6 @@ export class Ketch extends EventEmitter {
   private _provisionalConsent?: Consent
 
   /**
-   * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
-   *
-   * @internal
-   */
-  private _appDivs: AppDiv[]
-
-  /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
    *
    * @internal
@@ -153,13 +153,12 @@ export class Ketch extends EventEmitter {
     super()
     const maxListeners = parseInt(config.options?.maxListeners || '20')
     this._config = config
-    this._consent = new Future<Consent>({ name: 'consent', emitter: this, maxListeners })
-    this._environment = new Future<Environment>({ name: 'environment', emitter: this, maxListeners })
-    this._geoip = new Future({ name: 'geoip', emitter: this, maxListeners })
-    this._identities = new Future<Identities>({ name: 'identities', emitter: this, maxListeners })
-    this._jurisdiction = new Future<string>({ name: 'jurisdiction', emitter: this, maxListeners })
-    this._regionInfo = new Future<string>({ name: 'regionInfo', emitter: this, maxListeners })
-    this._appDivs = []
+    this._consent = new Future<Consent>({ name: CONSENT_EVENT, emitter: this, maxListeners })
+    this._environment = new Future<Environment>({ name: ENVIRONMENT_EVENT, emitter: this, maxListeners })
+    this._geoip = new Future({ name: GEOIP_EVENT, emitter: this, maxListeners })
+    this._identities = new Future<Identities>({ name: IDENTITIES_EVENT, emitter: this, maxListeners })
+    this._jurisdiction = new Future<string>({ name: JURISDICTION_EVENT, emitter: this, maxListeners })
+    this._regionInfo = new Future<string>({ name: REGION_INFO_EVENT, emitter: this, maxListeners })
     this._shouldConsentExperienceShow = false
     this._provisionalConsent = undefined
     this._api = new KetchWebAPI(getApiUrl(config))
@@ -208,14 +207,14 @@ export class Ketch extends EventEmitter {
       })
     }
     if (plugin.consentChanged !== undefined) {
-      this.on('consent', consent => {
+      this.on(CONSENT_EVENT, consent => {
         if (plugin.consentChanged !== undefined) {
           plugin.consentChanged(this, this._config, consent)
         }
       })
     }
     if (plugin.environmentLoaded !== undefined) {
-      this.on('environment', env => {
+      this.on(ENVIRONMENT_EVENT, env => {
         if (plugin.environmentLoaded !== undefined) {
           plugin.environmentLoaded(this, this._config, env)
         }
@@ -229,28 +228,28 @@ export class Ketch extends EventEmitter {
       })
     }
     if (plugin.geoIPLoaded !== undefined) {
-      this.on('geoip', geoip => {
+      this.on(GEOIP_EVENT, geoip => {
         if (plugin.geoIPLoaded !== undefined) {
           plugin.geoIPLoaded(this, this._config, geoip)
         }
       })
     }
     if (plugin.identitiesLoaded !== undefined) {
-      this.on('identities', identities => {
+      this.on(IDENTITIES_EVENT, identities => {
         if (plugin.identitiesLoaded !== undefined) {
           plugin.identitiesLoaded(this, this._config, identities)
         }
       })
     }
     if (plugin.jurisdictionLoaded !== undefined) {
-      this.on('jurisdiction', jurisdiction => {
+      this.on(JURISDICTION_EVENT, jurisdiction => {
         if (plugin.jurisdictionLoaded !== undefined) {
           plugin.jurisdictionLoaded(this, this._config, jurisdiction)
         }
       })
     }
     if (plugin.regionInfoLoaded !== undefined) {
-      this.on('regionInfo', regionInfo => {
+      this.on(REGION_INFO_EVENT, regionInfo => {
         if (plugin.regionInfoLoaded !== undefined) {
           plugin.regionInfoLoaded(this, this._config, regionInfo)
         }
@@ -271,6 +270,7 @@ export class Ketch extends EventEmitter {
   /**
    * Registers an identity provider
    *
+   * @param name The name of the identity
    * @param provider The provider to register
    */
   async registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
@@ -280,7 +280,7 @@ export class Ketch extends EventEmitter {
   /**
    * Registers a storage provider
    *
-   * @param provider The provider to register
+   * @param _ The provider to register
    */
   async registerStorageProvider(_: StorageProvider): Promise<void> {}
 
@@ -288,7 +288,7 @@ export class Ketch extends EventEmitter {
    * Returns the configuration.
    */
   async getConfig(): Promise<Configuration> {
-    return Promise.resolve(this._config)
+    return this._config
   }
 
   /**
@@ -304,8 +304,11 @@ export class Ketch extends EventEmitter {
     }
 
     // check if experience show parameter override set
-    const show = parameters.get(parameters.SHOW, window.location.search)
-    if (parameters.has(parameters.SHOW, window.location.search) && (show.length === 0 || show === parameters.CONSENT)) {
+    const show = parameters.get(parameters.SWB_SHOW, window.location.search)
+    if (
+      parameters.has(parameters.SWB_SHOW, window.location.search) &&
+      (show.length === 0 || show === parameters.CONSENT)
+    ) {
       log.debug('selectExperience', ExperienceType.Consent)
       return ExperienceType.Consent
     } else if (show === parameters.PREFERENCES) {
@@ -334,13 +337,12 @@ export class Ketch extends EventEmitter {
 
   /**
    * Selects the correct experience.
-   *
    */
   selectConsentExperience(): ConsentExperienceType {
     if (this._config.purposes) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
-          if (this._config.experiences?.consent?.experienceDefault == 2) {
+          if (this._config.experiences?.consent?.experienceDefault === 2) {
             log.debug('selectConsentExperience', 'experiences.consent.modal')
             return ConsentExperienceType.Modal
           }
@@ -358,17 +360,6 @@ export class Ketch extends EventEmitter {
    * @param type The type of experience to be shown
    */
   willShowExperience(type: string): void {
-    if (this._config.options?.appDivs) {
-      const appDivList = this._config.options.appDivs.split(',')
-      for (const divID of appDivList) {
-        const div = document.getElementById(divID)
-        if (div) {
-          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
-          div.style.zIndex = '-1'
-        }
-      }
-    }
-
     // Call functions registered using onWillShowExperience
     this.emit('willShowExperience', type)
 
@@ -382,7 +373,7 @@ export class Ketch extends EventEmitter {
   async showConsentExperience(): Promise<Consent> {
     log.info('showConsentExperience')
 
-    const consent = this._consent.isFulfilled() ? this._consent.value : ({ purposes: {}, vendors: [] } as Consent)
+    const consent = await this.retrieveConsent()
 
     if (this.listenerCount('showConsentExperience') > 0) {
       this.willShowExperience(ExperienceType.Consent)
@@ -558,7 +549,7 @@ export class Ketch extends EventEmitter {
    * @param callback The consent callback to register
    */
   async onConsent(callback: Callback): Promise<void> {
-    this.on('consent', callback)
+    this.on(CONSENT_EVENT, callback)
   }
 
   /**
@@ -686,7 +677,7 @@ export class Ketch extends EventEmitter {
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
       log.debug('updateConsent', 'skipping')
-      return Promise.resolve()
+      return
     }
 
     if (
@@ -699,12 +690,12 @@ export class Ketch extends EventEmitter {
       this._config.purposes.length === 0
     ) {
       log.debug('updateConsent', 'skipping')
-      return Promise.resolve()
+      return
     }
 
     if (isEmpty(consent)) {
       log.debug('updateConsent', 'skipping')
-      return Promise.resolve()
+      return
     }
 
     const request: SetConsentRequest = {
@@ -732,7 +723,7 @@ export class Ketch extends EventEmitter {
     // Make sure we actually got purposes to update
     if (isEmpty(request.purposes)) {
       log.debug('updateConsent', 'calculated consents empty')
-      return Promise.resolve()
+      return
     }
 
     // Save a locally cached consent
@@ -761,12 +752,12 @@ export class Ketch extends EventEmitter {
 
     // We have to have environments
     if (!this._config.environments) {
-      log.debug('detectEnvironment', 'no environments')
+      log.warn('detectEnvironment', 'no environments')
       throw errors.noEnvironmentError
     }
 
     // Try to locate the specifiedEnv
-    const specifiedEnv = parameters.get(parameters.ENV, window.location.search)
+    const specifiedEnv = parameters.get(parameters.SWB_ENV, window.location.search)
     if (specifiedEnv) {
       for (let i = 0; i < this._config.environments.length; i++) {
         const e = this._config.environments[i]
@@ -835,7 +826,7 @@ export class Ketch extends EventEmitter {
    * @param callback Environment callback to register
    */
   async onEnvironment(callback: Callback): Promise<void> {
-    this.on('environment', callback)
+    this.on(ENVIRONMENT_EVENT, callback)
   }
 
   /**
@@ -897,7 +888,7 @@ export class Ketch extends EventEmitter {
    * @param callback GeoIP callback to register
    */
   async onGeoIP(callback: Callback): Promise<void> {
-    this.on('geoip', callback)
+    this.on(GEOIP_EVENT, callback)
   }
 
   /**
@@ -989,7 +980,7 @@ export class Ketch extends EventEmitter {
             this._watcher.add(name, configIDs[name])
           }
         } catch (e) {
-          log.error('error checking proxy', e)
+          log.error(`error checking proxy '${this._config.property?.proxy}'`, e)
         }
       }
     }
@@ -1017,7 +1008,7 @@ export class Ketch extends EventEmitter {
    * @param callback Identities callback to register
    */
   async onIdentities(callback: Callback): Promise<void> {
-    this.on('identities', callback)
+    this.on(IDENTITIES_EVENT, callback)
   }
 
   /**
@@ -1069,7 +1060,7 @@ export class Ketch extends EventEmitter {
    * @param callback Callback to register
    */
   async onJurisdiction(callback: Callback): Promise<void> {
-    this.on('jurisdiction', callback)
+    this.on(JURISDICTION_EVENT, callback)
   }
 
   /**
@@ -1078,7 +1069,7 @@ export class Ketch extends EventEmitter {
   async loadJurisdiction(): Promise<string> {
     log.info('loadJurisdiction', this._config.jurisdiction)
 
-    const jurisdictionOverride = parameters.get(parameters.JURISDICTION, window.location.search)
+    const jurisdictionOverride = parameters.get(parameters.SWB_JURISDICTION, window.location.search)
     if (jurisdictionOverride) {
       return this.setJurisdiction(jurisdictionOverride)
     }
@@ -1101,14 +1092,14 @@ export class Ketch extends EventEmitter {
 
     try {
       const region = await this.loadRegionInfo()
-      const jurisdiction = ps.scopes && ps.scopes[region] ? ps.scopes[region] : ps.defaultScopeCode || ''
+      const jurisdiction = (ps.jurisdictions || {})[region] ?? ps.defaultJurisdictionCode ?? ''
       if (!jurisdiction) {
         return Promise.reject(errors.noJurisdictionError)
       }
 
       return this.setJurisdiction(jurisdiction)
     } catch (e) {
-      return ps.defaultScopeCode || ''
+      return ps.defaultJurisdictionCode ?? ''
     }
   }
 
@@ -1129,7 +1120,7 @@ export class Ketch extends EventEmitter {
   async loadRegionInfo(): Promise<string> {
     log.info('loadRegionInfo')
 
-    const specifiedRegion = parameters.get(parameters.REGION, window.location.search)
+    const specifiedRegion = parameters.get(parameters.SWB_REGION, window.location.search)
     if (specifiedRegion) {
       return this.setRegionInfo(specifiedRegion)
     }
@@ -1176,7 +1167,7 @@ export class Ketch extends EventEmitter {
    * @param callback Callback to register
    */
   async onRegionInfo(callback: Callback): Promise<void> {
-    this.on('regionInfo', callback)
+    this.on(REGION_INFO_EVENT, callback)
   }
 
   /**
@@ -1196,7 +1187,7 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount('showPreferenceExperience') > 0) {
       // check if experience show parameter override set
-      const tab = parameters.get(parameters.PREFERENCES_TAB, window.location.search)
+      const tab = parameters.get(parameters.SWB_PREFERENCES_TAB, window.location.search)
       // override with url param
       if (isTab(tab)) {
         if (!params) {
@@ -1227,7 +1218,7 @@ export class Ketch extends EventEmitter {
       !eventData.right ||
       eventData.right === ''
     ) {
-      return Promise.resolve()
+      return
     }
 
     let identities: Identities = {}
@@ -1246,7 +1237,7 @@ export class Ketch extends EventEmitter {
       !this._config.rights ||
       this._config.rights.length === 0
     ) {
-      return Promise.resolve()
+      return
     }
 
     const user: DataSubject = eventData.subject
@@ -1275,14 +1266,6 @@ export class Ketch extends EventEmitter {
    * Values: setConsent, invokeRight, close
    */
   async experienceClosed(reason: string): Promise<Consent> {
-    for (const appDiv of this._appDivs) {
-      const div = document.getElementById(appDiv.id)
-      if (div) {
-        div.style.zIndex = appDiv.zIndex
-      }
-    }
-    this._appDivs = []
-
     // update isExperienceDisplayed flag when experience no longer displayed
     // update hasExperienceBeenDisplayed flag after experience has been displayed
     this._isExperienceDisplayed = false
@@ -1314,7 +1297,7 @@ export class Ketch extends EventEmitter {
       this.emit('hideExperience', reason)
     }, 0)
 
-    return Promise.resolve({ purposes: {}, vendors: [] } as Consent)
+    return this.retrieveConsent()
   }
 
   /**
@@ -1360,7 +1343,7 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Synchronously calls each of the listeners registered for the event named`eventName`, in the order they
+   * Synchronously calls each of the listeners registered for the event named `eventName`, in the order they
    * were registered, passing the supplied arguments to each.
    */
   emit(event: string | symbol, ...args: any[]): boolean {
@@ -1396,5 +1379,67 @@ export class Ketch extends EventEmitter {
       }
     }
     return super.emit(event, ...args)
+  }
+
+  addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    return this.on(eventName, listener)
+  }
+
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.on(FULFILLED_EVENT, listener)
+      return this
+    }
+
+    return super.on(eventName, listener)
+  }
+
+  once(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.once(FULFILLED_EVENT, listener)
+      return this
+    }
+
+    return super.once(eventName, listener)
+  }
+
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.removeListener(FULFILLED_EVENT, listener)
+      return this
+    }
+
+    return super.removeListener(eventName, listener)
+  }
+
+  off(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    return this.removeListener(eventName, listener)
+  }
+
+  private mapEvent(eventName: string | symbol): EventEmitter | undefined {
+    switch (eventName) {
+      case CONSENT_EVENT:
+        return this._consent
+
+      case ENVIRONMENT_EVENT:
+        return this._environment
+
+      case GEOIP_EVENT:
+        return this._geoip
+
+      case IDENTITIES_EVENT:
+        return this._identities
+
+      case JURISDICTION_EVENT:
+        return this._jurisdiction
+
+      case REGION_INFO_EVENT:
+        return this._regionInfo
+    }
+
+    return
   }
 }

@@ -133,3 +133,15 @@ function myPlugin(host: Ketch, _config: any) {
 
 semaphore.push(['registerPlugin', myPlugin])
 ```
+
+## Testing
+
+To test the tag locally, run the following:
+```shell
+npm run all
+docker compose --file base.yml up -d
+docker compose up -d
+open https://localhost:8080/ketchtag/test/
+```
+
+The test page is located in `./test/fixtures/index.html`. The configuration is in `./test/fixtues/boot.js`.

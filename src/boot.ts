@@ -1,4 +1,5 @@
 import init from './init'
+import log from './logging'
 
 export function boot() {
   if (document.readyState === 'loading') {
@@ -6,6 +7,8 @@ export function boot() {
     document.addEventListener('DOMContentLoaded', init)
   } else {
     // `DOMContentLoaded` has already fired, so just run init now (since an event handler will never be called)
-    init().then(() => {})
+    init()
+      .then(() => {})
+      .catch(log.error)
   }
 }

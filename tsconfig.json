@@ -7,9 +7,10 @@
     "declarationDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "inlineSourceMap": true,
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "noEmit": false,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -26,5 +27,5 @@
     "target": "ES2015"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "**/__mocks__/**"]
 }

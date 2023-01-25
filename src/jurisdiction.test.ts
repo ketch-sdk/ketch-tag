@@ -10,7 +10,7 @@ describe('jurisdiction', () => {
   const mockParametersGet = jest.mocked(parameters.get)
 
   describe('getJurisdiction', () => {
-    it('returns the existing policy scope', () => {
+    it('returns the existing jurisdiction', () => {
       const ketch = new Ketch({} as Configuration)
 
       const ps = 'gdpr'
@@ -21,11 +21,11 @@ describe('jurisdiction', () => {
   })
 
   describe('loadJurisdiction', () => {
-    it('allows setting policy scope on query', () => {
+    it('allows setting jurisdiction on query', () => {
       const ketch = new Ketch({} as Configuration)
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.JURISDICTION) return 'FOO'
+        if (key === parameters.SWB_JURISDICTION) return 'FOO'
         return ''
       })
 
@@ -63,11 +63,11 @@ describe('jurisdiction', () => {
       return expect(ketch.loadJurisdiction()).resolves.toBe('ccpa')
     })
 
-    it('locates specified policy scope', () => {
+    it('locates specified jurisdiction', () => {
       const ketch = new Ketch({
         jurisdiction: {
-          defaultScopeCode: 'default',
-          scopes: {
+          defaultJurisdictionCode: 'default',
+          jurisdictions: {
             'US-CA': 'ccpa',
             UK: 'gdpr',
           },
@@ -86,11 +86,11 @@ describe('jurisdiction', () => {
       return expect(ketch.loadJurisdiction()).resolves.toBe('ccpa')
     })
 
-    it('defaults policy scope if not found', () => {
+    it('defaults jurisdiction if not found', () => {
       const ketch = new Ketch({
         jurisdiction: {
-          defaultScopeCode: 'default',
-          scopes: {
+          defaultJurisdictionCode: 'default',
+          jurisdictions: {
             'US-CA': 'ccpa',
             UK: 'gdpr',
           },
@@ -109,11 +109,11 @@ describe('jurisdiction', () => {
       return expect(ketch.loadJurisdiction()).resolves.toBe('default')
     })
 
-    it('defaults policy scope on reject', () => {
+    it('defaults jurisdiction on reject', () => {
       const ketch = new Ketch({
         jurisdiction: {
-          defaultScopeCode: 'default',
-          scopes: {
+          defaultJurisdictionCode: 'default',
+          jurisdictions: {
             'US-CA': 'ccpa',
             UK: 'gdpr',
           },

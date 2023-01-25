@@ -107,7 +107,7 @@ describe('regionInfo', () => {
       )
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.REGION) return 'FOO'
+        if (key === parameters.SWB_REGION) return 'FOO'
         return ''
       })
 
