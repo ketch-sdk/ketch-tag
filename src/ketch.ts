@@ -1092,7 +1092,6 @@ export class Ketch extends EventEmitter {
 
     try {
       const region = await this.loadRegionInfo()
-      log.info('ps', ps, region)
       const jurisdiction = (ps.jurisdictions || {})[region] ?? ps.defaultJurisdictionCode ?? ''
       if (!jurisdiction) {
         return Promise.reject(errors.noJurisdictionError)
@@ -1407,9 +1406,9 @@ export class Ketch extends EventEmitter {
   }
 
   removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    const f = this.mapEvent(eventName)
-    if (f !== undefined) {
-      f.removeListener(FULFILLED_EVENT, listener)
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.removeListener(FULFILLED_EVENT, listener)
       return this
     }
 
@@ -1441,6 +1440,6 @@ export class Ketch extends EventEmitter {
         return this._regionInfo
     }
 
-    return undefined
+    return
   }
 }

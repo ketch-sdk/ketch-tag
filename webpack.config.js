@@ -15,8 +15,6 @@ module.exports = {
     extensions: ['.ts', '.json', '.js'],
     fallback: {
       crypto: require.resolve('./src/polyfill/crypto.ts'),
-      // util: require.resolve('util/'),
-      // 'process/browser': require.resolve('process/browser'),
     },
   },
 
