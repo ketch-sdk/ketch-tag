@@ -2,7 +2,6 @@ import { EventEmitter } from 'events'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import Future from '@ketch-com/future'
 import {
-  AppDiv,
   Callback,
   Configuration,
   Consent,
@@ -119,13 +118,6 @@ export class Ketch extends EventEmitter {
   private _provisionalConsent?: Consent
 
   /**
-   * appDivs is a list of hidden popup div ids and zIndexes as defined in AppDiv
-   *
-   * @internal
-   */
-  private _appDivs: AppDiv[]
-
-  /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
    *
    * @internal
@@ -167,7 +159,6 @@ export class Ketch extends EventEmitter {
     this._identities = new Future<Identities>({ name: IDENTITIES_EVENT, emitter: this, maxListeners })
     this._jurisdiction = new Future<string>({ name: JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: REGION_INFO_EVENT, emitter: this, maxListeners })
-    this._appDivs = []
     this._shouldConsentExperienceShow = false
     this._provisionalConsent = undefined
     this._api = new KetchWebAPI(getApiUrl(config))
@@ -279,6 +270,7 @@ export class Ketch extends EventEmitter {
   /**
    * Registers an identity provider
    *
+   * @param name The name of the identity
    * @param provider The provider to register
    */
   async registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
@@ -288,7 +280,7 @@ export class Ketch extends EventEmitter {
   /**
    * Registers a storage provider
    *
-   * @param provider The provider to register
+   * @param _ The provider to register
    */
   async registerStorageProvider(_: StorageProvider): Promise<void> {}
 
@@ -345,7 +337,6 @@ export class Ketch extends EventEmitter {
 
   /**
    * Selects the correct experience.
-   *
    */
   selectConsentExperience(): ConsentExperienceType {
     if (this._config.purposes) {
@@ -369,17 +360,6 @@ export class Ketch extends EventEmitter {
    * @param type The type of experience to be shown
    */
   willShowExperience(type: string): void {
-    if (this._config.options?.appDivs) {
-      const appDivList = this._config.options.appDivs.split(',')
-      for (const divID of appDivList) {
-        const div = document.getElementById(divID)
-        if (div) {
-          this._appDivs.push({ id: divID, zIndex: div.style.zIndex })
-          div.style.zIndex = '-1'
-        }
-      }
-    }
-
     // Call functions registered using onWillShowExperience
     this.emit('willShowExperience', type)
 
@@ -1287,14 +1267,6 @@ export class Ketch extends EventEmitter {
    * Values: setConsent, invokeRight, close
    */
   async experienceClosed(reason: string): Promise<Consent> {
-    for (const appDiv of this._appDivs) {
-      const div = document.getElementById(appDiv.id)
-      if (div) {
-        div.style.zIndex = appDiv.zIndex
-      }
-    }
-    this._appDivs = []
-
     // update isExperienceDisplayed flag when experience no longer displayed
     // update hasExperienceBeenDisplayed flag after experience has been displayed
     this._isExperienceDisplayed = false

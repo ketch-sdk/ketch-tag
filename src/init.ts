@@ -9,7 +9,6 @@ export let ketch: Ketch | undefined
 /**
  * This is the entry point when this package is first loaded.
  */
-
 export default async function init(): Promise<any> {
   const initRequest = getGlobal().shift()
 

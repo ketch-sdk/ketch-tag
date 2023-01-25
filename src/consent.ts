@@ -1,5 +1,5 @@
 import { GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
-import { getDefaultCacher } from './cache'
+import { getDefaultCacher } from '@ketch-com/ketch-cache'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const CACHED_CONSENT_TTL = 300 // 5 min in s
