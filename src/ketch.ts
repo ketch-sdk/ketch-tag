@@ -1386,9 +1386,9 @@ export class Ketch extends EventEmitter {
   }
 
   on(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    const f = this.mapEvent(eventName)
-    if (f !== undefined) {
-      f.on(FULFILLED_EVENT, listener)
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.on(FULFILLED_EVENT, listener)
       return this
     }
 
@@ -1396,9 +1396,9 @@ export class Ketch extends EventEmitter {
   }
 
   once(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    const f = this.mapEvent(eventName)
-    if (f !== undefined) {
-      f.once(FULFILLED_EVENT, listener)
+    const future = this.mapEvent(eventName)
+    if (future !== undefined) {
+      future.once(FULFILLED_EVENT, listener)
       return this
     }
 
