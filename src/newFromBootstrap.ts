@@ -25,8 +25,8 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
     parameters.get(parameters.SWB_LANGUAGE, window.location.search) ||
     document.documentElement.lang ||
     document.documentElement.getAttribute('xml:lang') ||
-    boot.language ||
     window.navigator.language ||
+    boot.language ||
     'en'
 
   // Check if we have been given an already resolved Configuration

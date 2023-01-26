@@ -28,6 +28,9 @@ services:
       DECKHAND_VAULT_TLS_ENABLED: false
       DECKHAND_VAULT_TOKEN: ketch
       DECKHAND_REDIRECT: false
+      DECKHAND_HEADER_CACHE_CONTROL: "no-cache"
+      DECKHAND_ASSET_HEADER_CACHE_CONTROL: "no-cache"
+      DECKHAND_REDIRECT_HEADER_CACHE_CONTROL: "no-cache"
 
   vault-loader:
     image: ghcr.io/ketch-com/vault-loader

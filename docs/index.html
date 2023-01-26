@@ -45,18 +45,80 @@
 <pre><code><span class="hl-0">&lt;</span><span class="hl-2">script</span><span class="hl-0"> </span><span class="hl-2">src</span><span class="hl-0">=</span><span class="hl-1">&quot;../plugins.js&quot;</span><span class="hl-0">&gt;&lt;/</span><span class="hl-3">script</span><span class="hl-0">&gt;</span>
 </code></pre>
 
+<a href="#querystring-parameters" id="querystring-parameters" style="color: inherit; text-decoration: none;">
+  <h2>Querystring parameters</h2>
+</a>
+<p>The following querystring parameters are checked at various points during the initialization and
+operation of the Ketch tag.</p>
+<table>
+<thead>
+<tr>
+<th>parameter</th>
+<th>allowed values</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ketch_log (swb_log)</td>
+<td>trace, debug, info, warn, error</td>
+<td>enables console logging by Ketch components</td>
+</tr>
+<tr>
+<td>ketch_env (swb_env)</td>
+<td>staging, production</td>
+<td>overrides environment detection and uses a specific environment</td>
+</tr>
+<tr>
+<td>ketch_region (swb_region)</td>
+<td>ISO-3166 country code</td>
+<td>overrides region detection and uses a specific region</td>
+</tr>
+<tr>
+<td>ketch_jurisdiction (swb_p)</td>
+<td>jurisdiction code</td>
+<td>overrides jurisdiction detection and uses a specific jurisdiction</td>
+</tr>
+<tr>
+<td>ketch_lang (lang, swb_l)</td>
+<td>ISO 639-1 language code, with optional regional extension</td>
+<td>overrides language detection and uses a specific language</td>
+</tr>
+<tr>
+<td>ketch_show (swb_show)</td>
+<td>cd,  preferences</td>
+<td>forces an experience to show</td>
+</tr>
+<tr>
+<td>ketch_preferences_tab (swb_preferences_tab)</td>
+<td>overviewTab,  rightsTab, consentsTab</td>
+<td>forces a particular tab of the preferences experience to show</td>
+</tr>
+</tbody></table>
+
+<a href="#ketch-function" id="ketch-function" style="color: inherit; text-decoration: none;">
+  <h2>Ketch function</h2>
+</a>
+<p>Newer bootstrap tags include the definition of a <code>ketch</code> function that should be the primary entrypoint
+into the Ketch Tag API.  The old <code>semaphore.push</code> will still be supported until the next major release.</p>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">  </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent updated&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">})</span>
+</code></pre>
+<p>The equivalent using <code>semaphore.push</code> is as follows:</p>
+<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">  </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent updated&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">}])</span>
+</code></pre>
+<p>The remainder of the examples will use the <code>ketch</code> function, but the equivalent <code>semaphore.push</code> can be used.</p>
+
 <a href="#showing-consent-experience" id="showing-consent-experience" style="color: inherit; text-decoration: none;">
   <h2>Showing Consent Experience</h2>
 </a>
 <p>The consent experience can be shown to a data subject using the following:</p>
-<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;showConsent&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-5">// options</span><br/><span class="hl-0">}])</span>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;showConsent&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-6">// options</span><br/><span class="hl-0">})</span>
 </code></pre>
 
 <a href="#showing-preferences-experience" id="showing-preferences-experience" style="color: inherit; text-decoration: none;">
   <h2>Showing Preferences Experience</h2>
 </a>
 <p>The preferences experience can be shown to a data subject using the following:</p>
-<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;showPreferences&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-5">// options</span><br/><span class="hl-0">}])</span>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;showPreferences&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-6">// options</span><br/><span class="hl-0">})</span>
 </code></pre>
 
 <a href="#events" id="events" style="color: inherit; text-decoration: none;">
@@ -68,21 +130,21 @@
   <h3>on</h3>
 </a>
 <p>To handle every occurrence of an event (<code>consent</code> in this example), use the following:</p>
-<pre><code class="language-typescript"><span class="hl-6">function</span><span class="hl-0"> </span><span class="hl-4">handleConsentChange</span><span class="hl-0">(</span><span class="hl-2">consent</span><span class="hl-0">: </span><span class="hl-3">Consent</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-5">// TODO - do something with the consent</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">])</span>
+<pre><code class="language-typescript"><span class="hl-5">function</span><span class="hl-0"> </span><span class="hl-4">handleConsentChange</span><span class="hl-0">(</span><span class="hl-2">consent</span><span class="hl-0">: </span><span class="hl-3">Consent</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-6">// TODO - do something with the consent</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
 
 <a href="#once" id="once" style="color: inherit; text-decoration: none;">
   <h3>once</h3>
 </a>
 <p>To handle just a single occurrence of an event, use the following:</p>
-<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;once&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">])</span>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;once&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
 
 <a href="#off" id="off" style="color: inherit; text-decoration: none;">
   <h3>off</h3>
 </a>
 <p>To stop handling events, use the following:</p>
-<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;off&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">])</span>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;off&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
 
 <a href="#consent" id="consent" style="color: inherit; text-decoration: none;">
@@ -136,7 +198,7 @@ a boolean denoting whether the user has consented to the purpose.</p>
   <h3>config</h3>
 </a>
 <p>To get the current configuration, use the following:</p>
-<pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;getConfig&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConfig</span><span class="hl-0">])</span>
+<pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;getConfig&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConfig</span><span class="hl-0">)</span>
 </code></pre>
 
 <a href="#plugins" id="plugins" style="color: inherit; text-decoration: none;">
@@ -144,7 +206,7 @@ a boolean denoting whether the user has consented to the purpose.</p>
 </a>
 <p>The Ketch Tag allows extending functionality by registering plugins. The plugin is a function that receives an instance
 of the Ketch Tag and the configuration of the plugin.</p>
-<pre><code class="language-typescript"><span class="hl-6">function</span><span class="hl-0"> </span><span class="hl-4">myPlugin</span><span class="hl-0">(</span><span class="hl-2">host</span><span class="hl-0">: </span><span class="hl-3">Ketch</span><span class="hl-0">, </span><span class="hl-2">_config</span><span class="hl-0">: </span><span class="hl-3">any</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-2">host</span><span class="hl-0">.</span><span class="hl-4">on</span><span class="hl-0">(</span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-6">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">    </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent changed to: &#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">  })</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;registerPlugin&#39;</span><span class="hl-0">, </span><span class="hl-2">myPlugin</span><span class="hl-0">])</span>
+<pre><code class="language-typescript"><span class="hl-5">function</span><span class="hl-0"> </span><span class="hl-4">myPlugin</span><span class="hl-0">(</span><span class="hl-2">host</span><span class="hl-0">: </span><span class="hl-3">Ketch</span><span class="hl-0">, </span><span class="hl-2">_config</span><span class="hl-0">: </span><span class="hl-3">any</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-2">host</span><span class="hl-0">.</span><span class="hl-4">on</span><span class="hl-0">(</span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">    </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent changed to: &#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">  })</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;registerPlugin&#39;</span><span class="hl-0">, </span><span class="hl-2">myPlugin</span><span class="hl-0">)</span>
 </code></pre>
 
 <a href="#testing" id="testing" style="color: inherit; text-decoration: none;">

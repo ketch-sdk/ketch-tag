@@ -39,31 +39,4 @@ describe('geoip', () => {
         })
     })
   })
-
-  describe('pushGeoIP', () => {
-    it('pushes geoIP to dataLayer', () => {
-      const ketch = new Ketch({} as Configuration)
-
-      // @ts-ignore
-      const g: IPInfo = {
-        ip: '1.2.3.5',
-        countryCode: 'US',
-        regionCode: 'CA',
-      }
-      ketch.pushGeoIP(g)
-
-      // @ts-ignore
-      const r: IPInfo = {}
-
-      // @ts-ignore
-      for (const dl of window['dataLayer']) {
-        if (dl['event'] === 'ketchGeoip') {
-          r.ip = dl['ip']
-          r.countryCode = dl['countryCode']
-          r.regionCode = dl['regionCode']
-        }
-      }
-      return expect(r).toEqual(g)
-    })
-  })
 })
