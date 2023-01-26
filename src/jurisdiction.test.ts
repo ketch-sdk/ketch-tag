@@ -125,23 +125,4 @@ describe('jurisdiction', () => {
       return expect(ketch.loadJurisdiction()).resolves.toBe('default')
     })
   })
-
-  describe('pushJurisdiction', () => {
-    it('pushes jurisdiction to dataLayer', () => {
-      const ps = 'US-CA'
-
-      const ketch = new Ketch({} as Configuration)
-
-      ketch.pushJurisdiction(ps)
-      let dataLayerPS = ''
-
-      // @ts-ignore
-      for (const dl of window.dataLayer) {
-        if (dl['event'] === 'ketchJurisdiction') {
-          dataLayerPS = dl['jurisdictionCode']
-        }
-      }
-      return expect(dataLayerPS).toEqual(ps)
-    })
-  })
 })

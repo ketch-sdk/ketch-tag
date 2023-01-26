@@ -25,14 +25,50 @@ Then update `./test/fixtures/index.html` to point to the new file:
 <script src="../plugins.js"></script>
 ```
 
+## Querystring parameters
+
+The following querystring parameters are checked at various points during the initialization and
+operation of the Ketch tag.
+
+| parameter                                   | allowed values                                            | description                                                       |
+|---------------------------------------------|-----------------------------------------------------------|-------------------------------------------------------------------|
+| ketch_log (swb_log)                         | trace, debug, info, warn, error                           | enables console logging by Ketch components                       |
+| ketch_env (swb_env)                         | staging, production                                       | overrides environment detection and uses a specific environment   |
+| ketch_region (swb_region)                   | ISO-3166 country code                                     | overrides region detection and uses a specific region             |
+| ketch_jurisdiction (swb_p)                  | jurisdiction code                                         | overrides jurisdiction detection and uses a specific jurisdiction |
+| ketch_lang (lang, swb_l)                    | ISO 639-1 language code, with optional regional extension | overrides language detection and uses a specific language         |
+| ketch_show (swb_show)                       | cd,  preferences                                          | forces an experience to show                                      |
+| ketch_preferences_tab (swb_preferences_tab) | overviewTab,  rightsTab, consentsTab                      | forces a particular tab of the preferences experience to show     |
+
+## Ketch function
+
+Newer bootstrap tags include the definition of a `ketch` function that should be the primary entrypoint
+into the Ketch Tag API.  The old `semaphore.push` will still be supported until the next major release.
+
+```typescript
+ketch('on', 'consent', consent => {
+  console.log('consent updated', consent)
+})
+```
+
+The equivalent using `semaphore.push` is as follows:
+
+```typescript
+semaphore.push(['on', 'consent', consent => {
+  console.log('consent updated', consent)
+}])
+```
+
+The remainder of the examples will use the `ketch` function, but the equivalent `semaphore.push` can be used.
+
 ## Showing Consent Experience
 
 The consent experience can be shown to a data subject using the following:
 
 ```typescript
-semaphore.push(['showConsent', {
+ketch('showConsent', {
   // options
-}])
+})
 ```
 
 ## Showing Preferences Experience
@@ -40,9 +76,9 @@ semaphore.push(['showConsent', {
 The preferences experience can be shown to a data subject using the following:
 
 ```typescript
-semaphore.push(['showPreferences', {
+ketch('showPreferences', {
   // options
-}])
+})
 ```
 ## Events
 
@@ -56,21 +92,21 @@ function handleConsentChange(consent: Consent) {
   // TODO - do something with the consent
 }
 
-semaphore.push(['on', 'consent', handleConsentChange])
+ketch('on', 'consent', handleConsentChange)
 ```
 
 ### once
 
 To handle just a single occurrence of an event, use the following:
 ```typescript
-semaphore.push(['once', 'consent', handleConsentChange])
+ketch('once', 'consent', handleConsentChange)
 ```
 
 ### off
 
 To stop handling events, use the following:
 ```typescript
-semaphore.push(['off', 'consent', handleConsentChange])
+ketch('off', 'consent', handleConsentChange)
 ```
 
 ### consent
@@ -116,7 +152,7 @@ The Ketch tag exposes several properties available to interrogate.
 To get the current configuration, use the following:
 
 ```typescript
-semaphore.push(['getConfig', handleConfig])
+ketch('getConfig', handleConfig)
 ```
 
 ## Plugins
@@ -131,7 +167,7 @@ function myPlugin(host: Ketch, _config: any) {
   })
 }
 
-semaphore.push(['registerPlugin', myPlugin])
+ketch('registerPlugin', myPlugin)
 ```
 
 ## Testing

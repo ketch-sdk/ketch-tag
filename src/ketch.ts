@@ -830,24 +830,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Push the IPInfo to data layer.
-   *
-   * @param g IPInfo
-   */
-  pushGeoIP(g: IPInfo): number {
-    log.info('pushGeoIP', g)
-
-    const GeoipEvent = {
-      event: 'ketchGeoip',
-      ip: g.ip,
-      countryCode: g.countryCode,
-      regionCode: g.regionCode,
-    }
-
-    return dataLayer().push(GeoipEvent)
-  }
-
-  /**
    * Set the IPInfo.
    *
    * @param g IPInfo
@@ -855,7 +837,6 @@ export class Ketch extends EventEmitter {
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
     log.info('setGeoIP', g)
     this._geoip.value = g
-    this.pushGeoIP(g)
     return this._geoip.fulfilled
   }
 
@@ -1012,22 +993,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Push the JurisdictionInfo to data layer.
-   *
-   * @param ps Jurisdiction to push
-   */
-  pushJurisdiction(ps: string): void {
-    log.info('pushJurisdiction', ps)
-
-    const JurisdictionEvent = {
-      event: 'ketchJurisdiction',
-      jurisdictionCode: ps,
-    }
-
-    dataLayer().push(JurisdictionEvent)
-  }
-
-  /**
    * Set the policy scope.
    *
    * @param ps Jurisdiction to set
@@ -1035,7 +1000,6 @@ export class Ketch extends EventEmitter {
   async setJurisdiction(ps: string): Promise<string> {
     log.info('setJurisdiction', ps)
 
-    this.pushJurisdiction(ps)
     this._jurisdiction.value = ps
     return this._jurisdiction.fulfilled
   }

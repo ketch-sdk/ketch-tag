@@ -1,22 +1,32 @@
-/**
- * Prefix the parameter.
- *
- * @param param
- */
-function prefixed(param: string): string {
-  return `swb_${param}`
-}
+const prefixes = ['ketch', 'swb']
 
 export default {
-  SWB_ENV: prefixed('env'),
-  SWB_REGION: prefixed('region'),
-  SWB_JURISDICTION: prefixed('p'),
-  SWB_LANGUAGE: prefixed('l'),
-  SWB_SHOW: prefixed('show'),
-  SWB_PREFERENCES_TAB: prefixed('preferences_tab'),
+  SWB_ENV: 'env',
+  SWB_REGION: 'region',
+  SWB_JURISDICTION: 'jurisdiction',
+  SWB_LANGUAGE: 'lang',
+  SWB_SHOW: 'show',
+  SWB_PREFERENCES_TAB: 'preferences_tab',
   LANG: 'lang',
   CONSENT: 'cd',
   PREFERENCES: 'preferences',
-  get: (key: string, input: string): string => new URLSearchParams(input).get(key) || '',
-  has: (key: string, input: string): boolean => new URLSearchParams(input).has(key),
+  get: (key: string, input: string): string => {
+    const p = new URLSearchParams(input)
+    for (const prefix of prefixes) {
+      const value = p.get(`${prefix}_${key}`)
+      if (value) {
+        return value
+      }
+    }
+    return ''
+  },
+  has: (key: string, input: string): boolean => {
+    const p = new URLSearchParams(input)
+    for (const prefix of prefixes) {
+      if (p.has(`${prefix}_${key}`)) {
+        return true
+      }
+    }
+    return false
+  },
 }
