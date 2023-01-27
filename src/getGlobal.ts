@@ -1,17 +1,7 @@
-import constants from './constants'
-
 export type CommandEntry = string | any[]
 
-export default function getGlobal(pusher?: Function): CommandEntry[] {
-  let variableName = constants.VARIABLE_NAME
-
-  // @ts-ignore
-  if (window[constants.SEMAPHORE]) {
-    variableName = constants.SEMAPHORE
-  }
-
-  // @ts-ignore
-  const v = (window[variableName] = window[variableName] || [])
+export default function getGlobal(pusher?: (a: any[] | string | IArguments | undefined) => void): CommandEntry[] {
+  const v = (window.semaphore = window.semaphore || [])
 
   // Override push if one is specified
   if (pusher !== undefined) {
@@ -19,5 +9,5 @@ export default function getGlobal(pusher?: Function): CommandEntry[] {
     v.loaded = true
   }
 
-  return v
+  return v as any
 }

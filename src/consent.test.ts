@@ -5,6 +5,7 @@ import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
 import { CACHED_CONSENT_KEY, getCachedConsent } from './consent'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('consent', () => {
   // @ts-ignore
@@ -148,7 +149,7 @@ describe('consent', () => {
 
   describe('fetchConsent', () => {
     it('handles a call with full config and no server consent', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
         return JSON.stringify({})
@@ -162,7 +163,7 @@ describe('consent', () => {
     })
 
     it('handles a call with full config and server consent', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
         return JSON.stringify({
@@ -198,13 +199,13 @@ describe('consent', () => {
     })
 
     it('skips calling if no identities', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       return expect(ketch.fetchConsent({})).rejects.toBe(errors.noIdentitiesError)
     })
 
     it('skips calling if no purposes', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         organization: {
           code: 'org',
         },
@@ -226,7 +227,7 @@ describe('consent', () => {
 
   describe('updateConsent', () => {
     it('handles a call with full config', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI('https://global.ketchcdn.com/web/v2'), config)
 
       fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({}))
 
@@ -263,7 +264,7 @@ describe('consent', () => {
     })
 
     it('skips if no identities', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       return ketch
         .updateConsent(
@@ -282,7 +283,7 @@ describe('consent', () => {
     })
 
     it('skips if no purposes', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         organization: {
           code: 'org',
         },
@@ -314,7 +315,7 @@ describe('consent', () => {
     })
 
     it('skips if no consents', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       return ketch.updateConsent(identities, { purposes: {} }).then(x => {
         expect(x).toBeUndefined()
@@ -324,7 +325,7 @@ describe('consent', () => {
 
   describe('getConsent', () => {
     it('returns the existing consent', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
       const c = {
         purposes: {
           ip: true,
@@ -359,7 +360,7 @@ describe('consent', () => {
     })
 
     it('fetches if no consent', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
       ketch.setIdentities(identities)
       fetchMock.mockResponse(async (): Promise<string> => {
         return '{}'
@@ -373,7 +374,7 @@ describe('consent', () => {
 
   describe('selectExperience', () => {
     it('returns modal if any purposes requires opt in and defaultExperience is modal', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [
           {
             code: '',
@@ -394,7 +395,7 @@ describe('consent', () => {
     })
 
     it('returns banner if any purposes requires opt in and defaultExperience is not modal', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [
           {
             code: '',
@@ -410,7 +411,7 @@ describe('consent', () => {
     })
 
     it('returns banner if none of the purposes requires opt in', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [
           {
             code: '',
@@ -426,7 +427,7 @@ describe('consent', () => {
     })
 
     it('returns banner no purposes', () => {
-      const ketch = new Ketch(config2)
+      const ketch = new Ketch(new KetchWebAPI(''), config2)
 
       expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
     })
@@ -434,13 +435,13 @@ describe('consent', () => {
 
   describe('shouldShowConsent', () => {
     it('shows when missing options', () => {
-      const ketch = new Ketch(config2)
+      const ketch = new Ketch(new KetchWebAPI(''), config2)
 
       expect(ketch.selectExperience({ purposes: {} })).toEqual(ExperienceType.Consent)
     })
 
     it('does not show when no purposes', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [],
         experiences: {
           consent: {
@@ -453,7 +454,7 @@ describe('consent', () => {
     })
 
     it('still shows when no consent experience', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [
           {
             code: 'productresearch',
@@ -469,7 +470,7 @@ describe('consent', () => {
     })
 
     it('shows when options', () => {
-      const ketch = new Ketch(config2)
+      const ketch = new Ketch(new KetchWebAPI(''), config2)
 
       expect(
         ketch.selectExperience({
@@ -483,7 +484,7 @@ describe('consent', () => {
 
   describe('showConsent', () => {
     it('calls lanyard', () => {
-      const ketch = new Ketch(config2)
+      const ketch = new Ketch(new KetchWebAPI(''), config2)
 
       const c = { purposes: { datasales: true } }
 
@@ -494,7 +495,7 @@ describe('consent', () => {
 })
 
 describe('experience consent', () => {
-  const ketch = new Ketch({
+  const ketch = new Ketch(new KetchWebAPI(''), {
     purposes: [
       {
         code: 'analytics',

@@ -1,6 +1,7 @@
 import getAction from './getAction'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './ketch'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('getAction', () => {
   describe('no ketch', () => {
@@ -11,7 +12,7 @@ describe('getAction', () => {
 
   describe('ketch defined', () => {
     const config = {} as Configuration
-    const ketch = new Ketch(config)
+    const ketch = new Ketch(new KetchWebAPI(''), config)
 
     it('invalid returns undefined', () => {
       return expect(getAction(ketch, 'undefined')).toBeUndefined()

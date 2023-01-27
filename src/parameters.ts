@@ -1,32 +1,22 @@
-const prefixes = ['ketch', 'swb']
+import { getParams } from '@ketch-sdk/ketch-logging'
+
+const parameters = getParams(window.location.search, ['ketch_', 'swb_'])
 
 export default {
-  SWB_ENV: 'env',
-  SWB_REGION: 'region',
-  SWB_JURISDICTION: 'jurisdiction',
-  SWB_LANGUAGE: 'lang',
-  SWB_SHOW: 'show',
-  SWB_PREFERENCES_TAB: 'preferences_tab',
-  LANG: 'lang',
+  ENV: 'env',
+  REGION: 'region',
+  JURISDICTION: 'jurisdiction',
+  LANGUAGE: 'lang',
+  SHOW: 'show',
+  PREFERENCES_TAB: 'preferences_tab',
   CONSENT: 'cd',
   PREFERENCES: 'preferences',
-  get: (key: string, input: string): string => {
-    const p = new URLSearchParams(input)
-    for (const prefix of prefixes) {
-      const value = p.get(`${prefix}_${key}`)
-      if (value) {
-        return value
-      }
-    }
-    return ''
+
+  get: (key: string): string => {
+    return parameters.get(key) || ''
   },
-  has: (key: string, input: string): boolean => {
-    const p = new URLSearchParams(input)
-    for (const prefix of prefixes) {
-      if (p.has(`${prefix}_${key}`)) {
-        return true
-      }
-    }
-    return false
+
+  has: (key: string): boolean => {
+    return parameters.has(key)
   },
 }

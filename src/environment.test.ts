@@ -2,6 +2,7 @@ import errors from './errors'
 import parameters from './parameters'
 import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 jest.mock('./parameters')
 
@@ -37,7 +38,7 @@ const test = {
 describe('environment', () => {
   describe('getEnvironment', () => {
     it('returns the existing environment', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       return ketch.setEnvironment(dev).then(() => {
         return expect(ketch.getEnvironment()).resolves.toBe(dev)
@@ -53,7 +54,7 @@ describe('environment', () => {
         },
         environments: [],
       }
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       const env = ketch.detectEnvironment()
       return expect(env).rejects.toBe(errors.noEnvironmentError)
@@ -66,7 +67,7 @@ describe('environment', () => {
         },
         environments: [prod, dev, test],
       }
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(dev)
@@ -79,7 +80,7 @@ describe('environment', () => {
         },
         environments: [devShort, dev],
       }
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(dev)
@@ -94,11 +95,11 @@ describe('environment', () => {
       }
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.SWB_ENV) return 'test'
+        if (key === parameters.ENV) return 'test'
         return ''
       })
 
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(test)
     })
@@ -111,7 +112,7 @@ describe('environment', () => {
         environments: [prod, test],
       }
 
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
       const env = ketch.detectEnvironment()
       return expect(env).resolves.toBe(prod)
     })

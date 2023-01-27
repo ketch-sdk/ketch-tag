@@ -19,15 +19,18 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
     throw errors.invalidConfigurationError
   }
 
-  const k = new Ketch(boot)
+  const api = new KetchWebAPI(getApiUrl(boot))
+
+  const k = new Ketch(api, boot)
+
   const language =
-    parameters.get(parameters.LANG, window.location.search) ||
-    parameters.get(parameters.SWB_LANGUAGE, window.location.search) ||
-    document.documentElement.lang ||
-    document.documentElement.getAttribute('xml:lang') ||
-    window.navigator.language ||
-    boot.language ||
-    'en'
+    new URLSearchParams(window.location.search).get(parameters.LANGUAGE) || // ?lang
+    parameters.get(parameters.LANGUAGE) || // ? ketch_lang
+    document.documentElement.lang || // <html lang
+    document.documentElement.getAttribute('xml:lang') || // <html xml:lang
+    window.navigator.language || // browser setting
+    boot.language || // language set in boot
+    'en' // default language
 
   // Check if we have been given an already resolved Configuration
   if (boot.property && boot.environment && boot.language === language) {
@@ -36,13 +39,11 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
   }
 
   const env = await k.detectEnvironment()
-
   if (!env.hash) {
     throw errors.noEnvironmentError
   }
 
   const jurisdiction = await k.loadJurisdiction()
-
   if (!jurisdiction) {
     throw errors.noJurisdictionError
   }
@@ -50,7 +51,7 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
   log.info('loadConfig', env, jurisdiction, language)
 
   const request: GetFullConfigurationRequest = {
-    organizationCode: boot.organization.code || '',
+    organizationCode: boot.organization.code,
     propertyCode: boot.property?.code || '',
     environmentCode: env.code,
     hash: env.hash || '',
@@ -58,9 +59,7 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
     jurisdictionCode: jurisdiction,
   }
 
-  const api = new KetchWebAPI(getApiUrl(boot))
-
   const cfg = await api.getFullConfiguration(request)
 
-  return new Ketch(cfg)
+  return new Ketch(api, cfg)
 }

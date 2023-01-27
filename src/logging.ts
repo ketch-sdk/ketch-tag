@@ -1,3 +1,3 @@
-import { getLogger, getLogLevel } from '@ketch-sdk/ketch-logging'
+import { getLogger, getLogLevel, getParams } from '@ketch-sdk/ketch-logging'
 
-export default getLogger('ketch', getLogLevel(window.location.search, 'swb_'))
+export default getLogger('ketch', getLogLevel(getParams(window.location.search, ['ketch_', 'swb_'])))

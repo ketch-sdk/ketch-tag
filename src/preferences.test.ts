@@ -1,10 +1,11 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('preferences', () => {
   describe('showPreferences', () => {
     it('shows experience', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         experiences: {
           preference: {
             code: 'test',
@@ -23,7 +24,7 @@ describe('preferences', () => {
     })
 
     it('does not show experience', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       const c = {
         purposes: {},
