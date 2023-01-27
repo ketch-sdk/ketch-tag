@@ -3,6 +3,8 @@ import errors from './errors'
 import parameters from './parameters'
 import { Ketch } from './'
 import fetchMock from 'jest-fetch-mock'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import constants from './constants'
 
 jest.mock('./parameters')
 
@@ -11,7 +13,7 @@ describe('regionInfo', () => {
 
   describe('getRegionInfo', () => {
     it('returns the existing region info', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       const ri = 'US-CA'
       return ketch.setRegionInfo(ri).then(() => {
@@ -22,7 +24,7 @@ describe('regionInfo', () => {
 
   describe('loadRegionInfo', () => {
     it('handles an invalid IPInfo', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -34,7 +36,7 @@ describe('regionInfo', () => {
     })
 
     it('handles a missing country_code', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -48,7 +50,7 @@ describe('regionInfo', () => {
     })
 
     it('handles a non-US country_code with a region', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -64,7 +66,7 @@ describe('regionInfo', () => {
     })
 
     it('handles no region', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -79,7 +81,7 @@ describe('regionInfo', () => {
     })
 
     it('handles sub region', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -95,7 +97,7 @@ describe('regionInfo', () => {
     })
 
     it('handles region on the query', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(
         JSON.stringify({
@@ -107,7 +109,7 @@ describe('regionInfo', () => {
       )
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.SWB_REGION) return 'FOO'
+        if (key === constants.REGION) return 'FOO'
         return ''
       })
 

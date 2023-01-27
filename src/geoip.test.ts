@@ -1,11 +1,12 @@
 import { Configuration, GetLocationResponse, IPInfo } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 import fetchMock from 'jest-fetch-mock'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('geoip', () => {
   describe('getGeoIP', () => {
     it('returns the existing geoip', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       // @ts-ignore
       const ip: IPInfo = {
@@ -28,7 +29,7 @@ describe('geoip', () => {
       } as GetLocationResponse
       fetchMock.mockResponse(async (): Promise<string> => JSON.stringify(ip))
 
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       return ketch
         .loadGeoIP()

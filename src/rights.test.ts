@@ -1,6 +1,7 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 import fetchMock from 'jest-fetch-mock'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('gangplank', () => {
   // @ts-ignore
@@ -60,7 +61,7 @@ describe('gangplank', () => {
       stateRegion: 'California',
     },
   }
-  const ketch = new Ketch(config)
+  const ketch = new Ketch(new KetchWebAPI('https://global.ketchcdn.com/web/v2'), config)
 
   describe('invokeRights', () => {
     it('handles a call with full config', () => {

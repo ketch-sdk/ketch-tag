@@ -3,6 +3,8 @@ import parameters from './parameters'
 import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import constants from './constants'
 
 jest.mock('./parameters')
 
@@ -11,7 +13,7 @@ describe('jurisdiction', () => {
 
   describe('getJurisdiction', () => {
     it('returns the existing jurisdiction', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       const ps = 'gdpr'
       return ketch.setJurisdiction(ps).then(() => {
@@ -22,10 +24,10 @@ describe('jurisdiction', () => {
 
   describe('loadJurisdiction', () => {
     it('allows setting jurisdiction on query', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.SWB_JURISDICTION) return 'FOO'
+        if (key === constants.JURISDICTION) return 'FOO'
         return ''
       })
 
@@ -33,7 +35,7 @@ describe('jurisdiction', () => {
     })
 
     it('handles null regionInfo', () => {
-      const ketch = new Ketch({} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       fetchMock.mockResponse(JSON.stringify({}))
 
@@ -41,7 +43,7 @@ describe('jurisdiction', () => {
     })
 
     it('loads from dataLayer', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         jurisdiction: {
           variable: 'foobar',
         },
@@ -64,7 +66,7 @@ describe('jurisdiction', () => {
     })
 
     it('locates specified jurisdiction', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         jurisdiction: {
           defaultJurisdictionCode: 'default',
           jurisdictions: {
@@ -87,7 +89,7 @@ describe('jurisdiction', () => {
     })
 
     it('defaults jurisdiction if not found', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         jurisdiction: {
           defaultJurisdictionCode: 'default',
           jurisdictions: {
@@ -110,7 +112,7 @@ describe('jurisdiction', () => {
     })
 
     it('defaults jurisdiction on reject', () => {
-      const ketch = new Ketch({
+      const ketch = new Ketch(new KetchWebAPI(''), {
         jurisdiction: {
           defaultJurisdictionCode: 'default',
           jurisdictions: {

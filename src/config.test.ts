@@ -1,5 +1,6 @@
 import type { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 jest.mock('./parameters')
 
@@ -9,7 +10,7 @@ describe('config', () => {
       const config = {
         language: 'en',
       } as Configuration
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
 
       return expect(ketch.getConfig()).resolves.toBe(config)
     })

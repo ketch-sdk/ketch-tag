@@ -1,5 +1,6 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
 describe('identities', () => {
   const config: Configuration = {
@@ -64,7 +65,7 @@ describe('identities', () => {
 
   describe('setIdentities', () => {
     it('handles merging of identities', () => {
-      const ketch = new Ketch(config)
+      const ketch = new Ketch(new KetchWebAPI(''), config)
       return ketch.setIdentities(identities).then(x => {
         expect(x).toEqual({
           space1: 'id1',
