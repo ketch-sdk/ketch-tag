@@ -5,6 +5,7 @@ import errors from './errors'
 import parameters from './parameters'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import getApiUrl from './getApiUrl'
+import constants from './constants'
 
 /**
  * Loads the config.
@@ -24,8 +25,8 @@ export default async function newFromBootstrap(boot: Configuration): Promise<Ket
   const k = new Ketch(api, boot)
 
   const language =
-    new URLSearchParams(window.location.search).get(parameters.LANGUAGE) || // ?lang
-    parameters.get(parameters.LANGUAGE) || // ? ketch_lang
+    new URLSearchParams(window.location.search).get(constants.LANGUAGE) || // ?lang
+    parameters.get(constants.LANGUAGE) || // ? ketch_lang
     document.documentElement.lang || // <html lang
     document.documentElement.getAttribute('xml:lang') || // <html xml:lang
     window.navigator.language || // browser setting

@@ -4,6 +4,7 @@ import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import constants from './constants'
 
 jest.mock('./parameters')
 
@@ -26,7 +27,7 @@ describe('jurisdiction', () => {
       const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.JURISDICTION) return 'FOO'
+        if (key === constants.JURISDICTION) return 'FOO'
         return ''
       })
 

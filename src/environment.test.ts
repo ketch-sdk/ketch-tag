@@ -3,6 +3,7 @@ import parameters from './parameters'
 import { Ketch } from './'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import constants from './constants'
 
 jest.mock('./parameters')
 
@@ -95,7 +96,7 @@ describe('environment', () => {
       }
 
       mockParametersGet.mockImplementationOnce(key => {
-        if (key === parameters.ENV) return 'test'
+        if (key === constants.ENV) return 'test'
         return ''
       })
 

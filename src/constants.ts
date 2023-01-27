@@ -21,4 +21,12 @@ export default {
   DETECT_ENVIRONMENT: 'detectEnvironment',
   NONE: 'none',
   SKIPPING: 'skipping',
+  ENV: 'env',
+  REGION: 'region',
+  JURISDICTION: 'jurisdiction',
+  LANGUAGE: 'lang',
+  SHOW: 'show',
+  PREFERENCES_TAB: 'preferences_tab',
+  CONSENT: 'cd',
+  PREFERENCES: 'preferences',
 }

@@ -299,13 +299,13 @@ export class Ketch extends EventEmitter {
     }
 
     // check if experience show parameter override set
-    const show = parameters.get(parameters.SHOW)
-    if (parameters.has(parameters.SHOW) && (show.length === 0 || show === parameters.CONSENT)) {
-      log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
-      return ExperienceType.Consent
-    } else if (show === parameters.PREFERENCES) {
+    const show = parameters.get(constants.SHOW)
+    if (show === constants.PREFERENCES) {
       log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Preference)
       return ExperienceType.Preference
+    } else if (show) {
+      log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
+      return ExperienceType.Consent
     }
 
     if (this._shouldConsentExperienceShow) {
@@ -749,7 +749,7 @@ export class Ketch extends EventEmitter {
     }
 
     // Try to locate the specifiedEnv
-    const specifiedEnv = parameters.get(parameters.ENV)
+    const specifiedEnv = parameters.get(constants.ENV)
     if (specifiedEnv) {
       for (let i = 0; i < this._config.environments.length; i++) {
         const e = this._config.environments[i]
@@ -1025,7 +1025,7 @@ export class Ketch extends EventEmitter {
   async loadJurisdiction(): Promise<string> {
     log.info('loadJurisdiction', this._config.jurisdiction)
 
-    const jurisdictionOverride = parameters.get(parameters.JURISDICTION)
+    const jurisdictionOverride = parameters.get(constants.JURISDICTION)
     if (jurisdictionOverride) {
       return this.setJurisdiction(jurisdictionOverride)
     }
@@ -1076,7 +1076,7 @@ export class Ketch extends EventEmitter {
   async loadRegionInfo(): Promise<string> {
     log.info('loadRegionInfo')
 
-    const specifiedRegion = parameters.get(parameters.REGION)
+    const specifiedRegion = parameters.get(constants.REGION)
     if (specifiedRegion) {
       return this.setRegionInfo(specifiedRegion)
     }
@@ -1143,9 +1143,9 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
       // check if experience show parameter override set
-      const tab = parameters.get(parameters.PREFERENCES_TAB)
+      const tab = parameters.get(constants.PREFERENCES_TAB)
       // override with url param
-      if (isTab(tab)) {
+      if (tab && isTab(tab)) {
         if (!params) {
           params = {}
         }
