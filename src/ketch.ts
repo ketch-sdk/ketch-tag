@@ -6,7 +6,6 @@ import {
   Configuration,
   Consent,
   Environment,
-  GetLocationResponse,
   Identities,
   InvokeRightRequest,
   InvokeRightEvent,
@@ -26,13 +25,12 @@ import {
   IdentityProvider,
   StorageProvider,
 } from '@ketch-sdk/ketch-types'
-import dataLayer from './datalayer'
 import isEmpty from './isEmpty'
 import log from './logging'
 import errors from './errors'
 import parameters from './parameters'
 import Watcher from '@ketch-sdk/ketch-data-layer'
-import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './consent'
+import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './cache'
 import deepEqual from 'nano-equal'
 import constants from './constants'
 
@@ -145,6 +143,7 @@ export class Ketch extends EventEmitter {
   constructor(api: KetchWebAPI, config: Configuration) {
     super()
     const maxListeners = parseInt(config.options?.maxListeners || '20')
+    this._api = api
     this._config = config
     this._consent = new Future<Consent>({ name: constants.CONSENT_EVENT, emitter: this, maxListeners })
     this._environment = new Future<Environment>({ name: constants.ENVIRONMENT_EVENT, emitter: this, maxListeners })
@@ -156,7 +155,6 @@ export class Ketch extends EventEmitter {
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = false
     this._provisionalConsent = undefined
-    this._api = api
     this._watcher = new Watcher(window, {
       interval: parseInt(config.options?.watcherInterval || '2000'),
       timeout: parseInt(config.options?.watcherTimeout || '10000'),
@@ -736,80 +734,12 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Detect the current environment. It will first look at the query string for any specified environment,
-   * then it will iterate through the environment specifications to match based on the environment pattern.
-   */
-  async detectEnvironment(): Promise<Environment> {
-    log.info(constants.DETECT_ENVIRONMENT)
-
-    // We have to have environments
-    if (!this._config.environments) {
-      log.warn(constants.DETECT_ENVIRONMENT, 'no environments')
-      throw errors.noEnvironmentError
-    }
-
-    // Try to locate the specifiedEnv
-    const specifiedEnv = parameters.get(constants.ENV)
-    if (specifiedEnv) {
-      for (let i = 0; i < this._config.environments.length; i++) {
-        const e = this._config.environments[i]
-
-        if (e && specifiedEnv && e.code === specifiedEnv) {
-          log.debug(constants.DETECT_ENVIRONMENT, 'found', e)
-          return this.setEnvironment(e)
-        }
-      }
-
-      log.error(constants.DETECT_ENVIRONMENT, 'not found', specifiedEnv)
-      throw errors.noEnvironmentError
-    }
-
-    // Try to locate based on pattern
-    let environment = {} as Environment
-    for (let i = 0; i < this._config.environments.length; i++) {
-      const e = this._config.environments[i]
-      const pattern = atob(e.pattern || '')
-
-      if (
-        pattern &&
-        new RegExp(pattern).test(window.document.location.href) &&
-        (!environment.pattern || pattern.length > atob(environment.pattern).length)
-      ) {
-        environment = e
-      }
-    }
-
-    // match pattern
-    if (environment.pattern) {
-      log.debug(constants.DETECT_ENVIRONMENT, 'matched', environment)
-      return this.setEnvironment(environment)
-    }
-
-    // Finally, try to locate production
-    for (let i = 0; i < this._config.environments.length; i++) {
-      const e = this._config.environments[i]
-
-      if (e.code === 'production') {
-        log.debug(constants.DETECT_ENVIRONMENT, e.code, e)
-        return this.setEnvironment(e)
-      }
-    }
-
-    throw errors.noEnvironmentError
-  }
-
-  /**
    * Get the environment.
    */
   async getEnvironment(): Promise<Environment> {
     log.info('getEnvironment')
 
-    if (this._environment.isFulfilled()) {
-      return this._environment.fulfilled
-    } else {
-      const env = await this.detectEnvironment()
-      return this.setEnvironment(env)
-    }
+    return this._environment.fulfilled
   }
 
   /**
@@ -833,26 +763,12 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Loads the IPInfo.
-   */
-  async loadGeoIP(): Promise<GetLocationResponse> {
-    log.info('loadGeoIP')
-
-    return this._api.getLocation()
-  }
-
-  /**
    * Gets the IPInfo.
    */
   async getGeoIP(): Promise<IPInfo> {
     log.info('getGeoIP')
 
-    if (this._geoip.isFulfilled()) {
-      return this._geoip.fulfilled
-    } else {
-      const r = await this.loadGeoIP()
-      return this.setGeoIP(r.location)
-    }
+    return this._geoip.fulfilled
   }
 
   /**
@@ -1002,12 +918,7 @@ export class Ketch extends EventEmitter {
   async getJurisdiction(): Promise<string> {
     log.info('getJurisdiction')
 
-    if (this._jurisdiction.isFulfilled()) {
-      return this._jurisdiction.fulfilled
-    } else {
-      const ps = await this.loadJurisdiction()
-      return this.setJurisdiction(ps)
-    }
+    return this._jurisdiction.fulfilled
   }
 
   /**
@@ -1017,46 +928,6 @@ export class Ketch extends EventEmitter {
    */
   async onJurisdiction(callback: Callback): Promise<void> {
     this.on(constants.JURISDICTION_EVENT, callback)
-  }
-
-  /**
-   * Get the policy scope from query, page or config.
-   */
-  async loadJurisdiction(): Promise<string> {
-    log.info('loadJurisdiction', this._config.jurisdiction)
-
-    const jurisdictionOverride = parameters.get(constants.JURISDICTION)
-    if (jurisdictionOverride) {
-      return this.setJurisdiction(jurisdictionOverride)
-    }
-
-    const ps = this._config.jurisdiction
-    if (!ps) {
-      throw errors.noJurisdictionError
-    }
-
-    const v = ps.variable
-
-    if (v) {
-      for (const dl of dataLayer()) {
-        const scope = dl[v]
-        if (scope) {
-          return this.setJurisdiction(scope)
-        }
-      }
-    }
-
-    try {
-      const region = await this.loadRegionInfo()
-      const jurisdiction = (ps.jurisdictions || {})[region] ?? ps.defaultJurisdictionCode ?? ''
-      if (!jurisdiction) {
-        return Promise.reject(errors.noJurisdictionError)
-      }
-
-      return this.setJurisdiction(jurisdiction)
-    } catch (e) {
-      return ps.defaultJurisdictionCode ?? ''
-    }
   }
 
   /**
@@ -1071,50 +942,11 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Load the region info.
-   */
-  async loadRegionInfo(): Promise<string> {
-    log.info('loadRegionInfo')
-
-    const specifiedRegion = parameters.get(constants.REGION)
-    if (specifiedRegion) {
-      return this.setRegionInfo(specifiedRegion)
-    }
-
-    const r = await this.loadGeoIP()
-    if (!r || !r.location) {
-      throw errors.unrecognizedLocationError
-    }
-
-    const g = await this.setGeoIP(r.location)
-    if (!g) {
-      throw errors.unrecognizedLocationError
-    }
-
-    const cc = g.countryCode
-    if (!cc) {
-      throw errors.unrecognizedLocationError
-    }
-
-    let region = cc
-    if (cc === 'US') {
-      region = `${cc}-${g.regionCode}`
-    }
-
-    return this.setRegionInfo(region)
-  }
-
-  /**
    * Gets the region.
    */
   async getRegionInfo(): Promise<string> {
     log.info('getRegionInfo')
-    if (this._regionInfo.isFulfilled()) {
-      return this._regionInfo.fulfilled
-    } else {
-      const info = await this.loadRegionInfo()
-      return this.setRegionInfo(info)
-    }
+    return this._regionInfo.fulfilled
   }
 
   /**

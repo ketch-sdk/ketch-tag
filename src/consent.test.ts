@@ -3,7 +3,7 @@ import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
-import { CACHED_CONSENT_KEY, getCachedConsent } from './consent'
+import { CACHED_CONSENT_KEY, getCachedConsent } from './cache'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 

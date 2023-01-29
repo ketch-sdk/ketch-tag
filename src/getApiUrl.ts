@@ -8,7 +8,7 @@ import constants from './constants'
  */
 export default function getApiUrl(config: Configuration): string {
   if (config.services) {
-    let url = config.services[constants.SHORELINE]
+    let url = config.services[constants.API_SERVER]
 
     // url must not end in '/'
     if (url.endsWith('/')) {
@@ -24,5 +24,5 @@ export default function getApiUrl(config: Configuration): string {
   }
 
   // default case
-  return 'https://global.ketchcdn.com/web/v2'
+  return constants.API_SERVER_BASE_URL
 }
