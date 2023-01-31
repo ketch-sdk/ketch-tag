@@ -3,7 +3,7 @@ import { Ketch } from './'
 import fetchMock from 'jest-fetch-mock'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
-describe('gangplank', () => {
+describe('rights', () => {
   // @ts-ignore
   const config: Configuration = {
     organization: {

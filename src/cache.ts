@@ -7,7 +7,7 @@ export const CACHED_CONSENT_TTL = 300 // 5 min in s
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
 
 export async function getCachedConsent(request: GetConsentRequest): Promise<GetConsentResponse> {
-  const syntheticResponse = {
+  const syntheticResponse: GetConsentResponse = {
     organizationCode: request.organizationCode,
     propertyCode: request.propertyCode,
     environmentCode: request.environmentCode,

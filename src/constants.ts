@@ -1,7 +1,6 @@
 export default {
   CONSENT_MODAL: 'experiences.consent.modal',
   CONSENT_BANNER: 'experiences.consent.banner',
-  SHORELINE: 'shoreline',
   FULFILLED_EVENT: 'fulfilled',
   CONSENT_EVENT: 'consent',
   ENVIRONMENT_EVENT: 'environment',
@@ -18,10 +17,11 @@ export default {
   SELECT_EXPERIENCE: 'selectExperience',
   SELECT_CONSENT_EXPERIENCE: 'selectConsentExperience',
   UPDATE_CONSENT: 'updateConsent',
-  DETECT_ENVIRONMENT: 'detectEnvironment',
+  BUILD_ENVIRONMENT: 'buildEnvironment',
   NONE: 'none',
   SKIPPING: 'skipping',
   ENV: 'env',
+  PRODUCTION: 'production',
   REGION: 'region',
   JURISDICTION: 'jurisdiction',
   LANGUAGE: 'lang',
@@ -29,4 +29,6 @@ export default {
   PREFERENCES_TAB: 'preferences_tab',
   CONSENT: 'cd',
   PREFERENCES: 'preferences',
+  API_SERVER: 'shoreline',
+  API_SERVER_BASE_URL: 'https://global.ketchcdn.com/web/v2',
 }

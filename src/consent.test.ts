@@ -3,7 +3,7 @@ import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
 import fetchMock from 'jest-fetch-mock'
-import { CACHED_CONSENT_KEY, getCachedConsent } from './consent'
+import { CACHED_CONSENT_KEY, getCachedConsent } from './cache'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
@@ -20,7 +20,7 @@ describe('consent', () => {
     },
     environments: [
       {
-        code: 'production',
+        code: constants.PRODUCTION,
         hash: '1392568836159292875',
       },
     ],
@@ -37,7 +37,7 @@ describe('consent', () => {
       },
     },
     environment: {
-      code: 'production',
+      code: constants.PRODUCTION,
       hash: '1392568836159292875',
     },
     deployment: {
@@ -528,7 +528,7 @@ describe('cached consent', () => {
   const request: GetConsentRequest = {
     organizationCode: 'org',
     propertyCode: 'prop',
-    environmentCode: 'production',
+    environmentCode: constants.PRODUCTION,
     identities: {},
     jurisdictionCode: 'us_ca',
     purposes: { analytics: { legalBasisCode: 'disclosure' } },

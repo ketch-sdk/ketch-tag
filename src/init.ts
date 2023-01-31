@@ -1,36 +1,43 @@
-import getGlobal from './getGlobal'
 import log from './logging'
-import newFromBootstrap from './newFromBootstrap'
-import pusher from './push'
-import { Ketch } from './ketch'
-import entrypoint from './entrypoint'
-
-export let ketch: Ketch | undefined
+import Builder from './builder'
+import Router from './router'
 
 /**
  * This is the entry point when this package is first loaded.
  */
-export default async function init(): Promise<any> {
-  const push = pusher(entrypoint)
+export default async function init(): Promise<void> {
+  const actions = (window.semaphore as any as any[]) || []
 
-  const g = getGlobal(push)
+  // Shift out the first action, which must be an ['init', {config}] action
+  const initRequest = actions.shift()
 
-  const initRequest = g.shift()
-
-  if (!Array.isArray(initRequest) || initRequest[0] != 'init') {
-    log.error('ketch tag command queue is not configured correctly')
-    return
+  if (!Array.isArray(initRequest) || initRequest.length != 2 || initRequest[0] != 'init') {
+    throw Error('ketch tag command queue is not configured correctly')
   }
 
+  // The configuration will be the second element in the array
   const cfg = initRequest[1]
 
   log.trace('init', cfg)
 
-  ketch = await newFromBootstrap(cfg)
+  // Create a new Ketch object
+  const builder = new Builder(cfg)
+  const ketch = await builder.build()
 
-  while (g.length > 0) {
-    push(g.shift())
+  // Wrap a router around that Ketch object
+  const router = new Router(ketch)
+
+  // Process all the queued actions
+  while (actions.length > 0) {
+    router.push(actions.shift())
   }
 
-  return ketch.getConsent()
+  // Replace the `push` function on the semaphore queue with the router
+  window.semaphore.push = router.push.bind(router)
+
+  // Note that the tag has loaded
+  window.semaphore.loaded = true
+
+  // Ensure consent has been loaded
+  await ketch.getConsent()
 }
