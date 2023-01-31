@@ -358,7 +358,7 @@ export class Ketch extends EventEmitter {
    * @param type The type of experience to be shown
    */
   willShowExperience(type: string): void {
-    log.trace('willShowExperience', type)
+    log.debug('willShowExperience', type)
 
     // Call functions registered using onWillShowExperience
     this.emit(constants.WILL_SHOW_EXPERIENCE_EVENT, type)
@@ -374,7 +374,7 @@ export class Ketch extends EventEmitter {
    * Values: setConsent, invokeRight, close
    */
   async experienceClosed(reason: string): Promise<Consent> {
-    log.trace('experienceClosed', reason)
+    log.debug('experienceClosed', reason)
 
     // update isExperienceDisplayed flag when experience no longer displayed
     // update hasExperienceBeenDisplayed flag after experience has been displayed
@@ -408,7 +408,7 @@ export class Ketch extends EventEmitter {
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
-    log.trace('showConsentExperience')
+    log.debug('showConsentExperience')
 
     const consent = await this.retrieveConsent()
 
@@ -427,7 +427,7 @@ export class Ketch extends EventEmitter {
    */
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
     const l = wrapLogger(log, 'showPreferenceExperience')
-    l.trace(params)
+    l.debug(params)
 
     const consent = await this.getConsent()
 
@@ -461,7 +461,7 @@ export class Ketch extends EventEmitter {
    * @param callback Callback to register
    */
   async onShowConsentExperience(callback: (consents: Consent, options?: ShowConsentOptions) => void): Promise<void> {
-    log.trace('onShowConsentExperience')
+    log.debug('onShowConsentExperience')
     this.removeAllListeners(constants.SHOW_CONSENT_EXPERIENCE_EVENT)
     this.on(constants.SHOW_CONSENT_EXPERIENCE_EVENT, callback)
   }
@@ -474,7 +474,7 @@ export class Ketch extends EventEmitter {
   async onShowPreferenceExperience(
     callback: (consents: Consent, options?: ShowPreferenceOptions) => void,
   ): Promise<void> {
-    log.trace('onShowPreferenceExperience')
+    log.debug('onShowPreferenceExperience')
     this.removeAllListeners(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
     this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, callback)
   }
@@ -484,7 +484,7 @@ export class Ketch extends EventEmitter {
    *
    */
   async setShowConsentExperience(): Promise<void> {
-    log.trace('setShowConsentExperience')
+    log.debug('setShowConsentExperience')
     this._shouldConsentExperienceShow = true
   }
 
@@ -501,7 +501,7 @@ export class Ketch extends EventEmitter {
    * @param consent Consent to change
    */
   async changeConsent(consent: Consent): Promise<any> {
-    log.trace('changeConsent', consent)
+    log.debug('changeConsent', consent)
 
     // check for new identifiers for tags that may fire after consent collected
     this._watcher.stop()
@@ -517,7 +517,7 @@ export class Ketch extends EventEmitter {
    */
   async setConsent(c: Consent): Promise<Consent> {
     const l = wrapLogger(log, 'setConsent')
-    l.trace(c)
+    l.debug(c)
 
     if (!c || isEmpty(c)) {
       l.trace('reset')
@@ -554,7 +554,7 @@ export class Ketch extends EventEmitter {
    * @param c Consent to set
    */
   async setProvisionalConsent(c: Consent): Promise<void> {
-    log.trace('setProvisionalConsent', c)
+    log.debug('setProvisionalConsent', c)
 
     this._provisionalConsent = c
     if (this._consent.isFulfilled()) {
@@ -571,7 +571,8 @@ export class Ketch extends EventEmitter {
    */
   overrideWithProvisionalConsent(c: Consent): boolean {
     const l = wrapLogger(log, 'overrideWithProvisionalConsent')
-    l.trace(c)
+    l.debug(c)
+
     let shouldUpdateConsent = false
     if (!this._provisionalConsent) {
       l.trace('no provisional consent')
@@ -599,7 +600,7 @@ export class Ketch extends EventEmitter {
       return this._consent.fulfilled
     }
 
-    l.trace('obtaining consent')
+    l.debug('obtaining consent')
 
     const identities = await this.getIdentities()
 
@@ -619,7 +620,7 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    l.trace('shouldCreatePermits', shouldCreatePermits)
+    l.debug('shouldCreatePermits', shouldCreatePermits)
 
     // first set consent value then proceed to show experience and/or create permits
     if (shouldCreatePermits) {
@@ -645,7 +646,7 @@ export class Ketch extends EventEmitter {
    * Retrieve the consent for subsequent calls.
    */
   async retrieveConsent(): Promise<Consent> {
-    log.trace('retrieveConsent')
+    log.debug('retrieveConsent')
 
     if (this._consent.isFulfilled()) {
       return this._consent.fulfilled
@@ -661,7 +662,7 @@ export class Ketch extends EventEmitter {
    */
   async fetchConsent(identities: Identities): Promise<Consent> {
     const l = wrapLogger(log, 'fetchConsent')
-    l.trace(identities)
+    l.debug(identities)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
@@ -837,7 +838,7 @@ export class Ketch extends EventEmitter {
    * @param env Environment to set
    */
   async setEnvironment(env: Environment): Promise<Environment> {
-    log.trace('setEnvironment', env)
+    log.debug('setEnvironment', env)
     this._environment.value = env
     return this._environment.fulfilled
   }
@@ -846,7 +847,7 @@ export class Ketch extends EventEmitter {
    * Get the environment.
    */
   async getEnvironment(): Promise<Environment> {
-    log.trace('getEnvironment')
+    log.debug('getEnvironment')
 
     return this._environment.fulfilled
   }
@@ -857,7 +858,7 @@ export class Ketch extends EventEmitter {
    * @param g IPInfo
    */
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
-    log.trace('setGeoIP', g)
+    log.debug('setGeoIP', g)
     this._geoip.value = g
     return this._geoip.fulfilled
   }
@@ -866,7 +867,7 @@ export class Ketch extends EventEmitter {
    * Gets the IPInfo.
    */
   async getGeoIP(): Promise<IPInfo> {
-    log.trace('getGeoIP')
+    log.debug('getGeoIP')
 
     return this._geoip.fulfilled
   }
@@ -878,7 +879,7 @@ export class Ketch extends EventEmitter {
    */
   async setIdentities(newIdentities: Identities): Promise<Identities> {
     const l = wrapLogger(log, 'setIdentities')
-    l.trace(newIdentities)
+    l.debug(newIdentities)
 
     // update current identities with new identities but do not overwrite previously found identities
     let identities: Identities = {}
@@ -941,7 +942,7 @@ export class Ketch extends EventEmitter {
    */
   async collectIdentities(): Promise<void> {
     const l = wrapLogger(log, 'collectIdentities')
-    l.trace(this._config.identities)
+    l.debug(this._config.identities)
 
     const configIDs = this._config.identities
 
@@ -986,7 +987,7 @@ export class Ketch extends EventEmitter {
    * Get the identities.
    */
   async getIdentities(): Promise<Identities> {
-    log.trace('getIdentities')
+    log.debug('getIdentities')
 
     if (!this._identities.isFulfilled()) {
       await this.collectIdentities()
@@ -1001,7 +1002,7 @@ export class Ketch extends EventEmitter {
    * @param ps Jurisdiction to set
    */
   async setJurisdiction(ps: string): Promise<string> {
-    log.trace('setJurisdiction', ps)
+    log.debug('setJurisdiction', ps)
 
     this._jurisdiction.value = ps
     return this._jurisdiction.fulfilled
@@ -1011,7 +1012,7 @@ export class Ketch extends EventEmitter {
    * Get the policy scope.
    */
   async getJurisdiction(): Promise<string> {
-    log.trace('getJurisdiction')
+    log.debug('getJurisdiction')
 
     return this._jurisdiction.fulfilled
   }
@@ -1022,7 +1023,7 @@ export class Ketch extends EventEmitter {
    * @param info Region information
    */
   async setRegionInfo(info: string): Promise<string> {
-    log.trace('setRegionInfo', info)
+    log.debug('setRegionInfo', info)
     this._regionInfo.value = info
     return this._regionInfo.fulfilled
   }
@@ -1031,7 +1032,7 @@ export class Ketch extends EventEmitter {
    * Gets the region.
    */
   async getRegionInfo(): Promise<string> {
-    log.trace('getRegionInfo')
+    log.debug('getRegionInfo')
     return this._regionInfo.fulfilled
   }
 
@@ -1042,7 +1043,7 @@ export class Ketch extends EventEmitter {
    */
   async invokeRight(eventData: InvokeRightEvent): Promise<void> {
     const l = wrapLogger(log, 'invokeRight')
-    l.trace(eventData)
+    l.debug(eventData)
 
     // If no identities or rights defined, skip the call.
     if (

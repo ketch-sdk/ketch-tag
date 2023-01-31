@@ -156,7 +156,7 @@ export default class Builder {
    */
   async buildJurisdiction(region: string): Promise<string> {
     const l = wrapLogger(log, 'buildJurisdiction')
-    l.trace(this._config.jurisdiction)
+    l.debug(this._config.jurisdiction)
 
     const jurisdictionOverride = parameters.get(constants.JURISDICTION)
     if (jurisdictionOverride) {
@@ -236,7 +236,7 @@ export default class Builder {
    * Build the IPInfo.
    */
   async buildGeoIP(): Promise<IPInfo> {
-    log.trace('buildGeoIP')
+    log.debug('buildGeoIP')
 
     const r = await this._api.getLocation()
     if (!r || !r.location) {

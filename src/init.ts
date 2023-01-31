@@ -18,7 +18,7 @@ export default async function init(): Promise<void> {
   // The configuration will be the second element in the array
   const cfg = initRequest[1]
 
-  log.trace('init', cfg)
+  log.debug('init', cfg)
 
   // Create a new Ketch object
   const builder = new Builder(cfg)
