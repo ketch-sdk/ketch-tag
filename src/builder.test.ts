@@ -8,7 +8,7 @@ import fetchMock from 'jest-fetch-mock'
 jest.mock('./parameters')
 
 const prod = {
-  code: 'production',
+  code: constants.PRODUCTION,
   deploymentID: 'khGIVjDxxvy7dPN4lmAtV3',
   hash: '1392568836159292875',
 }
@@ -74,7 +74,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',
@@ -101,7 +101,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',
@@ -126,7 +126,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',
@@ -150,7 +150,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',
@@ -182,7 +182,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',
@@ -214,7 +214,7 @@ describe('builder', () => {
           code: 'axonic',
         },
         environment: {
-          code: 'production',
+          code: constants.PRODUCTION,
         },
         jurisdiction: {
           code: 'gdpr',

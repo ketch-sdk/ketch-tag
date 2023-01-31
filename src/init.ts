@@ -6,14 +6,13 @@ import Router from './router'
  * This is the entry point when this package is first loaded.
  */
 export default async function init(): Promise<void> {
-  const actions = window.semaphore as any
+  const actions = (window.semaphore as any as any[]) || []
 
   // Shift out the first action, which must be an ['init', {config}] action
   const initRequest = actions.shift()
 
   if (!Array.isArray(initRequest) || initRequest.length != 2 || initRequest[0] != 'init') {
-    log.error('ketch tag command queue is not configured correctly')
-    return
+    throw Error('ketch tag command queue is not configured correctly')
   }
 
   // The configuration will be the second element in the array
@@ -34,7 +33,7 @@ export default async function init(): Promise<void> {
   }
 
   // Replace the `push` function on the semaphore queue with the router
-  window.semaphore.push = router.push
+  window.semaphore.push = router.push.bind(router)
 
   // Note that the tag has loaded
   window.semaphore.loaded = true

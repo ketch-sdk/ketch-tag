@@ -58,6 +58,7 @@ describe('router', () => {
     })
 
     it('handles a Promise that rejects', () => {
+      jest.spyOn(global.console, 'log').mockImplementation(() => {})
       const router = new Router(ketch)
       const entrypoint = jest.spyOn(router, 'route').mockRejectedValue('oops')
       router.push(['setRegionInfo', 'arg1'])
@@ -109,6 +110,7 @@ describe('router', () => {
     })
 
     it('takes callback for promise reject', async () => {
+      jest.spyOn(global.console, 'log').mockImplementation(() => {})
       const router = new Router(ketch)
       const mockGetConfig = jest.spyOn(router, 'getConfig').mockRejectedValue('oops')
       const resolve = jest.fn().mockImplementation(() => 'foo')
@@ -282,6 +284,7 @@ describe('router', () => {
     })
 
     it('calls setRegionInfo', async () => {
+      jest.spyOn(global.console, 'log').mockImplementation(() => {})
       const setRegionInfo = jest.fn().mockResolvedValue('foo')
       const router = new Router({
         setRegionInfo,

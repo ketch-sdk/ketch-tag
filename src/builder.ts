@@ -85,7 +85,7 @@ export default class Builder {
    * then it will iterate through the environment specifications to match based on the environment pattern.
    */
   async buildEnvironment(): Promise<Environment> {
-    log.info(constants.DETECT_ENVIRONMENT)
+    log.info(constants.BUILD_ENVIRONMENT)
 
     // We already have an environment
     if (this._config.environment) {
@@ -104,7 +104,7 @@ export default class Builder {
         const e = this._config.environments[i]
 
         if (e && specifiedEnv && e.code === specifiedEnv) {
-          log.debug(constants.DETECT_ENVIRONMENT, 'found', e)
+          log.debug(constants.BUILD_ENVIRONMENT, 'found', e)
           return e
         }
       }
@@ -129,7 +129,7 @@ export default class Builder {
 
     // match pattern
     if (environment.pattern) {
-      log.debug(constants.DETECT_ENVIRONMENT, 'matched', environment)
+      log.debug(constants.BUILD_ENVIRONMENT, 'matched', environment)
       return environment
     }
 
@@ -137,8 +137,8 @@ export default class Builder {
     for (let i = 0; i < this._config.environments.length; i++) {
       const e = this._config.environments[i]
 
-      if (e.code === 'production') {
-        log.debug(constants.DETECT_ENVIRONMENT, e.code, e)
+      if (e.code === constants.PRODUCTION) {
+        log.debug(constants.BUILD_ENVIRONMENT, e.code, e)
         return e
       }
     }
@@ -150,7 +150,7 @@ export default class Builder {
    * Build the jurisdiction from query, page or config.
    */
   async buildJurisdiction(region: string): Promise<string> {
-    log.info('loadJurisdiction', this._config.jurisdiction)
+    log.info('buildJurisdiction', this._config.jurisdiction)
 
     const jurisdictionOverride = parameters.get(constants.JURISDICTION)
     if (jurisdictionOverride) {
@@ -200,7 +200,7 @@ export default class Builder {
    * Build the region info.
    */
   async buildRegionInfo(g: IPInfo): Promise<string> {
-    log.info('loadRegionInfo')
+    log.info('buildRegionInfo')
 
     const specifiedRegion = parameters.get(constants.REGION)
     if (specifiedRegion) {
@@ -218,7 +218,7 @@ export default class Builder {
    * Build the IPInfo.
    */
   async buildGeoIP(): Promise<IPInfo> {
-    log.info('loadGeoIP')
+    log.info('buildGeoIP')
 
     const r = await this._api.getLocation()
     if (!r || !r.location) {

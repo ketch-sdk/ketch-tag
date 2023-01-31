@@ -1,11 +1,12 @@
 import { GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import { CACHED_CONSENT_KEY, getCachedConsent, setCachedConsent } from './cache'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
+import constants from './constants'
 
 describe('cache', () => {
   const request = {
     collectedAt: 0,
-    environmentCode: 'production',
+    environmentCode: constants.PRODUCTION,
     identities: {
       account_id: '123',
     },

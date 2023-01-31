@@ -2,7 +2,6 @@ import { EventEmitter } from 'events'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import Future from '@ketch-com/future'
 import {
-  Callback,
   Configuration,
   Consent,
   Environment,
@@ -24,6 +23,7 @@ import {
   IdentityType,
   IdentityProvider,
   StorageProvider,
+  ExperienceDefault,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './logging'
@@ -301,7 +301,7 @@ export class Ketch extends EventEmitter {
     if (show === constants.PREFERENCES) {
       log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Preference)
       return ExperienceType.Preference
-    } else if (show) {
+    } else if (parameters.has(constants.SHOW)) {
       log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
       return ExperienceType.Consent
     }
@@ -326,16 +326,19 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Selects the correct experience.
+   * Selects the correct experience. If the default experience is modal, but there are no purposes requiring opt in
+   * then the experience is changed to banner.
    */
   selectConsentExperience(): ConsentExperienceType {
-    if (this._config.purposes) {
+    if (
+      this._config.purposes &&
+      this._config.purposes.length &&
+      this._config.experiences?.consent?.experienceDefault === ExperienceDefault.MODAL
+    ) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
-          if (this._config.experiences?.consent?.experienceDefault === 2) {
-            log.debug(constants.SELECT_CONSENT_EXPERIENCE, ConsentExperienceType.Modal)
-            return ConsentExperienceType.Modal
-          }
+          log.debug(constants.SELECT_CONSENT_EXPERIENCE, ConsentExperienceType.Modal)
+          return ConsentExperienceType.Modal
         }
       }
     }
@@ -358,6 +361,47 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Signals that an experience has been hidden
+   *
+   * @param reason is a string representing the reason the experience was closed
+   * Values: setConsent, invokeRight, close
+   */
+  async experienceClosed(reason: string): Promise<Consent> {
+    // update isExperienceDisplayed flag when experience no longer displayed
+    // update hasExperienceBeenDisplayed flag after experience has been displayed
+    this._isExperienceDisplayed = false
+    this._hasExperienceBeenDisplayed = true
+
+    if (reason !== ExperienceClosedReason.SET_CONSENT) {
+      const consent = await this.retrieveConsent()
+
+      if (this._config.purposes) {
+        for (const p of this._config.purposes) {
+          if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
+            consent.purposes[p.code] = false
+          }
+        }
+      }
+
+      const res = await this.setConsent(consent)
+      // Call functions registered using onHideExperience
+      // In setTimeout to push to bottom of event queue
+      setTimeout(() => {
+        this.emit(constants.HIDE_EXPERIENCE_EVENT, reason)
+      }, 0)
+      return res
+    }
+
+    // Call functions registered using onHideExperience
+    // In setTimeout to push to bottom of event queue
+    setTimeout(() => {
+      this.emit(constants.HIDE_EXPERIENCE_EVENT, reason)
+    }, 0)
+
+    return this.retrieveConsent()
+  }
+
+  /**
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
@@ -371,6 +415,68 @@ export class Ketch extends EventEmitter {
     }
 
     return consent
+  }
+
+  /**
+   * Shows the Preferences Manager.
+   *
+   * @param params Preferences Manager preferences
+   */
+  async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
+    log.info(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
+
+    const consent = await this.getConsent()
+
+    // if no preference experience configured do not show
+    if (!this._config.experiences?.preference) {
+      return consent
+    }
+
+    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
+      // check if experience show parameter override set
+      const tab = parameters.get(constants.PREFERENCES_TAB)
+      // override with url param
+      if (tab && isTab(tab)) {
+        if (!params) {
+          params = {}
+        }
+        params.tab = tab
+      }
+      this.willShowExperience(ExperienceType.Preference)
+      this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
+    }
+
+    return consent
+  }
+
+  /**
+   * onShowConsentExperience registers a function to handle showing consent
+   *
+   * @param callback Callback to register
+   */
+  async onShowConsentExperience(callback: (consents: Consent, options?: ShowConsentOptions) => void): Promise<void> {
+    this.removeAllListeners(constants.SHOW_CONSENT_EXPERIENCE_EVENT)
+    this.on(constants.SHOW_CONSENT_EXPERIENCE_EVENT, callback)
+  }
+
+  /**
+   * onShowPreferenceExperience registers a function to handle showing preferences
+   *
+   * @param callback Callback to register
+   */
+  async onShowPreferenceExperience(
+    callback: (consents: Consent, options?: ShowPreferenceOptions) => void,
+  ): Promise<void> {
+    this.removeAllListeners(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
+    this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, callback)
+  }
+
+  /**
+   * Set to show consent experience
+   *
+   */
+  async setShowConsentExperience(): Promise<void> {
+    this._shouldConsentExperienceShow = true
   }
 
   /**
@@ -428,14 +534,6 @@ export class Ketch extends EventEmitter {
     await this.updateConsent(identities, c)
 
     return c
-  }
-
-  /**
-   * Set to show consent experience
-   *
-   */
-  async setShowConsentExperience(): Promise<void> {
-    this._shouldConsentExperienceShow = true
   }
 
   /**
@@ -531,24 +629,6 @@ export class Ketch extends EventEmitter {
     }
 
     return { purposes: {}, vendors: [] }
-  }
-
-  /**
-   * Registers a callback for consent change notifications.
-   *
-   * @param callback The consent callback to register
-   */
-  async onConsent(callback: Callback): Promise<void> {
-    this.on(constants.CONSENT_EVENT, callback)
-  }
-
-  /**
-   * Registers a callback for right invocations.
-   *
-   * @param callback The right callback to register
-   */
-  async onInvokeRight(callback: Callback): Promise<void> {
-    this.on(constants.RIGHT_INVOKED_EVENT, callback)
   }
 
   /**
@@ -743,15 +823,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Registers a callback for environment change notifications.
-   *
-   * @param callback Environment callback to register
-   */
-  async onEnvironment(callback: Callback): Promise<void> {
-    this.on(constants.ENVIRONMENT_EVENT, callback)
-  }
-
-  /**
    * Set the IPInfo.
    *
    * @param g IPInfo
@@ -769,15 +840,6 @@ export class Ketch extends EventEmitter {
     log.info('getGeoIP')
 
     return this._geoip.fulfilled
-  }
-
-  /**
-   * Registers a callback for GeoIP change notifications.
-   *
-   * @param callback GeoIP callback to register
-   */
-  async onGeoIP(callback: Callback): Promise<void> {
-    this.on(constants.GEOIP_EVENT, callback)
   }
 
   /**
@@ -892,15 +954,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Registers a callback for identity change notifications.
-   *
-   * @param callback Identities callback to register
-   */
-  async onIdentities(callback: Callback): Promise<void> {
-    this.on(constants.IDENTITIES_EVENT, callback)
-  }
-
-  /**
    * Set the policy scope.
    *
    * @param ps Jurisdiction to set
@@ -922,15 +975,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Registers a callback for policy scope change notifications.
-   *
-   * @param callback Callback to register
-   */
-  async onJurisdiction(callback: Callback): Promise<void> {
-    this.on(constants.JURISDICTION_EVENT, callback)
-  }
-
-  /**
    * Set the region.
    *
    * @param info Region information
@@ -947,47 +991,6 @@ export class Ketch extends EventEmitter {
   async getRegionInfo(): Promise<string> {
     log.info('getRegionInfo')
     return this._regionInfo.fulfilled
-  }
-
-  /**
-   * Registers a callback for region info change notifications.
-   *
-   * @param callback Callback to register
-   */
-  async onRegionInfo(callback: Callback): Promise<void> {
-    this.on(constants.REGION_INFO_EVENT, callback)
-  }
-
-  /**
-   * Shows the Preferences Manager.
-   *
-   * @param params Preferences Manager preferences
-   */
-  async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
-    log.info(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
-
-    const consent = await this.getConsent()
-
-    // if no preference experience configured do not show
-    if (!this._config.experiences?.preference) {
-      return consent
-    }
-
-    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
-      // check if experience show parameter override set
-      const tab = parameters.get(constants.PREFERENCES_TAB)
-      // override with url param
-      if (tab && isTab(tab)) {
-        if (!params) {
-          params = {}
-        }
-        params.tab = tab
-      }
-      this.willShowExperience(ExperienceType.Preference)
-      this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
-    }
-
-    return consent
   }
 
   /**
@@ -1048,89 +1051,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Signals that an experience has been hidden
-   *
-   * @param reason is a string representing the reason the experience was closed
-   * Values: setConsent, invokeRight, close
-   */
-  async experienceClosed(reason: string): Promise<Consent> {
-    // update isExperienceDisplayed flag when experience no longer displayed
-    // update hasExperienceBeenDisplayed flag after experience has been displayed
-    this._isExperienceDisplayed = false
-    this._hasExperienceBeenDisplayed = true
-
-    if (reason !== ExperienceClosedReason.SET_CONSENT) {
-      const consent = await this.retrieveConsent()
-
-      if (this._config.purposes) {
-        for (const p of this._config.purposes) {
-          if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
-            consent.purposes[p.code] = false
-          }
-        }
-      }
-
-      const res = await this.setConsent(consent)
-      // Call functions registered using onHideExperience
-      // In setTimeout to push to bottom of event queue
-      setTimeout(() => {
-        this.emit(constants.HIDE_EXPERIENCE_EVENT, reason)
-      }, 0)
-      return res
-    }
-
-    // Call functions registered using onHideExperience
-    // In setTimeout to push to bottom of event queue
-    setTimeout(() => {
-      this.emit(constants.HIDE_EXPERIENCE_EVENT, reason)
-    }, 0)
-
-    return this.retrieveConsent()
-  }
-
-  /**
-   * onWillShowExperience called before an experience is shown
-   * Used to trigger external dependencies
-   *
-   * @param callback Callback to register
-   */
-  async onWillShowExperience(callback: Callback): Promise<void> {
-    this.on(constants.WILL_SHOW_EXPERIENCE_EVENT, callback)
-  }
-
-  /**
-   * onHideExperience called after experience hidden
-   * Used to trigger external dependencies
-   *
-   * @param callback Callback to register
-   */
-  async onHideExperience(callback: Callback): Promise<void> {
-    this.on(constants.HIDE_EXPERIENCE_EVENT, callback)
-  }
-
-  /**
-   * onShowPreferenceExperience registers a function to handle showing preferences
-   *
-   * @param callback Callback to register
-   */
-  async onShowPreferenceExperience(
-    callback: (consents: Consent, options?: ShowPreferenceOptions) => void,
-  ): Promise<void> {
-    this.removeAllListeners(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
-    this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, callback)
-  }
-
-  /**
-   * onShowConsentExperience registers a function to handle showing consent
-   *
-   * @param callback Callback to register
-   */
-  async onShowConsentExperience(callback: (consents: Consent, options?: ShowConsentOptions) => void): Promise<void> {
-    this.removeAllListeners(constants.SHOW_CONSENT_EXPERIENCE_EVENT)
-    this.on(constants.SHOW_CONSENT_EXPERIENCE_EVENT, callback)
-  }
-
-  /**
    * Synchronously calls each of the listeners registered for the event named `eventName`, in the order they
    * were registered, passing the supplied arguments to each.
    */
@@ -1178,6 +1098,8 @@ export class Ketch extends EventEmitter {
     if (future !== undefined) {
       future.on(constants.FULFILLED_EVENT, listener)
       return this
+    } else if (this.isSingletonEvent(eventName)) {
+      super.removeAllListeners(eventName)
     }
 
     return super.on(eventName, listener)
@@ -1188,6 +1110,8 @@ export class Ketch extends EventEmitter {
     if (future !== undefined) {
       future.once(constants.FULFILLED_EVENT, listener)
       return this
+    } else if (this.isSingletonEvent(eventName)) {
+      super.removeAllListeners(eventName)
     }
 
     return super.once(eventName, listener)
@@ -1207,7 +1131,14 @@ export class Ketch extends EventEmitter {
     return this.removeListener(eventName, listener)
   }
 
-  private mapEvent(eventName: string | symbol): EventEmitter | undefined {
+  private isSingletonEvent(_eventName: string | symbol): boolean {
+    return (
+      _eventName === constants.SHOW_CONSENT_EXPERIENCE_EVENT ||
+      _eventName === constants.SHOW_PREFERENCE_EXPERIENCE_EVENT
+    )
+  }
+
+  private mapEvent(eventName: string | symbol): Emitter | undefined {
     switch (eventName) {
       case constants.CONSENT_EVENT:
         return this._consent
@@ -1230,4 +1161,10 @@ export class Ketch extends EventEmitter {
 
     return
   }
+}
+
+declare interface Emitter {
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this
+  once(eventName: string | symbol, listener: (...args: any[]) => void): this
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this
 }

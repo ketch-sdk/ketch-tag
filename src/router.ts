@@ -5,7 +5,6 @@ import {
   Identities,
   IdentityProvider,
   IPInfo,
-  Ketch,
   Plugin,
   ShowPreferenceOptions,
 } from '@ketch-sdk/ketch-types'
@@ -13,6 +12,7 @@ import log from './logging'
 import errors from './errors'
 import isFunction from './isFunction'
 import constants from './constants'
+import { Ketch } from './ketch'
 
 /**
  * Router routes calls from the `ketch()` / `semaphore.push` interface to the internal Ketch interface
