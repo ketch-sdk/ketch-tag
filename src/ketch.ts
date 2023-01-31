@@ -24,6 +24,7 @@ import {
   IdentityProvider,
   StorageProvider,
   ExperienceDefault,
+  Identity,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './logging'
@@ -33,6 +34,7 @@ import Watcher from '@ketch-sdk/ketch-data-layer'
 import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './cache'
 import deepEqual from 'nano-equal'
 import constants from './constants'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
 declare global {
   type AndroidListener = {
@@ -290,24 +292,26 @@ export class Ketch extends EventEmitter {
    * @param c Consent to be used
    */
   selectExperience(c: Consent): ExperienceType | undefined {
+    const l = wrapLogger(log, 'selectExperience')
+
     // if experience has already shown, do not show again
     if (this._hasExperienceBeenDisplayed) {
-      log.debug(constants.SELECT_EXPERIENCE, constants.NONE)
+      l.debug(constants.NONE)
       return
     }
 
     // check if experience show parameter override set
     const show = parameters.get(constants.SHOW)
     if (show === constants.PREFERENCES) {
-      log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Preference)
+      l.debug(ExperienceType.Preference)
       return ExperienceType.Preference
     } else if (parameters.has(constants.SHOW)) {
-      log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
+      l.debug(ExperienceType.Consent)
       return ExperienceType.Consent
     }
 
     if (this._shouldConsentExperienceShow) {
-      log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
+      l.debug(ExperienceType.Consent)
       this._shouldConsentExperienceShow = false
       return ExperienceType.Consent
     }
@@ -315,13 +319,13 @@ export class Ketch extends EventEmitter {
     if (this._config.purposes) {
       for (const p of this._config.purposes) {
         if (c.purposes[p.code] === undefined) {
-          log.debug(constants.SELECT_EXPERIENCE, ExperienceType.Consent)
+          l.debug(ExperienceType.Consent)
           return ExperienceType.Consent
         }
       }
     }
 
-    log.debug(constants.SELECT_EXPERIENCE, constants.NONE)
+    l.debug(constants.NONE)
     return
   }
 
@@ -330,6 +334,7 @@ export class Ketch extends EventEmitter {
    * then the experience is changed to banner.
    */
   selectConsentExperience(): ConsentExperienceType {
+    const l = wrapLogger(log, 'selectConsentExperience')
     if (
       this._config.purposes &&
       this._config.purposes.length &&
@@ -337,13 +342,13 @@ export class Ketch extends EventEmitter {
     ) {
       for (const pa of this._config.purposes) {
         if (pa.requiresOptIn) {
-          log.debug(constants.SELECT_CONSENT_EXPERIENCE, ConsentExperienceType.Modal)
+          l.debug(ConsentExperienceType.Modal)
           return ConsentExperienceType.Modal
         }
       }
     }
 
-    log.debug(constants.SELECT_CONSENT_EXPERIENCE, ConsentExperienceType.Banner)
+    l.debug(ConsentExperienceType.Banner)
     return ConsentExperienceType.Banner
   }
 
@@ -353,6 +358,8 @@ export class Ketch extends EventEmitter {
    * @param type The type of experience to be shown
    */
   willShowExperience(type: string): void {
+    log.debug('willShowExperience', type)
+
     // Call functions registered using onWillShowExperience
     this.emit(constants.WILL_SHOW_EXPERIENCE_EVENT, type)
 
@@ -367,6 +374,8 @@ export class Ketch extends EventEmitter {
    * Values: setConsent, invokeRight, close
    */
   async experienceClosed(reason: string): Promise<Consent> {
+    log.debug('experienceClosed', reason)
+
     // update isExperienceDisplayed flag when experience no longer displayed
     // update hasExperienceBeenDisplayed flag after experience has been displayed
     this._isExperienceDisplayed = false
@@ -383,13 +392,7 @@ export class Ketch extends EventEmitter {
         }
       }
 
-      const res = await this.setConsent(consent)
-      // Call functions registered using onHideExperience
-      // In setTimeout to push to bottom of event queue
-      setTimeout(() => {
-        this.emit(constants.HIDE_EXPERIENCE_EVENT, reason)
-      }, 0)
-      return res
+      await this.setConsent(consent)
     }
 
     // Call functions registered using onHideExperience
@@ -405,7 +408,7 @@ export class Ketch extends EventEmitter {
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
-    log.info(constants.SHOW_CONSENT_EXPERIENCE_EVENT)
+    log.debug('showConsentExperience')
 
     const consent = await this.retrieveConsent()
 
@@ -423,12 +426,14 @@ export class Ketch extends EventEmitter {
    * @param params Preferences Manager preferences
    */
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
-    log.info(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
+    const l = wrapLogger(log, 'showPreferenceExperience')
+    l.debug(params)
 
     const consent = await this.getConsent()
 
     // if no preference experience configured do not show
     if (!this._config.experiences?.preference) {
+      l.info('no preference experience')
       return consent
     }
 
@@ -441,6 +446,7 @@ export class Ketch extends EventEmitter {
           params = {}
         }
         params.tab = tab
+        l.info('tab', tab)
       }
       this.willShowExperience(ExperienceType.Preference)
       this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
@@ -455,6 +461,7 @@ export class Ketch extends EventEmitter {
    * @param callback Callback to register
    */
   async onShowConsentExperience(callback: (consents: Consent, options?: ShowConsentOptions) => void): Promise<void> {
+    log.debug('onShowConsentExperience')
     this.removeAllListeners(constants.SHOW_CONSENT_EXPERIENCE_EVENT)
     this.on(constants.SHOW_CONSENT_EXPERIENCE_EVENT, callback)
   }
@@ -467,6 +474,7 @@ export class Ketch extends EventEmitter {
   async onShowPreferenceExperience(
     callback: (consents: Consent, options?: ShowPreferenceOptions) => void,
   ): Promise<void> {
+    log.debug('onShowPreferenceExperience')
     this.removeAllListeners(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
     this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, callback)
   }
@@ -476,6 +484,7 @@ export class Ketch extends EventEmitter {
    *
    */
   async setShowConsentExperience(): Promise<void> {
+    log.debug('setShowConsentExperience')
     this._shouldConsentExperienceShow = true
   }
 
@@ -492,6 +501,8 @@ export class Ketch extends EventEmitter {
    * @param consent Consent to change
    */
   async changeConsent(consent: Consent): Promise<any> {
+    log.debug('changeConsent', consent)
+
     // check for new identifiers for tags that may fire after consent collected
     this._watcher.stop()
     await this._watcher.start()
@@ -505,24 +516,25 @@ export class Ketch extends EventEmitter {
    * @param c Consent to set
    */
   async setConsent(c: Consent): Promise<Consent> {
-    log.info('setConsent', c)
+    const l = wrapLogger(log, 'setConsent')
+    l.debug(c)
 
     if (!c || isEmpty(c)) {
+      l.trace('reset')
       this._consent.reset()
       return {} as Consent
     }
 
     // Merge new consent into existing consent
     if (this.hasConsent()) {
+      l.trace('has consent')
       const existingConsent = this._consent.value
-      if (existingConsent) {
-        for (const key in existingConsent) {
-          if (
-            Object.prototype.hasOwnProperty.call(existingConsent, key) &&
-            !Object.prototype.hasOwnProperty.call(c, key)
-          ) {
-            c.purposes[key] = existingConsent.purposes[key]
-          }
+      for (const key in existingConsent) {
+        if (
+          Object.prototype.hasOwnProperty.call(existingConsent, key) &&
+          !Object.prototype.hasOwnProperty.call(c, key)
+        ) {
+          c.purposes[key] = existingConsent.purposes[key]
         }
       }
     }
@@ -542,6 +554,8 @@ export class Ketch extends EventEmitter {
    * @param c Consent to set
    */
   async setProvisionalConsent(c: Consent): Promise<void> {
+    log.debug('setProvisionalConsent', c)
+
     this._provisionalConsent = c
     if (this._consent.isFulfilled()) {
       if (this.overrideWithProvisionalConsent(this._consent.value)) {
@@ -556,8 +570,12 @@ export class Ketch extends EventEmitter {
    * @param c current consent
    */
   overrideWithProvisionalConsent(c: Consent): boolean {
+    const l = wrapLogger(log, 'overrideWithProvisionalConsent')
+    l.debug(c)
+
     let shouldUpdateConsent = false
     if (!this._provisionalConsent) {
+      l.trace('no provisional consent')
       return shouldUpdateConsent
     }
     for (const key in this._provisionalConsent.purposes) {
@@ -567,6 +585,7 @@ export class Ketch extends EventEmitter {
       }
     }
     this._provisionalConsent = undefined
+    l.trace('merged', c)
     return shouldUpdateConsent
   }
 
@@ -574,11 +593,14 @@ export class Ketch extends EventEmitter {
    * Gets the consent.
    */
   async getConsent(): Promise<Consent> {
-    log.info('getConsent')
+    const l = wrapLogger(log, 'getConsent')
 
     if (this.hasConsent()) {
+      l.trace('has consent')
       return this._consent.fulfilled
     }
+
+    l.debug('obtaining consent')
 
     const identities = await this.getIdentities()
 
@@ -597,6 +619,8 @@ export class Ketch extends EventEmitter {
         }
       }
     }
+
+    l.debug('shouldCreatePermits', shouldCreatePermits)
 
     // first set consent value then proceed to show experience and/or create permits
     if (shouldCreatePermits) {
@@ -622,7 +646,7 @@ export class Ketch extends EventEmitter {
    * Retrieve the consent for subsequent calls.
    */
   async retrieveConsent(): Promise<Consent> {
-    log.info('retrieveConsent')
+    log.debug('retrieveConsent')
 
     if (this._consent.isFulfilled()) {
       return this._consent.fulfilled
@@ -637,7 +661,8 @@ export class Ketch extends EventEmitter {
    * @param identities Identities to fetch consent for
    */
   async fetchConsent(identities: Identities): Promise<Consent> {
-    log.debug('fetchConsent', identities)
+    const l = wrapLogger(log, 'fetchConsent')
+    l.debug(identities)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
@@ -677,6 +702,8 @@ export class Ketch extends EventEmitter {
     const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
 
     const normalizeConsent = (input: GetConsentResponse): GetConsentResponse => {
+      l.trace('normalizeConsent', input)
+
       if (!input.purposes) {
         input.purposes = {}
         return input
@@ -692,19 +719,21 @@ export class Ketch extends EventEmitter {
         }
       }
 
+      l.trace('normalized', input)
+
       return input
     }
 
     // Determine whether we should use cached consent
     let useCachedConsent = false
     if (Object.keys(consent.purposes).length === 0) {
-      log.debug('cached consent is empty')
+      l.debug('cached consent is empty')
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
-      log.debug('revalidating cached consent')
+      l.debug('revalidating cached consent')
     } else if (!deepEqual(identities, consent.identities)) {
-      log.debug('cached consent discarded due to identity mismatch')
+      l.debug('cached consent discarded due to identity mismatch')
     } else {
-      log.debug('using cached consent')
+      l.debug('using cached consent')
       useCachedConsent = true
     }
 
@@ -742,11 +771,12 @@ export class Ketch extends EventEmitter {
    * @param consent Consent to update
    */
   async updateConsent(identities: Identities, consent: Consent): Promise<void> {
-    log.debug(constants.UPDATE_CONSENT, identities, consent)
+    const l = wrapLogger(log, 'updateConsent')
+    l.debug(identities, consent)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
-      log.debug(constants.UPDATE_CONSENT, constants.SKIPPING)
+      l.debug('no identities')
       return
     }
 
@@ -759,12 +789,12 @@ export class Ketch extends EventEmitter {
       !this._config.purposes ||
       this._config.purposes.length === 0
     ) {
-      log.debug(constants.UPDATE_CONSENT, constants.SKIPPING)
+      l.debug('invalid configuration')
       return
     }
 
-    if (isEmpty(consent)) {
-      log.debug(constants.UPDATE_CONSENT, constants.SKIPPING)
+    if (isEmpty(consent) || isEmpty(consent.purposes)) {
+      l.debug('empty consent')
       return
     }
 
@@ -792,7 +822,7 @@ export class Ketch extends EventEmitter {
 
     // Make sure we actually got purposes to update
     if (isEmpty(request.purposes)) {
-      log.debug(constants.UPDATE_CONSENT, 'calculated consents empty')
+      l.debug('calculated consents empty')
       return
     }
 
@@ -808,7 +838,7 @@ export class Ketch extends EventEmitter {
    * @param env Environment to set
    */
   async setEnvironment(env: Environment): Promise<Environment> {
-    log.info('setEnvironment', env)
+    log.debug('setEnvironment', env)
     this._environment.value = env
     return this._environment.fulfilled
   }
@@ -817,7 +847,7 @@ export class Ketch extends EventEmitter {
    * Get the environment.
    */
   async getEnvironment(): Promise<Environment> {
-    log.info('getEnvironment')
+    log.debug('getEnvironment')
 
     return this._environment.fulfilled
   }
@@ -828,7 +858,7 @@ export class Ketch extends EventEmitter {
    * @param g IPInfo
    */
   async setGeoIP(g: IPInfo): Promise<IPInfo> {
-    log.info('setGeoIP', g)
+    log.debug('setGeoIP', g)
     this._geoip.value = g
     return this._geoip.fulfilled
   }
@@ -837,7 +867,7 @@ export class Ketch extends EventEmitter {
    * Gets the IPInfo.
    */
   async getGeoIP(): Promise<IPInfo> {
-    log.info('getGeoIP')
+    log.debug('getGeoIP')
 
     return this._geoip.fulfilled
   }
@@ -848,7 +878,8 @@ export class Ketch extends EventEmitter {
    * @param newIdentities Identities to set
    */
   async setIdentities(newIdentities: Identities): Promise<Identities> {
-    log.info('setIdentities', newIdentities)
+    const l = wrapLogger(log, 'setIdentities')
+    l.debug(newIdentities)
 
     // update current identities with new identities but do not overwrite previously found identities
     let identities: Identities = {}
@@ -863,6 +894,7 @@ export class Ketch extends EventEmitter {
     // change in identities found so set new identities found on page and check for consent
     // if experience is currently displayed only update identities, and then return to wait for user input
     if (this._isExperienceDisplayed) {
+      l.trace('experience displayed')
       return identities
     }
 
@@ -877,6 +909,7 @@ export class Ketch extends EventEmitter {
     const permitConsent = await this.fetchConsent(identities)
 
     // check if consent value the same
+    // TODO - replace with deepEqual
     if (Object.keys(permitConsent.purposes).length === Object.keys(localConsent.purposes).length) {
       let newConsent = false
       for (const key in permitConsent) {
@@ -894,6 +927,7 @@ export class Ketch extends EventEmitter {
 
     // if experience has been displayed in session, update permits with already collected consent
     if (this._hasExperienceBeenDisplayed) {
+      l.trace('updating consent because experience displayed')
       await this.updateConsent(identities, localConsent)
       return identities
     }
@@ -907,36 +941,45 @@ export class Ketch extends EventEmitter {
    * Collect identities.
    */
   async collectIdentities(): Promise<void> {
-    log.info('collectIdentities', this._config.identities)
+    const l = wrapLogger(log, 'collectIdentities')
+    l.debug(this._config.identities)
 
     const configIDs = this._config.identities
 
     if (!this._config || !this._config.organization || configIDs === undefined || isEmpty(configIDs)) {
+      l.trace('invalid configuration')
       this._identities.value = {}
       return
     }
 
-    for (const name of Object.keys(configIDs)) {
-      // if no proxy add all, otherwise add if not local storage or if same origin
-      if (!this._config.property?.proxy) {
-        this._watcher.add(name, configIDs[name])
-      } else {
-        try {
-          const proxyPage = new URL(this._config.property?.proxy)
-          const currentPage = new URL(window.location.href)
-          if (
-            configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE ||
-            proxyPage.origin === currentPage.origin
-          ) {
-            this._watcher.add(name, configIDs[name])
+    const watcher = this._watcher
+
+    let adder = (name: string, identity: Identity) => {
+      watcher.add(name, identity)
+    }
+
+    if (this._config.property?.proxy) {
+      try {
+        const proxyPage = new URL(this._config.property?.proxy)
+        const currentPage = new URL(window.location.href)
+
+        if (proxyPage.origin !== currentPage.origin) {
+          adder = (name: string, identity: Identity) => {
+            if (configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
+              watcher.add(name, identity)
+            }
           }
-        } catch (e) {
-          log.error(`error checking proxy '${this._config.property?.proxy}'`, e)
         }
+      } catch (e) {
+        l.error(`error checking proxy '${this._config.property?.proxy}'`, e)
       }
     }
 
-    log.info('starting watcher')
+    for (const name of Object.keys(configIDs)) {
+      adder(name, configIDs[name])
+    }
+
+    l.info('starting watcher')
     await this._watcher.start()
   }
 
@@ -944,7 +987,7 @@ export class Ketch extends EventEmitter {
    * Get the identities.
    */
   async getIdentities(): Promise<Identities> {
-    log.info('getIdentities')
+    log.debug('getIdentities')
 
     if (!this._identities.isFulfilled()) {
       await this.collectIdentities()
@@ -959,7 +1002,7 @@ export class Ketch extends EventEmitter {
    * @param ps Jurisdiction to set
    */
   async setJurisdiction(ps: string): Promise<string> {
-    log.info('setJurisdiction', ps)
+    log.debug('setJurisdiction', ps)
 
     this._jurisdiction.value = ps
     return this._jurisdiction.fulfilled
@@ -969,7 +1012,7 @@ export class Ketch extends EventEmitter {
    * Get the policy scope.
    */
   async getJurisdiction(): Promise<string> {
-    log.info('getJurisdiction')
+    log.debug('getJurisdiction')
 
     return this._jurisdiction.fulfilled
   }
@@ -980,7 +1023,7 @@ export class Ketch extends EventEmitter {
    * @param info Region information
    */
   async setRegionInfo(info: string): Promise<string> {
-    log.info('setRegionInfo', info)
+    log.debug('setRegionInfo', info)
     this._regionInfo.value = info
     return this._regionInfo.fulfilled
   }
@@ -989,7 +1032,7 @@ export class Ketch extends EventEmitter {
    * Gets the region.
    */
   async getRegionInfo(): Promise<string> {
-    log.info('getRegionInfo')
+    log.debug('getRegionInfo')
     return this._regionInfo.fulfilled
   }
 
@@ -999,7 +1042,8 @@ export class Ketch extends EventEmitter {
    * @param eventData Event data to invoke right with
    */
   async invokeRight(eventData: InvokeRightEvent): Promise<void> {
-    log.debug('invokeRights', eventData)
+    const l = wrapLogger(log, 'invokeRight')
+    l.debug(eventData)
 
     // If no identities or rights defined, skip the call.
     if (
@@ -1009,6 +1053,7 @@ export class Ketch extends EventEmitter {
       !eventData.right ||
       eventData.right === ''
     ) {
+      l.warn('invalid right invocation request')
       return
     }
 
@@ -1016,6 +1061,7 @@ export class Ketch extends EventEmitter {
     if (this._identities.isFulfilled()) {
       identities = this._identities.value
     }
+
     // add email identity from rights form
     identities['email'] = eventData.subject.email
 
@@ -1028,6 +1074,7 @@ export class Ketch extends EventEmitter {
       !this._config.rights ||
       this._config.rights.length === 0
     ) {
+      l.warn('invalid configuration')
       return
     }
 
@@ -1055,6 +1102,9 @@ export class Ketch extends EventEmitter {
    * were registered, passing the supplied arguments to each.
    */
   emit(event: string | symbol, ...args: any[]): boolean {
+    const l = wrapLogger(log, 'emit')
+    l.trace(event, args)
+
     if (window.androidListener || window.webkit?.messageHandlers) {
       const eventName = event.toString()
 
@@ -1075,15 +1125,17 @@ export class Ketch extends EventEmitter {
       }
 
       if (window.androidListener && eventName in window.androidListener) {
+        l.trace('androidListener', window.androidListener, argument)
         if (filteredArgs.length === 0) {
           window.androidListener[eventName]()
         } else {
           window.androidListener[eventName](argument)
         }
       } else if (window.webkit?.messageHandlers && eventName in window.webkit.messageHandlers) {
+        l.trace('webkitMessageHandlers', window.webkit?.messageHandlers, argument)
         window.webkit.messageHandlers[eventName].postMessage(argument)
       } else {
-        log.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
+        l.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
       }
     }
     return super.emit(event, ...args)
@@ -1094,6 +1146,7 @@ export class Ketch extends EventEmitter {
   }
 
   on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    log.trace('on', eventName, listener)
     const future = this.mapEvent(eventName)
     if (future !== undefined) {
       future.on(constants.FULFILLED_EVENT, listener)
@@ -1106,6 +1159,7 @@ export class Ketch extends EventEmitter {
   }
 
   once(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    log.trace('once', eventName, listener)
     const future = this.mapEvent(eventName)
     if (future !== undefined) {
       future.once(constants.FULFILLED_EVENT, listener)
@@ -1118,6 +1172,7 @@ export class Ketch extends EventEmitter {
   }
 
   removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    log.trace('off', eventName, listener)
     const future = this.mapEvent(eventName)
     if (future !== undefined) {
       future.removeListener(constants.FULFILLED_EVENT, listener)
