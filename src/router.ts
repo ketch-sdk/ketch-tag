@@ -13,6 +13,7 @@ import errors from './errors'
 import isFunction from './isFunction'
 import constants from './constants'
 import { Ketch } from './ketch'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
 /**
  * Router routes calls from the `ketch()` / `semaphore.push` interface to the internal Ketch interface
@@ -42,6 +43,8 @@ export default class Router {
       fnName = args.shift()
     }
 
+    log.trace(fnName)
+
     this.route(fnName, ...args)
       .then(() => {
         log.trace(`${fnName} completed`)
@@ -55,6 +58,8 @@ export default class Router {
    * This is the entrypoint for all calls into the platform calling actions from outside.
    */
   async route(fnName: string, ...args: any[]): Promise<void> {
+    const l = wrapLogger(wrapLogger(log, 'route'), fnName)
+
     if (fnName === 'push' || fnName === 'route') {
       throw errors.actionNotFoundError(fnName)
     }
@@ -64,9 +69,9 @@ export default class Router {
       throw errors.actionNotFoundError(fnName)
     }
 
-    if (args.length <= fn.length) {
-      log.debug(fnName, args)
+    l.debug(args, args.length, fn.length)
 
+    if (args.length <= fn.length) {
       return fn.apply(this, args)
     }
 
@@ -75,8 +80,6 @@ export default class Router {
       if (!isFunction(resolve)) {
         throw errors.expectedFunctionError(fnName)
       }
-
-      log.debug(fnName, args)
 
       return fn.apply(this, args).then(resolve)
     }
@@ -90,8 +93,6 @@ export default class Router {
     if (!isFunction(resolve)) {
       throw errors.expectedFunctionError(fnName)
     }
-
-    log.debug(fnName, args)
 
     return fn.apply(this, args).then(resolve).catch(reject)
   }

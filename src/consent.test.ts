@@ -1,4 +1,11 @@
-import { Configuration, IdentityFormat, IdentityType, ExperienceType, GetConsentRequest } from '@ketch-sdk/ketch-types'
+import {
+  Configuration,
+  IdentityFormat,
+  IdentityType,
+  ExperienceType,
+  GetConsentRequest,
+  ConsentExperienceType,
+} from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
 import constants from './constants'
@@ -391,7 +398,7 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Modal)
     })
 
     it('returns banner if any purposes requires opt in and defaultExperience is not modal', () => {
@@ -407,7 +414,7 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Banner)
     })
 
     it('returns banner if none of the purposes requires opt in', () => {
@@ -423,13 +430,13 @@ describe('consent', () => {
         ],
       } as any as Configuration)
 
-      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_BANNER)
+      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Banner)
     })
 
     it('returns banner no purposes', () => {
       const ketch = new Ketch(new KetchWebAPI(''), config2)
 
-      expect(ketch.selectConsentExperience()).toEqual(constants.CONSENT_MODAL)
+      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Modal)
     })
   })
 
