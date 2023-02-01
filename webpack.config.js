@@ -2,7 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
 
 module.exports = {
-  entry: './src/test.ts',
+  entry: './test/test.js',
 
   output: {
     clean: true,

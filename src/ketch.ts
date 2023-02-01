@@ -373,7 +373,7 @@ export class Ketch extends EventEmitter {
    * @param reason is a string representing the reason the experience was closed
    * Values: setConsent, invokeRight, close
    */
-  async experienceClosed(reason: string): Promise<Consent> {
+  async experienceClosed(reason: ExperienceClosedReason): Promise<Consent> {
     log.debug('experienceClosed', reason)
 
     // update isExperienceDisplayed flag when experience no longer displayed
@@ -440,6 +440,7 @@ export class Ketch extends EventEmitter {
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
       // check if experience show parameter override set
       const tab = parameters.get(constants.PREFERENCES_TAB)
+
       // override with url param
       if (tab && isTab(tab)) {
         if (!params) {
