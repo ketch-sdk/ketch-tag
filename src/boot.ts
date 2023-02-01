@@ -2,12 +2,6 @@ import init from './init'
 import log from './logging'
 import ketch from './ketchfn'
 
-declare global {
-  interface Window {
-    ketch: () => void
-  }
-}
-
 export async function boot() {
   window.semaphore = window.semaphore || []
   window.ketch = window.ketch || ketch

@@ -5,6 +5,7 @@ import {
   ExperienceType,
   GetConsentRequest,
   ConsentExperienceType,
+  ExperienceClosedReason,
 } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
@@ -524,7 +525,7 @@ describe('experience consent', () => {
 
   it('retrieve consent on experience closed', () => {
     return ketch.setConsent(c).then(() => {
-      ketch.experienceClosed('close').then(consent => {
+      ketch.experienceClosed(ExperienceClosedReason.CLOSE).then(consent => {
         expect(consent).toEqual(c)
       })
     })

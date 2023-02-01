@@ -18,6 +18,14 @@ describe('boot', () => {
     expect(window.semaphore).toBeDefined()
   })
 
+  it('ensures ketch function is set', async () => {
+    delete (window as any)['ketch']
+    jest.mocked(init).mockResolvedValue(undefined)
+    expect(window.ketch).toBeUndefined()
+    await boot()
+    expect(window.ketch).toBeDefined()
+  })
+
   it('calls init immediately when document.readyState === complete', async () => {
     const mockInit = jest.mocked(init).mockResolvedValue(undefined)
 
