@@ -293,21 +293,21 @@ describe('router', () => {
       return expect(setRegionInfo).toHaveBeenCalled()
     })
 
-    it('calls showConsentExperience', async () => {
+    it('calls showConsent', async () => {
       const showConsentExperience = jest.fn()
       const router = new Router({
         showConsentExperience,
       } as any as Ketch)
-      await router.route('showConsentExperience')
+      await router.route('showConsent')
       return expect(showConsentExperience).toHaveBeenCalled()
     })
 
-    it('calls showPreferenceExperience', async () => {
+    it('calls showPreferences', async () => {
       const showPreferenceExperience = jest.fn()
       const router = new Router({
         showPreferenceExperience,
       } as any as Ketch)
-      await router.route('showPreferenceExperience')
+      await router.route('showPreferences')
       return expect(showPreferenceExperience).toHaveBeenCalled()
     })
 

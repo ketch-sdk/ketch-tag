@@ -126,62 +126,81 @@ export default class Router {
   }
 
   async onConsent(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onConsent is deprecated - use ketch("on", "${constants.CONSENT_EVENT}", listener) instead`)
     this._ketch.on(constants.CONSENT_EVENT, listener)
   }
 
   async onEnvironment(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onEnvironment is deprecated - use ketch("on", "${constants.ENVIRONMENT_EVENT}", listener) instead`)
     this._ketch.on(constants.ENVIRONMENT_EVENT, listener)
   }
 
   async onGeoIP(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onGeoIP is deprecated - use ketch("on", "${constants.GEOIP_EVENT}", listener) instead`)
     this._ketch.on(constants.GEOIP_EVENT, listener)
   }
 
   async onHideExperience(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(
+      `onHideExperience is deprecated - use ketch("on", "${constants.HIDE_EXPERIENCE_EVENT}", listener) instead`,
+    )
     this._ketch.on(constants.HIDE_EXPERIENCE_EVENT, listener)
   }
 
   async onWillShowExperience(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(
+      'onWillShowExperience is deprecated - use ketch("on", "' +
+        constants.WILL_SHOW_EXPERIENCE_EVENT +
+        '", listener) instead',
+    )
     this._ketch.on(constants.WILL_SHOW_EXPERIENCE_EVENT, listener)
   }
 
   async onIdentities(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onIdentities is deprecated - use ketch("on", "${constants.IDENTITIES_EVENT}", listener) instead`)
     this._ketch.on(constants.IDENTITIES_EVENT, listener)
   }
 
   async onJurisdiction(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onJurisdiction is deprecated - use ketch("on", "${constants.JURISDICTION_EVENT}", listener) instead`)
     this._ketch.on(constants.JURISDICTION_EVENT, listener)
   }
 
   async onRegionInfo(listener: (...args: any[]) => void): Promise<void> {
+    log.debug(`onRegionInfo is deprecated - use ketch("on", "${constants.REGION_INFO_EVENT}", listener) instead`)
     this._ketch.on(constants.REGION_INFO_EVENT, listener)
   }
 
   async setEnvironment(env: Environment): Promise<void> {
+    log.warn('setEnvironment is deprecated')
     return this._ketch.setEnvironment(env).then(() => {})
   }
 
   async setGeoIP(g: IPInfo): Promise<void> {
+    log.warn('setGeoIP is deprecated')
     return this._ketch.setGeoIP(g).then(() => {})
   }
 
   async setIdentities(id: Identities): Promise<void> {
+    log.warn('setIdentities is deprecated')
     return this._ketch.setIdentities(id).then(() => {})
   }
 
   async setJurisdiction(jurisdiction: string): Promise<void> {
+    log.warn('setJurisdiction is deprecated')
     return this._ketch.setJurisdiction(jurisdiction).then(() => {})
   }
 
   async setRegionInfo(info: string): Promise<void> {
+    log.warn('setRegionInfo is deprecated')
     return this._ketch.setRegionInfo(info).then(() => {})
   }
 
-  async showConsentExperience(): Promise<Consent> {
+  async showConsent(): Promise<Consent> {
     return this._ketch.showConsentExperience()
   }
 
-  async showPreferenceExperience(params: ShowPreferenceOptions): Promise<Consent> {
+  async showPreferences(params: ShowPreferenceOptions): Promise<Consent> {
     return this._ketch.showPreferenceExperience(params)
   }
 
