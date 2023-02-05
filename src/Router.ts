@@ -8,11 +8,11 @@ import {
   Plugin,
   ShowPreferenceOptions,
 } from '@ketch-sdk/ketch-types'
-import log from './logging'
+import log from './log'
 import errors from './errors'
 import isFunction from './isFunction'
 import constants from './constants'
-import { Ketch } from './ketch'
+import { Ketch } from './Ketch'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
 /**
@@ -97,132 +97,163 @@ export default class Router {
     return fn.apply(this, args).then(resolve).catch(reject)
   }
 
-  async getConfig(): Promise<Configuration> {
+  getConfig(): Promise<Configuration> {
     return this._ketch.getConfig()
   }
 
-  async getConsent(): Promise<Consent> {
+  getConsent(): Promise<Consent> {
     return this._ketch.getConsent()
   }
 
-  async getEnvironment(): Promise<Environment> {
+  getEnvironment(): Promise<Environment> {
     return this._ketch.getEnvironment()
   }
 
-  async getGeoIP(): Promise<IPInfo> {
+  getGeoIP(): Promise<IPInfo> {
     return this._ketch.getGeoIP()
   }
 
-  async getIdentities(): Promise<Identities> {
+  getIdentities(): Promise<Identities> {
     return this._ketch.getIdentities()
   }
 
-  async getJurisdiction(): Promise<string> {
+  getJurisdiction(): Promise<string> {
     return this._ketch.getJurisdiction()
   }
 
-  async getRegionInfo(): Promise<string> {
+  getRegionInfo(): Promise<string> {
     return this._ketch.getRegionInfo()
   }
 
-  async onConsent(listener: (...args: any[]) => void): Promise<void> {
+  onConsent(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onConsent is deprecated - use ketch("on", "${constants.CONSENT_EVENT}", listener) instead`)
     this._ketch.on(constants.CONSENT_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onEnvironment(listener: (...args: any[]) => void): Promise<void> {
+  onEnvironment(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onEnvironment is deprecated - use ketch("on", "${constants.ENVIRONMENT_EVENT}", listener) instead`)
     this._ketch.on(constants.ENVIRONMENT_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onGeoIP(listener: (...args: any[]) => void): Promise<void> {
+  onGeoIP(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onGeoIP is deprecated - use ketch("on", "${constants.GEOIP_EVENT}", listener) instead`)
     this._ketch.on(constants.GEOIP_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onHideExperience(listener: (...args: any[]) => void): Promise<void> {
+  onHideExperience(listener: (...args: any[]) => void): Promise<void> {
     log.debug(
       `onHideExperience is deprecated - use ketch("on", "${constants.HIDE_EXPERIENCE_EVENT}", listener) instead`,
     )
     this._ketch.on(constants.HIDE_EXPERIENCE_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onWillShowExperience(listener: (...args: any[]) => void): Promise<void> {
+  onWillShowExperience(listener: (...args: any[]) => void): Promise<void> {
     log.debug(
       'onWillShowExperience is deprecated - use ketch("on", "' +
         constants.WILL_SHOW_EXPERIENCE_EVENT +
         '", listener) instead',
     )
     this._ketch.on(constants.WILL_SHOW_EXPERIENCE_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onIdentities(listener: (...args: any[]) => void): Promise<void> {
+  onIdentities(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onIdentities is deprecated - use ketch("on", "${constants.IDENTITIES_EVENT}", listener) instead`)
     this._ketch.on(constants.IDENTITIES_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onJurisdiction(listener: (...args: any[]) => void): Promise<void> {
+  onJurisdiction(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onJurisdiction is deprecated - use ketch("on", "${constants.JURISDICTION_EVENT}", listener) instead`)
     this._ketch.on(constants.JURISDICTION_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async onRegionInfo(listener: (...args: any[]) => void): Promise<void> {
+  onRegionInfo(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onRegionInfo is deprecated - use ketch("on", "${constants.REGION_INFO_EVENT}", listener) instead`)
     this._ketch.on(constants.REGION_INFO_EVENT, listener)
+    return Promise.resolve()
   }
 
-  async setEnvironment(env: Environment): Promise<void> {
+  setEnvironment(env: Environment): Promise<void> {
     log.warn('setEnvironment is deprecated')
     return this._ketch.setEnvironment(env).then(() => {})
   }
 
-  async setGeoIP(g: IPInfo): Promise<void> {
+  setGeoIP(g: IPInfo): Promise<void> {
     log.warn('setGeoIP is deprecated')
     return this._ketch.setGeoIP(g).then(() => {})
   }
 
-  async setIdentities(id: Identities): Promise<void> {
+  setIdentities(id: Identities): Promise<void> {
     log.warn('setIdentities is deprecated')
     return this._ketch.setIdentities(id).then(() => {})
   }
 
-  async setJurisdiction(jurisdiction: string): Promise<void> {
+  setJurisdiction(jurisdiction: string): Promise<void> {
     log.warn('setJurisdiction is deprecated')
     return this._ketch.setJurisdiction(jurisdiction).then(() => {})
   }
 
-  async setRegionInfo(info: string): Promise<void> {
+  setRegionInfo(info: string): Promise<void> {
     log.warn('setRegionInfo is deprecated')
     return this._ketch.setRegionInfo(info).then(() => {})
   }
 
-  async showConsent(): Promise<Consent> {
-    return this._ketch.showConsentExperience()
+  showConsent(): Promise<void> {
+    return this._ketch.showConsentExperience().then(() => {})
   }
 
-  async showPreferences(params: ShowPreferenceOptions): Promise<Consent> {
-    return this._ketch.showPreferenceExperience(params)
+  showPreferences(params: ShowPreferenceOptions): Promise<void> {
+    return this._ketch.showPreferenceExperience(params).then(() => {})
   }
 
-  async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
-    return this._ketch.registerPlugin(plugin, config).then(() => {})
+  registerPlugin(plugin: Plugin, config?: any): Promise<void> {
+    return this._ketch.registerPlugin(plugin, config)
   }
 
-  async registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
-    return this._ketch.registerIdentityProvider(name, provider).then(() => {})
+  registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
+    return this._ketch.registerIdentityProvider(name, provider)
   }
 
-  async emit(eventName: string | symbol, ...args: any[]): Promise<void> {
+  emit(eventName: string | symbol, ...args: any[]): Promise<void> {
     this._ketch.emit(eventName, ...args)
+    return Promise.resolve()
   }
 
-  async on(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
+  on(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
     this._ketch.on(eventName, listener)
+    return Promise.resolve()
   }
 
-  async once(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
+  once(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
     this._ketch.once(eventName, listener)
+    return Promise.resolve()
   }
 
-  private readonly _ketch: Ketch
+  addListener(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
+    this._ketch.addListener(eventName, listener)
+    return Promise.resolve()
+  }
+
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
+    this._ketch.removeListener(eventName, listener)
+    return Promise.resolve()
+  }
+
+  off(eventName: string | symbol, listener: (...args: any[]) => void): Promise<void> {
+    this._ketch.off(eventName, listener)
+    return Promise.resolve()
+  }
+
+  removeAllListeners(eventName: string | symbol): Promise<void> {
+    this._ketch.removeAllListeners(eventName)
+    return Promise.resolve()
+  }
+
+  protected readonly _ketch: Ketch
 }

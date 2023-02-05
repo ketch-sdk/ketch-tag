@@ -1,5 +1,5 @@
 import init from './init'
-import log from './logging'
+import log from './log'
 import ketch from './ketchfn'
 
 export async function boot() {
