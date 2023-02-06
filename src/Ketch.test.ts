@@ -10,6 +10,7 @@ import {
   IPInfo,
   Ketch as KetchAPI,
   StorageOriginPolicy,
+  Tab,
 } from '@ketch-sdk/ketch-types'
 import { Ketch } from './Ketch'
 import parameters from './parameters'
@@ -541,12 +542,16 @@ describe('Ketch', () => {
           analytics: true,
         },
       } as Consent)
-      jest.spyOn(parameters, 'get').mockReturnValue('rightsTab')
+      jest.spyOn(parameters, 'get').mockReturnValue(Tab.Rights)
       const showPreferenceExperienceMock = jest.fn()
       const willShowExperienceMock = jest.fn()
       ketch.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, showPreferenceExperienceMock)
       ketch.on(constants.WILL_SHOW_EXPERIENCE_EVENT, willShowExperienceMock)
-      await expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({
+      await expect(
+        ketch.showPreferenceExperience({
+          tab: Tab.Rights,
+        }),
+      ).resolves.toStrictEqual({
         purposes: {
           analytics: true,
         },
@@ -559,7 +564,7 @@ describe('Ketch', () => {
           },
         },
         {
-          tab: 'rightsTab',
+          tab: Tab.Rights,
         },
       )
     })
