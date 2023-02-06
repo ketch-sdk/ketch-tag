@@ -2,7 +2,7 @@ import { Configuration, GetLocationResponse, IPInfo } from '@ketch-sdk/ketch-typ
 import errors from './errors'
 import parameters from './parameters'
 import constants from './constants'
-import Builder from './builder'
+import Builder from './Builder'
 import fetchMock from 'jest-fetch-mock'
 
 jest.mock('./parameters')

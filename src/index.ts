@@ -1,4 +1,4 @@
-import { Ketch } from './ketch'
+import { Ketch } from './Ketch'
 import { boot } from './boot'
 
 export { boot, Ketch }

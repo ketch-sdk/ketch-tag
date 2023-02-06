@@ -4,6 +4,6 @@ declare global {
   }
 }
 
-export default function datalayer(): any[] {
+export default function dataLayer(): any[] {
   return (window.dataLayer = window.dataLayer || [])
 }

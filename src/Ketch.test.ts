@@ -9,8 +9,10 @@ import {
   InvokeRightEvent,
   IPInfo,
   Ketch as KetchAPI,
+  StorageOriginPolicy,
+  Tab,
 } from '@ketch-sdk/ketch-types'
-import { Ketch } from './ketch'
+import { Ketch } from './Ketch'
 import parameters from './parameters'
 import constants from './constants'
 
@@ -74,17 +76,17 @@ describe('Ketch', () => {
       } as InvokeRightEvent
       await ketch.registerPlugin({
         async init(k: KetchAPI, config: Configuration) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
         },
 
         willShowExperience(k: KetchAPI, config: Configuration) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
         },
 
         showConsentExperience(k: KetchAPI, config: Configuration, consents, options) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(consents).toStrictEqual(consent)
           expect(options).toStrictEqual({
@@ -93,58 +95,58 @@ describe('Ketch', () => {
         },
 
         showPreferenceExperience(k: KetchAPI, config: Configuration, consents, options) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(consents).toStrictEqual(consent)
           expect(options).toStrictEqual({})
         },
 
         consentChanged(k: KetchAPI, config: Configuration, consent) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(consent).toStrictEqual(consent)
         },
 
         environmentLoaded(k: KetchAPI, config: Configuration, env) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(env).toStrictEqual({ code: constants.PRODUCTION })
         },
 
         // TODO:
         // experienceHidden(k: KetchAPI, config: Configuration, reason) {
-        //   expect(k).toEqual(ketch)
+        //   expect(k).toBeDefined()
         //   expect(config).toStrictEqual(config)
         //   expect(reason).toStrictEqual(ExperienceClosedReason.SET_CONSENT)
         // },
 
         geoIPLoaded(k: KetchAPI, config: Configuration, geoip) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(geoip).toStrictEqual({})
         },
 
         identitiesLoaded(k: KetchAPI, config: Configuration, identities) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(identities).toStrictEqual({})
         },
 
         jurisdictionLoaded(k: KetchAPI, config: Configuration, jurisdiction) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(jurisdiction).toBe('gdpr')
         },
 
         regionInfoLoaded(k: KetchAPI, config: Configuration, regionInfo) {
-          expect(k).toEqual(ketch)
+          expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(regionInfo).toBe('US-CA')
         },
 
         // TODO:
         // rightInvoked(k: KetchAPI, config: Configuration, request) {
-        //   expect(k).toEqual(ketch)
+        //   expect(k).toBeDefined()
         //   expect(config).toStrictEqual(config)
         //   expect(request).toStrictEqual({})
         // },
@@ -182,7 +184,9 @@ describe('Ketch', () => {
         removeItem: jest.fn(),
       }
       const ketch = new Ketch(webAPI, emptyConfig)
-      return expect(ketch.registerStorageProvider(providerMock)).resolves.toBeUndefined()
+      return expect(
+        ketch.registerStorageProvider(StorageOriginPolicy.CrossOrigin, providerMock),
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -236,14 +240,6 @@ describe('Ketch', () => {
       parametersGetMock.mockReturnValue('')
       parametersHasMock.mockReturnValue(true)
       expect(ketch.selectExperience(emptyConsent)).toBe(ExperienceType.Consent)
-    })
-
-    it('selects consent if shouldConsentExperienceShow is set', async () => {
-      const ketch = new Ketch(webAPI, emptyConfig)
-      await ketch.setShowConsentExperience()
-      expect((ketch as any)._shouldConsentExperienceShow).toBeTruthy()
-      expect(ketch.selectExperience(emptyConsent)).toBe(ExperienceType.Consent)
-      expect((ketch as any)._shouldConsentExperienceShow).toBeFalsy()
     })
 
     it('selects consent if a purpose consent is missing', () => {
@@ -546,12 +542,16 @@ describe('Ketch', () => {
           analytics: true,
         },
       } as Consent)
-      jest.spyOn(parameters, 'get').mockReturnValue('rightsTab')
+      jest.spyOn(parameters, 'get').mockReturnValue(Tab.Rights)
       const showPreferenceExperienceMock = jest.fn()
       const willShowExperienceMock = jest.fn()
       ketch.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, showPreferenceExperienceMock)
       ketch.on(constants.WILL_SHOW_EXPERIENCE_EVENT, willShowExperienceMock)
-      await expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({
+      await expect(
+        ketch.showPreferenceExperience({
+          tab: Tab.Rights,
+        }),
+      ).resolves.toStrictEqual({
         purposes: {
           analytics: true,
         },
@@ -564,17 +564,9 @@ describe('Ketch', () => {
           },
         },
         {
-          tab: 'rightsTab',
+          tab: Tab.Rights,
         },
       )
-    })
-  })
-
-  describe('setShowConsentExperience', () => {
-    it('sets property', async () => {
-      const ketch = new Ketch(webAPI, emptyConfig)
-      await expect(ketch.setShowConsentExperience()).resolves.toBeUndefined()
-      expect((ketch as any)._shouldConsentExperienceShow).toBeTruthy()
     })
   })
 

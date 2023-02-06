@@ -25,9 +25,10 @@ import {
   StorageProvider,
   ExperienceDefault,
   Identity,
+  StorageOriginPolicy,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
-import log from './logging'
+import log from './log'
 import errors from './errors'
 import parameters from './parameters'
 import Watcher from '@ketch-sdk/ketch-data-layer'
@@ -35,6 +36,7 @@ import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './cache'
 import deepEqual from 'nano-equal'
 import constants from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import InternalRouter from './InternalRouter'
 
 declare global {
   type AndroidListener = {
@@ -105,11 +107,6 @@ export class Ketch extends EventEmitter {
   private _provisionalConsent?: Consent
 
   /**
-   * @internal
-   */
-  private _shouldConsentExperienceShow: boolean
-
-  /**
    * isExperienceDisplayed is a bool representing whether an experience is currently showing
    *
    * @internal
@@ -153,7 +150,6 @@ export class Ketch extends EventEmitter {
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
-    this._shouldConsentExperienceShow = false
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = false
     this._provisionalConsent = undefined
@@ -172,93 +168,95 @@ export class Ketch extends EventEmitter {
    * @param config The plugin config
    */
   async registerPlugin(plugin: Plugin, config?: any): Promise<void> {
+    const router = new InternalRouter(this)
+
     if (!config) {
       config = await this.getConfig()
     }
 
     if (plugin instanceof Function) {
-      return plugin(this, config)
+      return plugin(router, config)
     }
 
     if (plugin.willShowExperience !== undefined) {
       this.on(constants.WILL_SHOW_EXPERIENCE_EVENT, expType => {
         if (plugin.willShowExperience !== undefined) {
-          plugin.willShowExperience(this, this._config, expType)
+          plugin.willShowExperience(router, this._config, expType)
         }
       })
     }
     if (plugin.showConsentExperience !== undefined) {
       this.on(constants.SHOW_CONSENT_EXPERIENCE_EVENT, (consents, options) => {
         if (plugin.showConsentExperience !== undefined) {
-          plugin.showConsentExperience(this, this._config, consents, options)
+          plugin.showConsentExperience(router, this._config, consents, options)
         }
       })
     }
     if (plugin.showPreferenceExperience !== undefined) {
       this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, (consents, options) => {
         if (plugin.showPreferenceExperience !== undefined) {
-          plugin.showPreferenceExperience(this, this._config, consents, options)
+          plugin.showPreferenceExperience(router, this._config, consents, options)
         }
       })
     }
     if (plugin.consentChanged !== undefined) {
       this.on(constants.CONSENT_EVENT, consent => {
         if (plugin.consentChanged !== undefined) {
-          plugin.consentChanged(this, this._config, consent)
+          plugin.consentChanged(router, this._config, consent)
         }
       })
     }
     if (plugin.environmentLoaded !== undefined) {
       this.on(constants.ENVIRONMENT_EVENT, env => {
         if (plugin.environmentLoaded !== undefined) {
-          plugin.environmentLoaded(this, this._config, env)
+          plugin.environmentLoaded(router, this._config, env)
         }
       })
     }
     if (plugin.experienceHidden !== undefined) {
       this.on(constants.HIDE_EXPERIENCE_EVENT, reason => {
         if (plugin.experienceHidden !== undefined) {
-          plugin.experienceHidden(this, this._config, reason)
+          plugin.experienceHidden(router, this._config, reason)
         }
       })
     }
     if (plugin.geoIPLoaded !== undefined) {
       this.on(constants.GEOIP_EVENT, geoip => {
         if (plugin.geoIPLoaded !== undefined) {
-          plugin.geoIPLoaded(this, this._config, geoip)
+          plugin.geoIPLoaded(router, this._config, geoip)
         }
       })
     }
     if (plugin.identitiesLoaded !== undefined) {
       this.on(constants.IDENTITIES_EVENT, identities => {
         if (plugin.identitiesLoaded !== undefined) {
-          plugin.identitiesLoaded(this, this._config, identities)
+          plugin.identitiesLoaded(router, this._config, identities)
         }
       })
     }
     if (plugin.jurisdictionLoaded !== undefined) {
       this.on(constants.JURISDICTION_EVENT, jurisdiction => {
         if (plugin.jurisdictionLoaded !== undefined) {
-          plugin.jurisdictionLoaded(this, this._config, jurisdiction)
+          plugin.jurisdictionLoaded(router, this._config, jurisdiction)
         }
       })
     }
     if (plugin.regionInfoLoaded !== undefined) {
       this.on(constants.REGION_INFO_EVENT, regionInfo => {
         if (plugin.regionInfoLoaded !== undefined) {
-          plugin.regionInfoLoaded(this, this._config, regionInfo)
+          plugin.regionInfoLoaded(router, this._config, regionInfo)
         }
       })
     }
     if (plugin.rightInvoked !== undefined) {
       this.on(constants.RIGHT_INVOKED_EVENT, request => {
         if (plugin.rightInvoked !== undefined) {
-          plugin.rightInvoked(this, this._config, request)
+          plugin.rightInvoked(router, this._config, request)
         }
       })
     }
     if (plugin.init !== undefined) {
-      return plugin.init(this, config)
+      return plugin.init(router, config)
     }
   }
 
@@ -275,9 +273,10 @@ export class Ketch extends EventEmitter {
   /**
    * Registers a storage provider
    *
-   * @param _ The provider to register
+   * @param _policy The storage policy
+   * @param _provider The provider to register
    */
-  async registerStorageProvider(_: StorageProvider): Promise<void> {}
+  async registerStorageProvider(_policy: StorageOriginPolicy, _provider: StorageProvider): Promise<void> {}
 
   /**
    * Returns the configuration.
@@ -307,12 +306,6 @@ export class Ketch extends EventEmitter {
       return ExperienceType.Preference
     } else if (parameters.has(constants.SHOW)) {
       l.debug(ExperienceType.Consent)
-      return ExperienceType.Consent
-    }
-
-    if (this._shouldConsentExperienceShow) {
-      l.debug(ExperienceType.Consent)
-      this._shouldConsentExperienceShow = false
       return ExperienceType.Consent
     }
 
@@ -478,15 +471,6 @@ export class Ketch extends EventEmitter {
     log.debug('onShowPreferenceExperience')
     this.removeAllListeners(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT)
     this.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, callback)
-  }
-
-  /**
-   * Set to show consent experience
-   *
-   */
-  async setShowConsentExperience(): Promise<void> {
-    log.debug('setShowConsentExperience')
-    this._shouldConsentExperienceShow = true
   }
 
   /**
@@ -1194,6 +1178,10 @@ export class Ketch extends EventEmitter {
     )
   }
 
+  /**
+   * @internal
+   * @private
+   */
   private mapEvent(eventName: string | symbol): Emitter | undefined {
     switch (eventName) {
       case constants.CONSENT_EVENT:

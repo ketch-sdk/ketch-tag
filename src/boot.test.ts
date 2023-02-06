@@ -1,9 +1,9 @@
 import init from './init'
-import log from './logging'
+import log from './log'
 import { boot } from './boot'
 
 jest.mock('./init')
-jest.mock('./logging')
+jest.mock('./log')
 
 describe('boot', () => {
   beforeEach(jest.resetAllMocks)

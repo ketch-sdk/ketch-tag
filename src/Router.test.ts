@@ -1,11 +1,11 @@
-import Router from './router'
-import { Ketch } from './ketch'
+import Router from './Router'
+import { Ketch } from './Ketch'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import constants from './constants'
 
-describe('router', () => {
+describe('Router', () => {
   const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
 
   describe('push', () => {
@@ -122,7 +122,7 @@ describe('router', () => {
     })
 
     it('calls getConsent', async () => {
-      const getConsent = jest.fn()
+      const getConsent = jest.fn().mockResolvedValue({})
       const router = new Router({
         getConsent,
       } as any as Ketch)
@@ -131,7 +131,7 @@ describe('router', () => {
     })
 
     it('calls getEnvironment', async () => {
-      const getEnvironment = jest.fn()
+      const getEnvironment = jest.fn().mockResolvedValue({})
       const router = new Router({
         getEnvironment,
       } as any as Ketch)
@@ -140,7 +140,7 @@ describe('router', () => {
     })
 
     it('calls getGeoIP', async () => {
-      const getGeoIP = jest.fn()
+      const getGeoIP = jest.fn().mockResolvedValue({})
       const router = new Router({
         getGeoIP,
       } as any as Ketch)
@@ -149,7 +149,7 @@ describe('router', () => {
     })
 
     it('calls getIdentities', async () => {
-      const getIdentities = jest.fn()
+      const getIdentities = jest.fn().mockResolvedValue({})
       const router = new Router({
         getIdentities,
       } as any as Ketch)
@@ -158,7 +158,7 @@ describe('router', () => {
     })
 
     it('calls getJurisdiction', async () => {
-      const getJurisdiction = jest.fn()
+      const getJurisdiction = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         getJurisdiction,
       } as any as Ketch)
@@ -167,7 +167,7 @@ describe('router', () => {
     })
 
     it('calls getRegionInfo', async () => {
-      const getRegionInfo = jest.fn()
+      const getRegionInfo = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         getRegionInfo,
       } as any as Ketch)
@@ -176,7 +176,7 @@ describe('router', () => {
     })
 
     it('calls onConsent', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -185,7 +185,7 @@ describe('router', () => {
     })
 
     it('calls onEnvironment', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -194,7 +194,7 @@ describe('router', () => {
     })
 
     it('calls onGeoIP', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -203,7 +203,7 @@ describe('router', () => {
     })
 
     it('calls onHideExperience', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -212,7 +212,7 @@ describe('router', () => {
     })
 
     it('calls onWillShowExperience', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -221,7 +221,7 @@ describe('router', () => {
     })
 
     it('calls onIdentities', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -230,7 +230,7 @@ describe('router', () => {
     })
 
     it('calls onJurisdiction', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -239,7 +239,7 @@ describe('router', () => {
     })
 
     it('calls onRegionInfo', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -248,7 +248,7 @@ describe('router', () => {
     })
 
     it('calls setEnvironment', async () => {
-      const setEnvironment = jest.fn().mockResolvedValue('foo')
+      const setEnvironment = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         setEnvironment,
       } as any as Ketch)
@@ -257,7 +257,7 @@ describe('router', () => {
     })
 
     it('calls setGeoIP', async () => {
-      const setGeoIP = jest.fn().mockResolvedValue('foo')
+      const setGeoIP = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         setGeoIP,
       } as any as Ketch)
@@ -266,7 +266,7 @@ describe('router', () => {
     })
 
     it('calls setIdentities', async () => {
-      const setIdentities = jest.fn().mockResolvedValue('foo')
+      const setIdentities = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         setIdentities,
       } as any as Ketch)
@@ -275,7 +275,7 @@ describe('router', () => {
     })
 
     it('calls setJurisdiction', async () => {
-      const setJurisdiction = jest.fn().mockResolvedValue('foo')
+      const setJurisdiction = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         setJurisdiction,
       } as any as Ketch)
@@ -285,7 +285,7 @@ describe('router', () => {
 
     it('calls setRegionInfo', async () => {
       jest.spyOn(global.console, 'log').mockImplementation(() => {})
-      const setRegionInfo = jest.fn().mockResolvedValue('foo')
+      const setRegionInfo = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         setRegionInfo,
       } as any as Ketch)
@@ -294,7 +294,7 @@ describe('router', () => {
     })
 
     it('calls showConsent', async () => {
-      const showConsentExperience = jest.fn()
+      const showConsentExperience = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         showConsentExperience,
       } as any as Ketch)
@@ -303,7 +303,7 @@ describe('router', () => {
     })
 
     it('calls showPreferences', async () => {
-      const showPreferenceExperience = jest.fn()
+      const showPreferenceExperience = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         showPreferenceExperience,
       } as any as Ketch)
@@ -312,7 +312,7 @@ describe('router', () => {
     })
 
     it('calls registerPlugin', async () => {
-      const registerPlugin = jest.fn().mockResolvedValue('foo')
+      const registerPlugin = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         registerPlugin,
       } as any as Ketch)
@@ -321,7 +321,7 @@ describe('router', () => {
     })
 
     it('calls registerIdentityProvider', async () => {
-      const registerIdentityProvider = jest.fn().mockResolvedValue('foo')
+      const registerIdentityProvider = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         registerIdentityProvider,
       } as any as Ketch)
@@ -330,7 +330,7 @@ describe('router', () => {
     })
 
     it('calls emit', async () => {
-      const emit = jest.fn()
+      const emit = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         emit,
       } as any as Ketch)
@@ -339,7 +339,7 @@ describe('router', () => {
     })
 
     it('calls on', async () => {
-      const on = jest.fn()
+      const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         on,
       } as any as Ketch)
@@ -348,12 +348,48 @@ describe('router', () => {
     })
 
     it('calls once', async () => {
-      const once = jest.fn()
+      const once = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
         once,
       } as any as Ketch)
       await router.route('once')
       return expect(once).toHaveBeenCalled()
+    })
+
+    it('calls off', async () => {
+      const off = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        off,
+      } as any as Ketch)
+      await router.route('off')
+      return expect(off).toHaveBeenCalled()
+    })
+
+    it('calls addListener', async () => {
+      const addListener = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        addListener,
+      } as any as Ketch)
+      await router.route('addListener')
+      return expect(addListener).toHaveBeenCalled()
+    })
+
+    it('calls removeListener', async () => {
+      const removeListener = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        removeListener,
+      } as any as Ketch)
+      await router.route('removeListener')
+      return expect(removeListener).toHaveBeenCalled()
+    })
+
+    it('calls removeAllListeners', async () => {
+      const removeAllListeners = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        removeAllListeners,
+      } as any as Ketch)
+      await router.route('removeAllListeners')
+      return expect(removeAllListeners).toHaveBeenCalled()
     })
   })
 })
