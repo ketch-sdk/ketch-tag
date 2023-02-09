@@ -4,28 +4,30 @@ import Future from '@ketch-com/future'
 import {
   Configuration,
   Consent,
-  Environment,
-  Identities,
-  InvokeRightRequest,
-  InvokeRightEvent,
-  IPInfo,
-  Plugin,
-  ShowPreferenceOptions,
-  SetConsentRequest,
-  DataSubject,
-  GetConsentRequest,
-  ExperienceType,
   ConsentExperienceType,
-  isTab,
+  DataSubject,
+  Environment,
   ExperienceClosedReason,
-  ShowConsentOptions,
-  GetConsentResponse,
-  IdentityType,
-  IdentityProvider,
-  StorageProvider,
   ExperienceDefault,
+  ExperienceOptions,
+  ExperienceServer,
+  ExperienceType,
+  GetConsentRequest,
+  GetConsentResponse,
+  Identities,
   Identity,
+  IdentityProvider,
+  IdentityType,
+  InvokeRightEvent,
+  InvokeRightRequest,
+  IPInfo,
+  isTab,
+  Plugin,
+  SetConsentRequest,
+  ShowConsentOptions,
+  ShowPreferenceOptions,
   StorageOriginPolicy,
+  StorageProvider,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -37,6 +39,7 @@ import deepEqual from 'nano-equal'
 import constants from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import InternalRouter from './InternalRouter'
+import NoExperienceServer from './NoExperienceServer'
 
 declare global {
   type AndroidListener = {
@@ -130,7 +133,14 @@ export class Ketch extends EventEmitter {
    *
    * @internal
    */
-  private _watcher: Watcher
+  private readonly _watcher: Watcher
+
+  /**
+   * Experience server
+   *
+   * @private
+   */
+  private _experienceServer: ExperienceServer
 
   /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
@@ -158,6 +168,7 @@ export class Ketch extends EventEmitter {
       timeout: parseInt(config.options?.watcherTimeout || '10000'),
     })
     this._watcher.on(constants.IDENTITY_EVENT, this.setIdentities.bind(this))
+    this._experienceServer = new NoExperienceServer()
     this.setMaxListeners(maxListeners)
   }
 
@@ -279,6 +290,15 @@ export class Ketch extends EventEmitter {
   async registerStorageProvider(_policy: StorageOriginPolicy, _provider: StorageProvider): Promise<void> {}
 
   /**
+   * Registers an experience server
+   *
+   * @param server The experience server to register
+   */
+  async registerExperienceServer(server: ExperienceServer): Promise<void> {
+    this._experienceServer = server
+  }
+
+  /**
    * Returns the configuration.
    */
   async getConfig(): Promise<Configuration> {
@@ -398,19 +418,80 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Shows the experience
+   *
+   * @param options The options for the experience
+   */
+  showExperience(options: ExperienceOptions): Promise<void> {
+    log.trace('showExperience', options)
+    return Promise.resolve() // TODO
+  }
+
+  /**
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
     log.debug('showConsentExperience')
 
+    const displayHint = this.selectConsentExperience()
     const consent = await this.retrieveConsent()
 
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
       this.willShowExperience(ExperienceType.Consent)
-      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
+      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint })
     }
 
-    return consent
+    const config = await this.getConfig()
+
+    if (
+      displayHint === ConsentExperienceType.Modal &&
+      config.experiences?.consent?.modal !== undefined &&
+      config.theme !== undefined
+    ) {
+      return this._experienceServer
+        .render({
+          kind: ExperienceType.Consent,
+          mode: displayHint,
+          code: config.experiences?.consent?.code ?? '',
+          version: config.experiences?.consent?.version ?? 0,
+          config: config.experiences?.consent?.modal,
+          theme: config.theme,
+        })
+        .then(() => consent)
+    } else if (
+      displayHint === ConsentExperienceType.Banner &&
+      config.experiences?.consent?.banner !== undefined &&
+      config.theme !== undefined
+    ) {
+      return this._experienceServer
+        .render({
+          kind: ExperienceType.Consent,
+          mode: displayHint,
+          code: config.experiences?.consent?.code ?? '',
+          version: config.experiences?.consent?.version ?? 0,
+          config: config.experiences?.consent?.banner,
+          theme: config.theme,
+        })
+        .then(() => consent)
+    } else if (
+      displayHint === ConsentExperienceType.JIT &&
+      config.experiences?.consent?.jit !== undefined &&
+      config.theme !== undefined
+    ) {
+      return this._experienceServer
+        .render({
+          kind: ExperienceType.Consent,
+          mode: displayHint,
+          code: config.experiences?.consent?.code ?? '',
+          version: config.experiences?.consent?.version ?? 0,
+          config: config.experiences?.consent?.jit,
+          theme: config.theme,
+          purposes: [], // TODO
+        })
+        .then(() => consent)
+    } else {
+      return consent
+    }
   }
 
   /**
@@ -446,7 +527,21 @@ export class Ketch extends EventEmitter {
       this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
     }
 
-    return consent
+    const config = await this.getConfig()
+
+    if (config.experiences?.preference !== undefined && config.theme !== undefined) {
+      return this._experienceServer
+        .render({
+          kind: ExperienceType.Preference,
+          code: config.experiences?.preference?.code ?? '',
+          version: config.experiences?.preference?.version ?? 0,
+          config: config.experiences?.preference,
+          theme: config.theme,
+        })
+        .then(() => consent)
+    } else {
+      return consent
+    }
   }
 
   /**

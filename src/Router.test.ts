@@ -391,5 +391,23 @@ describe('Router', () => {
       await router.route('removeAllListeners')
       return expect(removeAllListeners).toHaveBeenCalled()
     })
+
+    it('calls showExperience', async () => {
+      const showExperience = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        showExperience,
+      } as any as Ketch)
+      await router.route('showExperience')
+      return expect(showExperience).toHaveBeenCalled()
+    })
+
+    it('calls registerExperienceServer', async () => {
+      const registerExperienceServer = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        registerExperienceServer,
+      } as any as Ketch)
+      await router.route('registerExperienceServer')
+      return expect(registerExperienceServer).toHaveBeenCalled()
+    })
   })
 })

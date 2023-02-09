@@ -1,7 +1,7 @@
 import {
   Configuration,
   Consent,
-  Environment,
+  Environment, ExperienceOptions, ExperienceServer,
   Identities,
   IdentityProvider,
   IPInfo,
@@ -204,6 +204,10 @@ export default class Router {
     return this._ketch.setRegionInfo(info).then(() => {})
   }
 
+  showExperience(options: ExperienceOptions): Promise<void> {
+    return this._ketch.showExperience(options)
+  }
+
   showConsent(): Promise<void> {
     return this._ketch.showConsentExperience().then(() => {})
   }
@@ -218,6 +222,10 @@ export default class Router {
 
   registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
     return this._ketch.registerIdentityProvider(name, provider)
+  }
+
+  registerExperienceServer(server: ExperienceServer): Promise<void> {
+    return this._ketch.registerExperienceServer(server)
   }
 
   emit(eventName: string | symbol, ...args: any[]): Promise<void> {
