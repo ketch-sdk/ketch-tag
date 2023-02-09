@@ -4,6 +4,7 @@ import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import { Configuration } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import constants from './constants'
+import InternalRouter from './InternalRouter'
 
 describe('Router', () => {
   const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
@@ -390,6 +391,42 @@ describe('Router', () => {
       } as any as Ketch)
       await router.route('removeAllListeners')
       return expect(removeAllListeners).toHaveBeenCalled()
+    })
+
+    it('calls registerStorageProvider', async () => {
+      const registerStorageProvider = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        registerStorageProvider,
+      } as any as Ketch)
+      await router.route('registerStorageProvider')
+      return expect(registerStorageProvider).toHaveBeenCalled()
+    })
+
+    it('calls registerExperienceServer', async () => {
+      const registerExperienceServer = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        registerExperienceServer,
+      } as any as Ketch)
+      await router.route('registerExperienceServer')
+      return expect(registerExperienceServer).toHaveBeenCalled()
+    })
+
+    it('calls setConsent', async () => {
+      const setConsent = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        setConsent,
+      } as any as Ketch)
+      await router.route('setConsent')
+      return expect(setConsent).toHaveBeenCalled()
+    })
+
+    it('calls showExperience', async () => {
+      const showExperience = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        showExperience,
+      } as any as Ketch)
+      await router.route('showExperience')
+      return expect(showExperience).toHaveBeenCalled()
     })
   })
 })
