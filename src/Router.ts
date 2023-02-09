@@ -7,6 +7,10 @@ import {
   IPInfo,
   Plugin,
   ShowPreferenceOptions,
+  ExperienceOptions,
+  ExperienceServer,
+  StorageOriginPolicy,
+  StorageProvider,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
@@ -218,6 +222,22 @@ export default class Router {
 
   registerIdentityProvider(name: string, provider: IdentityProvider): Promise<void> {
     return this._ketch.registerIdentityProvider(name, provider)
+  }
+
+  registerExperienceServer(server: ExperienceServer): Promise<void> {
+    return this._ketch.registerExperienceServer(server)
+  }
+
+  registerStorageProvider(policy: StorageOriginPolicy, provider: StorageProvider): Promise<void> {
+    return this._ketch.registerStorageProvider(policy, provider)
+  }
+
+  setConsent(consent: Consent): Promise<void> {
+    return this._ketch.setConsent(consent).then(() => {})
+  }
+
+  showExperience(options: ExperienceOptions): Promise<void> {
+    return this._ketch.showExperience(options)
   }
 
   emit(eventName: string | symbol, ...args: any[]): Promise<void> {

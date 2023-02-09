@@ -26,6 +26,8 @@ import {
   ExperienceDefault,
   Identity,
   StorageOriginPolicy,
+  ExperienceServer,
+  ExperienceOptions,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -278,6 +280,8 @@ export class Ketch extends EventEmitter {
    */
   async registerStorageProvider(_policy: StorageOriginPolicy, _provider: StorageProvider): Promise<void> {}
 
+  async registerExperienceServer(_server: ExperienceServer): Promise<void> {}
+
   /**
    * Returns the configuration.
    */
@@ -396,6 +400,8 @@ export class Ketch extends EventEmitter {
 
     return this.retrieveConsent()
   }
+
+  async showExperience(_options: ExperienceOptions): Promise<void> {}
 
   /**
    * Shows the consent manager.
