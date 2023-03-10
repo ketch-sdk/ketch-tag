@@ -29,5 +29,32 @@ describe('InternalRouter', () => {
       await router.route('setProvisionalConsent')
       return expect(setProvisionalConsent).toHaveBeenCalled()
     })
+
+    it('calls getSubscriptions', async () => {
+      const getSubscriptions = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        getSubscriptions,
+      } as any as Ketch)
+      await router.route('getSubscriptions')
+      return expect(getSubscriptions).toHaveBeenCalled()
+    })
+
+    it('calls setSubscriptions', async () => {
+      const setSubscriptions = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        setSubscriptions,
+      } as any as Ketch)
+      await router.route('setSubscriptions')
+      return expect(setSubscriptions).toHaveBeenCalled()
+    })
+
+    it('calls getSubscriptionConfiguration', async () => {
+      const getSubscriptionConfiguration = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        getSubscriptionConfiguration,
+      } as any as Ketch)
+      await router.route('getSubscriptionConfiguration')
+      return expect(getSubscriptionConfiguration).toHaveBeenCalled()
+    })
   })
 })

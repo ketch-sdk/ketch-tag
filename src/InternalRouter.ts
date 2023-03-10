@@ -1,6 +1,13 @@
 import Router from './Router'
 import { Ketch } from './Ketch'
-import { Consent, ExperienceClosedReason, InvokeRightEvent, Ketch as KetchAPI } from '@ketch-sdk/ketch-types'
+import {
+  Consent,
+  ExperienceClosedReason,
+  InvokeRightEvent,
+  Ketch as KetchAPI,
+  SubscriptionConfiguration,
+  Subscriptions,
+} from '@ketch-sdk/ketch-types'
 
 export default class InternalRouter extends Router implements KetchAPI {
   constructor(ketch: Ketch) {
@@ -17,5 +24,28 @@ export default class InternalRouter extends Router implements KetchAPI {
 
   setProvisionalConsent(consent: Consent): Promise<void> {
     return this._ketch.setProvisionalConsent(consent)
+  }
+
+  /**
+   * Get subscriptions
+   */
+  getSubscriptions(): Promise<Subscriptions> {
+    return this._ketch.getSubscriptions()
+  }
+
+  /**
+   * Set subscriptions
+   *
+   * @param request
+   */
+  setSubscriptions(request: Subscriptions): Promise<void> {
+    return this._ketch.setSubscriptions(request)
+  }
+
+  /**
+   * Get Subscription configuration
+   */
+  getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
+    return this._ketch.getSubscriptionConfiguration()
   }
 }
