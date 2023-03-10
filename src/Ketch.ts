@@ -28,6 +28,10 @@ import {
   StorageOriginPolicy,
   ExperienceServer,
   ExperienceOptions,
+  SubscriptionConfiguration,
+  Subscriptions,
+  GetSubscriptionsRequest,
+  SetSubscriptionsRequest,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -821,6 +825,73 @@ export class Ketch extends EventEmitter {
     await setCachedConsent(request)
 
     return this._api.setConsent(request)
+  }
+
+  /**
+   * Get subscriptions
+   */
+  async getSubscriptions(): Promise<Subscriptions> {
+    if (this._config.property === undefined || this._config.environment === undefined) {
+      return {}
+    }
+
+    const request: GetSubscriptionsRequest = {
+      organizationCode: this._config.organization.code || '',
+      controllerCode: '',
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
+      identities: {}, // TODO
+      topics: {
+        // TODO
+        // '': {
+        //   status: SubscriptionStatus.Granted,
+        //   contactMethods: [],
+        // }
+      },
+      controls: {
+        // TODO
+        // '': {
+        //   status: SubscriptionStatus.Granted,
+        // },
+      },
+      collectedAt: Math.floor(Date.now() / 1000),
+    }
+
+    return this._api.getSubscriptions(request)
+  }
+
+  /**
+   * Set subscriptions
+   *
+   * @param subscriptions
+   */
+  async setSubscriptions(subscriptions: Subscriptions): Promise<void> {
+    log.trace('setSubscriptions', subscriptions)
+
+    if (this._config.property === undefined || this._config.environment === undefined) {
+      return
+    }
+
+    const request: SetSubscriptionsRequest = {
+      organizationCode: this._config.organization.code || '',
+      controllerCode: '',
+      propertyCode: this._config.property.code || '',
+      environmentCode: this._config.environment.code,
+      identities: {}, // TODO
+      topics: subscriptions.topics,
+      controls: subscriptions.controls,
+      collectedAt: Math.floor(Date.now() / 1000),
+    }
+
+    return this._api.setSubscriptions(request)
+  }
+
+  /**
+   * Get Subscription configuration
+   */
+  async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
+    log.trace('getSubscriptionConfiguration')
+    return {} as SubscriptionConfiguration
   }
 
   /**
