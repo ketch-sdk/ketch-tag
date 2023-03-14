@@ -147,7 +147,7 @@ export class Ketch extends EventEmitter {
    */
   constructor(api: KetchWebAPI, config: Configuration) {
     super()
-    const maxListeners = parseInt(config.options?.maxListeners || '20')
+    const maxListeners = parseInt(config.options?.maxListeners ?? '20')
     this._api = api
     this._config = config
     this._consent = new Future<Consent>({ name: constants.CONSENT_EVENT, emitter: this, maxListeners })
@@ -160,8 +160,8 @@ export class Ketch extends EventEmitter {
     this._hasExperienceBeenDisplayed = false
     this._provisionalConsent = undefined
     this._watcher = new Watcher(window, {
-      interval: parseInt(config.options?.watcherInterval || '2000'),
-      timeout: parseInt(config.options?.watcherTimeout || '10000'),
+      interval: parseInt(config.options?.watcherInterval ?? '2000'),
+      timeout: parseInt(config.options?.watcherTimeout ?? '10000'),
     })
     this._watcher.on(constants.IDENTITY_EVENT, this.setIdentities.bind(this))
     this.setMaxListeners(maxListeners)
@@ -677,10 +677,10 @@ export class Ketch extends EventEmitter {
     }
 
     const request: GetConsentRequest = {
-      organizationCode: this._config.organization.code || '',
-      propertyCode: this._config.property.code || '',
+      organizationCode: this._config.organization.code ?? '',
+      propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
-      jurisdictionCode: this._config.jurisdiction.code || '',
+      jurisdictionCode: this._config.jurisdiction.code ?? '',
       identities: identities,
       purposes: {},
     }
@@ -794,11 +794,11 @@ export class Ketch extends EventEmitter {
     }
 
     const request: SetConsentRequest = {
-      organizationCode: this._config.organization.code || '',
-      propertyCode: this._config.property.code || '',
+      organizationCode: this._config.organization.code ?? '',
+      propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
       identities: identities,
-      jurisdictionCode: this._config.jurisdiction.code || '',
+      jurisdictionCode: this._config.jurisdiction.code ?? '',
       purposes: {},
       vendors: consent.vendors,
       collectedAt: Math.floor(Date.now() / 1000),
@@ -836,11 +836,11 @@ export class Ketch extends EventEmitter {
     }
 
     const request: GetSubscriptionsRequest = {
-      organizationCode: this._config.organization.code || '',
+      organizationCode: this._config.organization.code ?? '',
       controllerCode: '',
-      propertyCode: this._config.property.code || '',
+      propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
-      identities: {}, // TODO
+      identities: {},
       topics: {
         // TODO
         // '': {
@@ -855,6 +855,17 @@ export class Ketch extends EventEmitter {
         // },
       },
       collectedAt: Math.floor(Date.now() / 1000),
+    }
+
+    if (request.identities) {
+      const config = await this.getSubscriptionConfiguration()
+
+      const identities = await this.getIdentities()
+      for (const key of Object.keys(identities)) {
+        if (config.identities[key]) {
+          request.identities[key] = identities[key]
+        }
+      }
     }
 
     return this._api.getSubscriptions(request)
@@ -873,14 +884,25 @@ export class Ketch extends EventEmitter {
     }
 
     const request: SetSubscriptionsRequest = {
-      organizationCode: this._config.organization.code || '',
+      organizationCode: this._config.organization.code ?? '',
       controllerCode: '',
-      propertyCode: this._config.property.code || '',
+      propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
-      identities: {}, // TODO
+      identities: {},
       topics: subscriptions.topics,
       controls: subscriptions.controls,
       collectedAt: Math.floor(Date.now() / 1000),
+    }
+
+    if (request.identities) {
+      const config = await this.getSubscriptionConfiguration()
+
+      const identities = await this.getIdentities()
+      for (const key of Object.keys(identities)) {
+        if (config.identities[key]) {
+          request.identities[key] = identities[key]
+        }
+      }
     }
 
     return this._api.setSubscriptions(request)
@@ -891,7 +913,15 @@ export class Ketch extends EventEmitter {
    */
   async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
     log.trace('getSubscriptionConfiguration')
-    return {} as SubscriptionConfiguration
+
+    const config = await this._api.getSubscriptionsConfiguration({
+      organizationCode: this._config.organization.code,
+      propertyCode: this._config.property?.code ?? '',
+      languageCode: this._config.language ?? '',
+    })
+
+    log.trace('subscriptionConfig', config)
+    return config
   }
 
   /**
@@ -971,8 +1001,7 @@ export class Ketch extends EventEmitter {
     const permitConsent = await this.fetchConsent(identities)
 
     // check if consent value the same
-    // TODO - replace with deepEqual
-    if (Object.keys(permitConsent.purposes).length === Object.keys(localConsent.purposes).length) {
+    if (deepEqual(permitConsent.purposes, localConsent.purposes)) {
       let newConsent = false
       for (const key in permitConsent) {
         if (permitConsent.purposes[key] !== localConsent.purposes[key]) {
@@ -1143,12 +1172,12 @@ export class Ketch extends EventEmitter {
     const user: DataSubject = eventData.subject
 
     const request: InvokeRightRequest = {
-      organizationCode: this._config.organization.code || '',
-      propertyCode: this._config.property.code || '',
+      organizationCode: this._config.organization.code ?? '',
+      propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
       controllerCode: '',
       identities: identities,
-      jurisdictionCode: this._config.jurisdiction.code || '',
+      jurisdictionCode: this._config.jurisdiction.code ?? '',
       rightCode: eventData.right,
       user: user,
       recaptchaToken: eventData.recaptchaToken,
