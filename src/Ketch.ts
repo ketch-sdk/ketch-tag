@@ -110,6 +110,16 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
+  private readonly _subscriptionConfig: Future<SubscriptionConfiguration>
+
+  /**
+   * @internal
+   */
+  private readonly _subscriptions: Future<Subscriptions>
+
+  /**
+   * @internal
+   */
   private _provisionalConsent?: Consent
 
   /**
@@ -129,14 +139,14 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
-  private _api: KetchWebAPI
+  private readonly _api: KetchWebAPI
 
   /**
    * Identity watcher
    *
    * @internal
    */
-  private _watcher: Watcher
+  private readonly _watcher: Watcher
 
   /**
    * Constructor for Ketch takes the configuration object. All other operations are driven by the configuration
@@ -156,6 +166,16 @@ export class Ketch extends EventEmitter {
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
+    this._subscriptionConfig = new Future<SubscriptionConfiguration>({
+      name: constants.SUBSCRIPTIONS_EVENT,
+      emitter: this,
+      maxListeners,
+    })
+    this._subscriptions = new Future<Subscriptions>({
+      name: constants.SUBSCRIPTION_CONFIG_EVENT,
+      emitter: this,
+      maxListeners,
+    })
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = false
     this._provisionalConsent = undefined
@@ -835,6 +855,10 @@ export class Ketch extends EventEmitter {
       return {}
     }
 
+    if (this._subscriptions.isFulfilled()) {
+      return this._subscriptions
+    }
+
     const config = await this.getSubscriptionConfiguration()
     if (config.topics.length === 0 || config.identities === undefined || Object.keys(config.identities).length === 0) {
       return {}
@@ -860,7 +884,11 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    return this._api.getSubscriptions(request)
+    const subscriptions = await this._api.getSubscriptions(request)
+
+    this._subscriptions.value = subscriptions
+
+    return subscriptions
   }
 
   /**
@@ -900,6 +928,8 @@ export class Ketch extends EventEmitter {
       }
     }
 
+    this._subscriptions.value = subscriptions
+
     return this._api.setSubscriptions(request)
   }
 
@@ -909,6 +939,10 @@ export class Ketch extends EventEmitter {
   async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
     log.trace('getSubscriptionConfiguration')
 
+    if (this._subscriptionConfig.isFulfilled()) {
+      return this._subscriptionConfig
+    }
+
     const config = await this._api.getSubscriptionsConfiguration({
       organizationCode: this._config.organization.code,
       propertyCode: this._config.property?.code ?? '',
@@ -916,6 +950,9 @@ export class Ketch extends EventEmitter {
     })
 
     log.trace('subscriptionConfig', config)
+
+    this._subscriptionConfig.value = config
+
     return config
   }
 
@@ -1302,6 +1339,12 @@ export class Ketch extends EventEmitter {
 
       case constants.REGION_INFO_EVENT:
         return this._regionInfo
+
+      case constants.SUBSCRIPTIONS_EVENT:
+        return this._subscriptions
+
+      case constants.SUBSCRIPTION_CONFIG_EVENT:
+        return this._subscriptionConfig
     }
 
     return
