@@ -835,31 +835,23 @@ export class Ketch extends EventEmitter {
       return {}
     }
 
+    const config = await this.getSubscriptionConfiguration()
+    if (config.topics.length === 0 || Object.keys(config.identities).length === 0) {
+      return {}
+    }
+
     const request: GetSubscriptionsRequest = {
       organizationCode: this._config.organization.code ?? '',
       controllerCode: '',
       propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
       identities: {},
-      topics: {
-        // TODO
-        // '': {
-        //   status: SubscriptionStatus.Granted,
-        //   contactMethods: [],
-        // }
-      },
-      controls: {
-        // TODO
-        // '': {
-        //   status: SubscriptionStatus.Granted,
-        // },
-      },
+      topics: {},
+      controls: {},
       collectedAt: Math.floor(Date.now() / 1000),
     }
 
     if (request.identities) {
-      const config = await this.getSubscriptionConfiguration()
-
       const identities = await this.getIdentities()
       for (const key of Object.keys(identities)) {
         if (config.identities[key]) {
@@ -883,6 +875,11 @@ export class Ketch extends EventEmitter {
       return
     }
 
+    const config = await this.getSubscriptionConfiguration()
+    if (config.topics.length === 0 || Object.keys(config.identities).length === 0) {
+      return
+    }
+
     const request: SetSubscriptionsRequest = {
       organizationCode: this._config.organization.code ?? '',
       controllerCode: '',
@@ -895,8 +892,6 @@ export class Ketch extends EventEmitter {
     }
 
     if (request.identities) {
-      const config = await this.getSubscriptionConfiguration()
-
       const identities = await this.getIdentities()
       for (const key of Object.keys(identities)) {
         if (config.identities[key]) {
