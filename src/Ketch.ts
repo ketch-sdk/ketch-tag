@@ -836,7 +836,7 @@ export class Ketch extends EventEmitter {
     }
 
     const config = await this.getSubscriptionConfiguration()
-    if (config.topics.length === 0 || Object.keys(config.identities).length === 0) {
+    if (config.topics.length === 0 || config.identities === undefined || Object.keys(config.identities).length === 0) {
       return {}
     }
 
@@ -876,7 +876,7 @@ export class Ketch extends EventEmitter {
     }
 
     const config = await this.getSubscriptionConfiguration()
-    if (config.topics.length === 0 || Object.keys(config.identities).length === 0) {
+    if (config.topics.length === 0 || config.identities === undefined || Object.keys(config.identities).length === 0) {
       return
     }
 
