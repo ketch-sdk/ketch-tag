@@ -7,6 +7,8 @@ export default {
   IDENTITY_EVENT: 'identity',
   JURISDICTION_EVENT: 'jurisdiction',
   REGION_INFO_EVENT: 'regionInfo',
+  SUBSCRIPTIONS_EVENT: 'subscriptions',
+  SUBSCRIPTION_CONFIG_EVENT: 'subscriptionConfig',
   RIGHT_INVOKED_EVENT: 'rightInvoked',
   WILL_SHOW_EXPERIENCE_EVENT: 'willShowExperience',
   SHOW_CONSENT_EXPERIENCE_EVENT: 'showConsentExperience',
