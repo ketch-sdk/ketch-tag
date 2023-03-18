@@ -461,44 +461,46 @@ export class Ketch extends EventEmitter {
     }
 
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
+      params = params ?? {}
+
       // check if experience show parameter override set
       const tab = parameters.get(constants.PREFERENCES_TAB)
 
       // override with url param
       if (tab && isTab(tab)) {
-        if (!params) {
-          params = {}
-        }
         params.tab = tab
         l.info('tab', tab)
       }
 
       const subConfig = await this.getSubscriptionConfiguration()
-      params = params ?? {}
-      if (
-        subConfig.topics === undefined ||
-        subConfig.topics.length === 0 ||
-        Object.keys(subConfig.identities).length === 0
-      ) {
-        params.showSubscriptionsTab = false
-        log.trace('showPreferences', 'not showing subscriptions because invalid subscription config')
-      }
+      if (subConfig !== undefined) {
+        if (
+          subConfig.topics === undefined ||
+          subConfig.topics.length === 0 ||
+          Object.keys(subConfig.identities).length === 0
+        ) {
+          params.showSubscriptionsTab = false
+          log.trace('showPreferences', 'not showing subscriptions because invalid subscription config')
+        }
 
-      if (params.showSubscriptionsTab) {
-        let haveAuthIdentities = false
+        if (params.showSubscriptionsTab) {
+          let haveAuthIdentities = false
 
-        const identities = await this.getIdentities()
-        for (const key of Object.keys(subConfig.identities)) {
-          if (identities[key]) {
-            haveAuthIdentities = true
-            break
+          const identities = await this.getIdentities()
+          for (const key of Object.keys(subConfig.identities)) {
+            if (identities[key]) {
+              haveAuthIdentities = true
+              break
+            }
+          }
+
+          if (!haveAuthIdentities) {
+            log.trace('showPreferences', 'not showing subscriptions because no auth identities')
+            params.showSubscriptionsTab = false
           }
         }
-
-        if (!haveAuthIdentities) {
-          log.trace('showPreferences', 'not showing subscriptions because no auth identities')
-          params.showSubscriptionsTab = false
-        }
+      } else {
+        params.showSubscriptionsTab = false
       }
 
       this.willShowExperience(ExperienceType.Preference)
@@ -882,7 +884,11 @@ export class Ketch extends EventEmitter {
   async getSubscriptions(): Promise<Subscriptions> {
     log.trace('getSubscriptions')
 
-    if (this._config.property === undefined || this._config.environment === undefined) {
+    if (
+      this._config.organization === undefined ||
+      this._config.property === undefined ||
+      this._config.environment === undefined
+    ) {
       log.trace('getSubscriptions', 'exiting because invalid config', this._config)
       return {}
     }
@@ -905,10 +911,10 @@ export class Ketch extends EventEmitter {
     }
 
     const request: GetSubscriptionsRequest = {
-      organizationCode: this._config.organization.code ?? '',
+      organizationCode: this._config?.organization?.code ?? '',
       controllerCode: '',
-      propertyCode: this._config.property.code ?? '',
-      environmentCode: this._config.environment.code,
+      propertyCode: this._config?.property?.code ?? '',
+      environmentCode: this._config?.environment?.code,
       collectedAt: Math.floor(Date.now() / 1000),
     }
 
@@ -940,7 +946,11 @@ export class Ketch extends EventEmitter {
   async setSubscriptions(subscriptions: Subscriptions): Promise<void> {
     log.trace('setSubscriptions', subscriptions, this._config)
 
-    if (this._config.property === undefined || this._config.environment === undefined) {
+    if (
+      this._config.organization === undefined ||
+      this._config.property === undefined ||
+      this._config.environment === undefined
+    ) {
       log.trace('setSubscriptions', 'exiting because of invalid config')
       return
     }
@@ -959,10 +969,10 @@ export class Ketch extends EventEmitter {
     }
 
     const request: SetSubscriptionsRequest = {
-      organizationCode: this._config.organization.code ?? '',
+      organizationCode: this._config?.organization?.code ?? '',
       controllerCode: '',
-      propertyCode: this._config.property.code ?? '',
-      environmentCode: this._config.environment.code,
+      propertyCode: this._config?.property?.code ?? '',
+      environmentCode: this._config?.environment?.code,
       topics: subscriptions.topics,
       controls: subscriptions.controls,
       collectedAt: Math.floor(Date.now() / 1000),
@@ -997,9 +1007,9 @@ export class Ketch extends EventEmitter {
     }
 
     const config = await this._api.getSubscriptionsConfiguration({
-      organizationCode: this._config.organization.code,
-      propertyCode: this._config.property?.code ?? '',
-      languageCode: this._config.language ?? '',
+      organizationCode: this._config?.organization?.code ?? '',
+      propertyCode: this._config?.property?.code ?? '',
+      languageCode: this._config?.language ?? '',
     })
 
     log.trace('subscriptionConfig', config)
