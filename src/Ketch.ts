@@ -472,6 +472,35 @@ export class Ketch extends EventEmitter {
         params.tab = tab
         l.info('tab', tab)
       }
+
+      const subConfig = await this.getSubscriptionConfiguration()
+      params = params ?? {}
+      if (
+        subConfig.topics === undefined ||
+        subConfig.topics.length === 0 ||
+        Object.keys(subConfig.identities).length === 0
+      ) {
+        params.showSubscriptionsTab = false
+        log.trace('showPreferences', 'not showing subscriptions because invalid subscription config')
+      }
+
+      if (params.showSubscriptionsTab) {
+        let haveAuthIdentities = false
+
+        const identities = await this.getIdentities()
+        for (const key of Object.keys(subConfig.identities)) {
+          if (identities[key]) {
+            haveAuthIdentities = true
+            break
+          }
+        }
+
+        if (!haveAuthIdentities) {
+          log.trace('showPreferences', 'not showing subscriptions because no auth identities')
+          params.showSubscriptionsTab = false
+        }
+      }
+
       this.willShowExperience(ExperienceType.Preference)
       this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
     }
@@ -851,7 +880,10 @@ export class Ketch extends EventEmitter {
    * Get subscriptions
    */
   async getSubscriptions(): Promise<Subscriptions> {
+    log.trace('getSubscriptions')
+
     if (this._config.property === undefined || this._config.environment === undefined) {
+      log.trace('getSubscriptions', 'exiting because invalid config', this._config)
       return {}
     }
 
@@ -861,6 +893,14 @@ export class Ketch extends EventEmitter {
 
     const config = await this.getSubscriptionConfiguration()
     if (config.topics.length === 0 || config.identities === undefined || Object.keys(config.identities).length === 0) {
+      log.trace(
+        'getSubscriptions',
+        'exiting because invalid subscription config',
+        config,
+        config.topics.length,
+        config.identities,
+        Object.keys(config.identities),
+      )
       return {}
     }
 
@@ -869,19 +909,20 @@ export class Ketch extends EventEmitter {
       controllerCode: '',
       propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
-      identities: {},
-      topics: {},
-      controls: {},
       collectedAt: Math.floor(Date.now() / 1000),
     }
 
-    if (request.identities) {
-      const identities = await this.getIdentities()
-      for (const key of Object.keys(identities)) {
-        if (config.identities[key]) {
-          request.identities[key] = identities[key]
-        }
+    request.identities = {}
+
+    const identities = await this.getIdentities()
+    for (const key of Object.keys(config.identities)) {
+      if (identities[key]) {
+        request.identities[key] = identities[key]
       }
+    }
+
+    if (Object.keys(request.identities).length === 0) {
+      log.trace('getSubscriptions', 'exiting because no identities')
     }
 
     const subscriptions = await this._api.getSubscriptions(request)
@@ -897,14 +938,23 @@ export class Ketch extends EventEmitter {
    * @param subscriptions
    */
   async setSubscriptions(subscriptions: Subscriptions): Promise<void> {
-    log.trace('setSubscriptions', subscriptions)
+    log.trace('setSubscriptions', subscriptions, this._config)
 
     if (this._config.property === undefined || this._config.environment === undefined) {
+      log.trace('setSubscriptions', 'exiting because of invalid config')
       return
     }
 
     const config = await this.getSubscriptionConfiguration()
     if (config.topics.length === 0 || config.identities === undefined || Object.keys(config.identities).length === 0) {
+      log.trace(
+        'setSubscriptions',
+        'exiting because of invalid subscription config',
+        config,
+        config.topics.length === 0,
+        config.identities,
+        Object.keys(config.identities),
+      )
       return
     }
 
@@ -913,19 +963,22 @@ export class Ketch extends EventEmitter {
       controllerCode: '',
       propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
-      identities: {},
       topics: subscriptions.topics,
       controls: subscriptions.controls,
       collectedAt: Math.floor(Date.now() / 1000),
     }
 
-    if (request.identities) {
-      const identities = await this.getIdentities()
-      for (const key of Object.keys(identities)) {
-        if (config.identities[key]) {
-          request.identities[key] = identities[key]
-        }
+    request.identities = {}
+
+    const identities = await this.getIdentities()
+    for (const key of Object.keys(config.identities)) {
+      if (identities[key]) {
+        request.identities[key] = identities[key]
       }
+    }
+
+    if (Object.keys(request.identities).length === 0) {
+      log.trace('setSubscriptions', 'exiting because no identities')
     }
 
     this._subscriptions.value = subscriptions
@@ -937,7 +990,7 @@ export class Ketch extends EventEmitter {
    * Get Subscription configuration
    */
   async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
-    log.trace('getSubscriptionConfiguration')
+    log.trace('getSubscriptionConfiguration', this._config)
 
     if (this._subscriptionConfig.isFulfilled()) {
       return this._subscriptionConfig
