@@ -26,6 +26,7 @@ describe('Ketch', () => {
     invokeRight: jest.fn(), // () => request: InvokeRightRequest): Promise<void>
     preferenceQR: jest.fn(), // () => request: GetPreferenceQRRequest): Promise<string>
     webReport: jest.fn(), // () => channel: string, request: WebReportRequest): Promise<void>
+    getSubscriptionsConfiguration: jest.fn(),
   }
   const webAPI = webAPIMock as unknown as KetchWebAPI
   const emptyConfig = {} as Configuration
@@ -98,7 +99,9 @@ describe('Ketch', () => {
           expect(k).toBeDefined()
           expect(config).toStrictEqual(config)
           expect(consents).toStrictEqual(consent)
-          expect(options).toStrictEqual({})
+          expect(options).toStrictEqual({
+            showSubscriptionsTab: false,
+          })
         },
 
         consentChanged(k: KetchAPI, config: Configuration, consent) {
@@ -518,7 +521,9 @@ describe('Ketch', () => {
             analytics: true,
           },
         },
-        {},
+        {
+          showSubscriptionsTab: false,
+        },
       )
     })
 
@@ -564,6 +569,7 @@ describe('Ketch', () => {
           },
         },
         {
+          showSubscriptionsTab: false,
           tab: Tab.Rights,
         },
       )
