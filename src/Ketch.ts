@@ -32,6 +32,7 @@ import {
   Subscriptions,
   GetSubscriptionsRequest,
   SetSubscriptionsRequest,
+  Tab,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -508,6 +509,10 @@ export class Ketch extends EventEmitter {
       } else {
         l.trace('invalid subscription config')
         params.showSubscriptionsTab = false
+      }
+
+      if (!params.showSubscriptionsTab && params.tab === Tab.Subscriptions) {
+        params.tab = undefined
       }
 
       this.willShowExperience(ExperienceType.Preference)
