@@ -68,7 +68,7 @@ describe('emit', () => {
     expect(androidHandler).toHaveBeenCalledWith()
   })
 
-  it('does not call iOS messageHandler postMessage if not defined', () => {
+  it.concurrent('does not call iOS messageHandler postMessage if not defined', () => {
     const ketch = new Ketch(new KetchWebAPI(''), config)
 
     const webkitHandler = jest.fn()
@@ -83,7 +83,7 @@ describe('emit', () => {
     expect(webkitHandler).not.toHaveBeenCalled()
   })
 
-  it('calls iOS messageHandler postMessage if defined', () => {
+  it.concurrent('calls iOS messageHandler postMessage if defined', () => {
     const ketch = new Ketch(new KetchWebAPI(''), config)
 
     const webkitHandler = jest.fn()
