@@ -55,7 +55,6 @@ declare global {
   }
 
   type WKHandler = {
-    (args?: any): void
     postMessage(args?: any): void
   }
 
@@ -66,6 +65,7 @@ declare global {
   interface Window {
     androidListener: AndroidListeners
     webkit: WebKit
+    [name: string]: any
   }
 }
 
@@ -1346,6 +1346,54 @@ export class Ketch extends EventEmitter {
         l.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
       }
     }
+
+    if (
+      this._config &&
+      this._config.options &&
+      this._config.options.externalListener &&
+      window[this._config.options.externalListener]
+    ) {
+      const externalListener = window[this._config.options.externalListener]
+
+      const eventName = event.toString()
+
+      const filteredArgs: any[] = []
+      for (const arg of args) {
+        if (arg !== this) {
+          filteredArgs.push(arg)
+        }
+      }
+
+      let argument
+      if (filteredArgs.length === 1 && typeof filteredArgs[0] === 'string') {
+        argument = filteredArgs[0]
+      } else if (filteredArgs.length === 1) {
+        argument = filteredArgs[0]
+      } else if (filteredArgs.length > 1) {
+        argument = filteredArgs
+      }
+
+      let eventData: { [key: string]: any } | string = {
+        event: eventName,
+        data: argument,
+      }
+
+      // TODO: option to determine if we pass stringify data or not
+      eventData = JSON.stringify(eventData)
+
+      if (typeof externalListener === 'function') {
+        externalListener(eventData)
+      } else if ('postMessage' in externalListener && typeof externalListener['postMessage'] === 'function') {
+        externalListener.postMessage(eventData)
+      } else if (typeof externalListener === 'object' && eventName in externalListener) {
+        if (externalListener[eventName] === 'function') {
+          externalListener[eventName](argument)
+        } else if ('postMessage' in externalListener[eventName]) {
+          externalListener[eventName].postMessage(argument)
+        }
+      }
+    }
+
     return super.emit(event, ...args)
   }
 
