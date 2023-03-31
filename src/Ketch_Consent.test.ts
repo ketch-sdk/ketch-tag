@@ -160,7 +160,7 @@ describe('consent', () => {
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
-        return JSON.stringify({})
+        return JSON.stringify({ organizationCode: 'org' })
       })
 
       return ketch.fetchConsent(identities).then(x => {
@@ -175,6 +175,7 @@ describe('consent', () => {
 
       fetchMock.mockResponse(async (): Promise<string> => {
         return JSON.stringify({
+          organizationCode: 'org',
           purposes: {
             pacode1: {
               allowed: 'true',
