@@ -65,7 +65,7 @@
     "@ketch-sdk/ketch-data-layer": "^1.2.1",
     "@ketch-sdk/ketch-logging": "^1.2.0",
     "@ketch-sdk/ketch-types": "^1.9.8",
-    "@ketch-sdk/ketch-web-api": "^1.3.2",
+    "@ketch-sdk/ketch-web-api": "^1.3.3",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "nano-equal": "^2.0.2",

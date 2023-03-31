@@ -157,10 +157,11 @@ describe('consent', () => {
 
   describe('fetchConsent', () => {
     it('handles a call with full config and no server consent', () => {
+      document.cookie = '_swb_consent_=; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure'
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
-        return JSON.stringify({ organizationCode: 'org' })
+        return JSON.stringify({})
       })
 
       return ketch.fetchConsent(identities).then(x => {
@@ -171,6 +172,7 @@ describe('consent', () => {
     })
 
     it('handles a call with full config and server consent', () => {
+      document.cookie = '_swb_consent_=; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure'
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
