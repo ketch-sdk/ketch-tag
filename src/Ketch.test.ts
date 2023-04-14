@@ -155,7 +155,7 @@ describe('Ketch', () => {
         // },
       })
 
-      expect.assertions(31 + 3) // willShowExperience is twice
+      expect.assertions(31 + 3 + 3) // willShowExperience is twice
       await ketch.setEnvironment({ code: constants.PRODUCTION })
       await ketch.setGeoIP(geoip)
       await ketch.setIdentities(identities)
