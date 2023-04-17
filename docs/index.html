@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@ketch-sdk/ketch-tag</title><meta name="description" content="Documentation for @ketch-sdk/ketch-tag"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script async src="assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@ketch-sdk/ketch-tag</title><meta name="description" content="Documentation for @ketch-sdk/ketch-tag"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base=".">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -9,46 +9,26 @@
 <li class="state failure">The search index is not available</li></ul><a href="index.html" class="title">@ketch-sdk/ketch-tag</a></div>
 <div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
 <div class="container container-main">
-<div class="col-8 col-content">
+<div class="col-content">
 <div class="tsd-page-title">
 <h2>@ketch-sdk/ketch-tag</h2></div>
-<div class="tsd-panel tsd-typography">
-<a href="#ketch-tag" id="ketch-tag" style="color: inherit; text-decoration: none;">
-  <h1>ketch-tag</h1>
-</a>
-<p>Ketch web infrastructure tag</p>
-
-<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
-  <h1>Prerequisites</h1>
-</a>
-<ul>
+<div class="tsd-panel tsd-typography"><a id="md:ketch-tag" class="tsd-anchor"></a><h1><a href="#$ketch-tag" style="color:inherit;text-decoration:none">ketch-tag</a></h1><p>Ketch web infrastructure tag</p>
+<a id="md:prerequisites" class="tsd-anchor"></a><h1><a href="#$prerequisites" style="color:inherit;text-decoration:none">Prerequisites</a></h1><ul>
 <li><a href="https://www.npmjs.com/package/@vercel/ncc">NCC</a> <code>npm i -g @vercel/ncc</code></li>
 </ul>
-
-<a href="#local-dx" id="local-dx" style="color: inherit; text-decoration: none;">
-  <h1>Local DX</h1>
-</a>
-<ol>
+<a id="md:local-dx" class="tsd-anchor"></a><h1><a href="#$local-dx" style="color:inherit;text-decoration:none">Local DX</a></h1><ol>
 <li><code>npm install</code></li>
 <li><code>npm run build</code></li>
 <li><code>docker compose -f base.yml -f docker-compose.yml up --build</code></li>
 <li>Navigate to <a href="https://localhost:8080/ketchtag/test/?swb_debug">https://localhost:8080/ketchtag/test/?swb_debug</a></li>
 </ol>
-
-<a href="#optional" id="optional" style="color: inherit; text-decoration: none;">
-  <h3>Optional</h3>
-</a>
-<p>You can test <a href="https://github.com/ketch-com/ketch-plugins/">ketch-plugins</a> or <a href="https://github.com/ketch-com/lanyard">lanyard</a> locally by including the following in <code>./docker-compose.yml</code> under <code>volumes</code>.</p>
+<a id="md:optional" class="tsd-anchor"></a><h3><a href="#$optional" style="color:inherit;text-decoration:none">Optional</a></h3><p>You can test <a href="https://github.com/ketch-com/ketch-plugins/">ketch-plugins</a> or <a href="https://github.com/ketch-com/lanyard">lanyard</a> locally by including the following in <code>./docker-compose.yml</code> under <code>volumes</code>.</p>
 <pre><code><span class="hl-0">- </span><span class="hl-1">&quot;{path-to-local-directory}/dist/plugins.js:/ketch/public/plugins.js&quot;</span>
 </code></pre>
 <p>Then update <code>./test/fixtures/index.html</code> to point to the new file:</p>
 <pre><code><span class="hl-0">&lt;</span><span class="hl-2">script</span><span class="hl-0"> </span><span class="hl-2">src</span><span class="hl-0">=</span><span class="hl-1">&quot;../plugins.js&quot;</span><span class="hl-0">&gt;&lt;/</span><span class="hl-3">script</span><span class="hl-0">&gt;</span>
 </code></pre>
-
-<a href="#querystring-parameters" id="querystring-parameters" style="color: inherit; text-decoration: none;">
-  <h2>Querystring parameters</h2>
-</a>
-<p>The following querystring parameters are checked at various points during the initialization and
+<a id="md:querystring-parameters" class="tsd-anchor"></a><h2><a href="#$querystring-parameters" style="color:inherit;text-decoration:none">Querystring parameters</a></h2><p>The following querystring parameters are checked at various points during the initialization and
 operation of the Ketch tag.</p>
 <table>
 <thead>
@@ -94,11 +74,7 @@ operation of the Ketch tag.</p>
 <td>forces a particular tab of the preferences experience to show</td>
 </tr>
 </tbody></table>
-
-<a href="#ketch-function" id="ketch-function" style="color: inherit; text-decoration: none;">
-  <h2>Ketch function</h2>
-</a>
-<p>Newer bootstrap tags include the definition of a <code>ketch</code> function that should be the primary entrypoint
+<a id="md:ketch-function" class="tsd-anchor"></a><h2><a href="#$ketch-function" style="color:inherit;text-decoration:none">Ketch function</a></h2><p>Newer bootstrap tags include the definition of a <code>ketch</code> function that should be the primary entrypoint
 into the Ketch Tag API.  The old <code>semaphore.push</code> will still be supported until the next major release.</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">  </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent updated&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">})</span>
 </code></pre>
@@ -106,121 +82,50 @@ into the Ketch Tag API.  The old <code>semaphore.push</code> will still be suppo
 <pre><code class="language-typescript"><span class="hl-2">semaphore</span><span class="hl-0">.</span><span class="hl-4">push</span><span class="hl-0">([</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">  </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent updated&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">}])</span>
 </code></pre>
 <p>The remainder of the examples will use the <code>ketch</code> function, but the equivalent <code>semaphore.push</code> can be used.</p>
-
-<a href="#showing-consent-experience" id="showing-consent-experience" style="color: inherit; text-decoration: none;">
-  <h2>Showing Consent Experience</h2>
-</a>
-<p>The consent experience can be shown to a data subject using the following:</p>
+<a id="md:showing-consent-experience" class="tsd-anchor"></a><h2><a href="#$showing-consent-experience" style="color:inherit;text-decoration:none">Showing Consent Experience</a></h2><p>The consent experience can be shown to a data subject using the following:</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;showConsent&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-6">// options</span><br/><span class="hl-0">})</span>
 </code></pre>
-
-<a href="#showing-preferences-experience" id="showing-preferences-experience" style="color: inherit; text-decoration: none;">
-  <h2>Showing Preferences Experience</h2>
-</a>
-<p>The preferences experience can be shown to a data subject using the following:</p>
+<a id="md:showing-preferences-experience" class="tsd-anchor"></a><h2><a href="#$showing-preferences-experience" style="color:inherit;text-decoration:none">Showing Preferences Experience</a></h2><p>The preferences experience can be shown to a data subject using the following:</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;showPreferences&#39;</span><span class="hl-0">, {</span><br/><span class="hl-0">  </span><span class="hl-6">// options</span><br/><span class="hl-0">})</span>
 </code></pre>
-
-<a href="#events" id="events" style="color: inherit; text-decoration: none;">
-  <h2>Events</h2>
-</a>
-<p>The Ketch tag will emit a variety of events to allow integrating into a site and extending functionality.</p>
-
-<a href="#on" id="on" style="color: inherit; text-decoration: none;">
-  <h3>on</h3>
-</a>
-<p>To handle every occurrence of an event (<code>consent</code> in this example), use the following:</p>
+<a id="md:events" class="tsd-anchor"></a><h2><a href="#$events" style="color:inherit;text-decoration:none">Events</a></h2><p>The Ketch tag will emit a variety of events to allow integrating into a site and extending functionality.</p>
+<a id="md:on" class="tsd-anchor"></a><h3><a href="#$on" style="color:inherit;text-decoration:none">on</a></h3><p>To handle every occurrence of an event (<code>consent</code> in this example), use the following:</p>
 <pre><code class="language-typescript"><span class="hl-5">function</span><span class="hl-0"> </span><span class="hl-4">handleConsentChange</span><span class="hl-0">(</span><span class="hl-2">consent</span><span class="hl-0">: </span><span class="hl-3">Consent</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-6">// TODO - do something with the consent</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;on&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
-
-<a href="#once" id="once" style="color: inherit; text-decoration: none;">
-  <h3>once</h3>
-</a>
-<p>To handle just a single occurrence of an event, use the following:</p>
+<a id="md:once" class="tsd-anchor"></a><h3><a href="#$once" style="color:inherit;text-decoration:none">once</a></h3><p>To handle just a single occurrence of an event, use the following:</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;once&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
-
-<a href="#off" id="off" style="color: inherit; text-decoration: none;">
-  <h3>off</h3>
-</a>
-<p>To stop handling events, use the following:</p>
+<a id="md:off" class="tsd-anchor"></a><h3><a href="#$off" style="color:inherit;text-decoration:none">off</a></h3><p>To stop handling events, use the following:</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;off&#39;</span><span class="hl-0">, </span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConsentChange</span><span class="hl-0">)</span>
 </code></pre>
-
-<a href="#consent" id="consent" style="color: inherit; text-decoration: none;">
-  <h3>consent</h3>
-</a>
-<p>The <code>consent</code> event is emitted whenever consent is resolved, either by loading from local storage, remote storage or
+<a id="md:consent" class="tsd-anchor"></a><h3><a href="#$consent" style="color:inherit;text-decoration:none">consent</a></h3><p>The <code>consent</code> event is emitted whenever consent is resolved, either by loading from local storage, remote storage or
 by prompting the user. The argument to the event is a consent object, where the keys are the purposes and the value is
 a boolean denoting whether the user has consented to the purpose.</p>
-
-<a href="#environment" id="environment" style="color: inherit; text-decoration: none;">
-  <h3>environment</h3>
-</a>
-<p>The <code>environment</code> event is emitted whenever the environment is resolved from configuration.</p>
-
-<a href="#geoip" id="geoip" style="color: inherit; text-decoration: none;">
-  <h3>geoip</h3>
-</a>
-<p>The <code>geoip</code> event is emitted whenever the location has been resolved from the IP address.</p>
-
-<a href="#identities" id="identities" style="color: inherit; text-decoration: none;">
-  <h3>identities</h3>
-</a>
-<p>The <code>identities</code> event is emitted whenever the identities collected about the user have changed.</p>
-
-<a href="#jurisdiction" id="jurisdiction" style="color: inherit; text-decoration: none;">
-  <h3>jurisdiction</h3>
-</a>
-<p>The <code>jurisdiction</code> event is emitted whenever the jurisdiction of the user has resolved or changed.</p>
-
-<a href="#regioninfo" id="regioninfo" style="color: inherit; text-decoration: none;">
-  <h3>regionInfo</h3>
-</a>
-<p>The <code>regionInfo</code> event is emitted whenever the region information about the user has resolved or changed.</p>
-
-<a href="#willshowexperience" id="willshowexperience" style="color: inherit; text-decoration: none;">
-  <h3>willShowExperience</h3>
-</a>
-<p>The <code>willShowExperience</code> event is emitted when an experience is shown to the user.</p>
-
-<a href="#hideexperience" id="hideexperience" style="color: inherit; text-decoration: none;">
-  <h3>hideExperience</h3>
-</a>
-<p>The <code>hideExperience</code> event is emitted when an experience is hidden from the user.</p>
-
-<a href="#properties" id="properties" style="color: inherit; text-decoration: none;">
-  <h2>Properties</h2>
-</a>
-<p>The Ketch tag exposes several properties available to interrogate.</p>
-
-<a href="#config" id="config" style="color: inherit; text-decoration: none;">
-  <h3>config</h3>
-</a>
-<p>To get the current configuration, use the following:</p>
+<a id="md:environment" class="tsd-anchor"></a><h3><a href="#$environment" style="color:inherit;text-decoration:none">environment</a></h3><p>The <code>environment</code> event is emitted whenever the environment is resolved from configuration.</p>
+<a id="md:geoip" class="tsd-anchor"></a><h3><a href="#$geoip" style="color:inherit;text-decoration:none">geoip</a></h3><p>The <code>geoip</code> event is emitted whenever the location has been resolved from the IP address.</p>
+<a id="md:identities" class="tsd-anchor"></a><h3><a href="#$identities" style="color:inherit;text-decoration:none">identities</a></h3><p>The <code>identities</code> event is emitted whenever the identities collected about the user have changed.</p>
+<a id="md:jurisdiction" class="tsd-anchor"></a><h3><a href="#$jurisdiction" style="color:inherit;text-decoration:none">jurisdiction</a></h3><p>The <code>jurisdiction</code> event is emitted whenever the jurisdiction of the user has resolved or changed.</p>
+<a id="md:regioninfo" class="tsd-anchor"></a><h3><a href="#$regioninfo" style="color:inherit;text-decoration:none">regionInfo</a></h3><p>The <code>regionInfo</code> event is emitted whenever the region information about the user has resolved or changed.</p>
+<a id="md:willshowexperience" class="tsd-anchor"></a><h3><a href="#$willshowexperience" style="color:inherit;text-decoration:none">willShowExperience</a></h3><p>The <code>willShowExperience</code> event is emitted when an experience is shown to the user.</p>
+<a id="md:hideexperience" class="tsd-anchor"></a><h3><a href="#$hideexperience" style="color:inherit;text-decoration:none">hideExperience</a></h3><p>The <code>hideExperience</code> event is emitted when an experience is hidden from the user.</p>
+<a id="md:properties" class="tsd-anchor"></a><h2><a href="#$properties" style="color:inherit;text-decoration:none">Properties</a></h2><p>The Ketch tag exposes several properties available to interrogate.</p>
+<a id="md:config" class="tsd-anchor"></a><h3><a href="#$config" style="color:inherit;text-decoration:none">config</a></h3><p>To get the current configuration, use the following:</p>
 <pre><code class="language-typescript"><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;getConfig&#39;</span><span class="hl-0">, </span><span class="hl-2">handleConfig</span><span class="hl-0">)</span>
 </code></pre>
-
-<a href="#plugins" id="plugins" style="color: inherit; text-decoration: none;">
-  <h2>Plugins</h2>
-</a>
-<p>The Ketch Tag allows extending functionality by registering plugins. The plugin is a function that receives an instance
+<a id="md:plugins" class="tsd-anchor"></a><h2><a href="#$plugins" style="color:inherit;text-decoration:none">Plugins</a></h2><p>The Ketch Tag allows extending functionality by registering plugins. The plugin is a function that receives an instance
 of the Ketch Tag and the configuration of the plugin.</p>
 <pre><code class="language-typescript"><span class="hl-5">function</span><span class="hl-0"> </span><span class="hl-4">myPlugin</span><span class="hl-0">(</span><span class="hl-2">host</span><span class="hl-0">: </span><span class="hl-3">Ketch</span><span class="hl-0">, </span><span class="hl-2">_config</span><span class="hl-0">: </span><span class="hl-3">any</span><span class="hl-0">) {</span><br/><span class="hl-0">  </span><span class="hl-2">host</span><span class="hl-0">.</span><span class="hl-4">on</span><span class="hl-0">(</span><span class="hl-1">&#39;consent&#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0"> </span><span class="hl-5">=&gt;</span><span class="hl-0"> {</span><br/><span class="hl-0">    </span><span class="hl-2">console</span><span class="hl-0">.</span><span class="hl-4">log</span><span class="hl-0">(</span><span class="hl-1">&#39;consent changed to: &#39;</span><span class="hl-0">, </span><span class="hl-2">consent</span><span class="hl-0">)</span><br/><span class="hl-0">  })</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-4">ketch</span><span class="hl-0">(</span><span class="hl-1">&#39;registerPlugin&#39;</span><span class="hl-0">, </span><span class="hl-2">myPlugin</span><span class="hl-0">)</span>
 </code></pre>
-
-<a href="#testing" id="testing" style="color: inherit; text-decoration: none;">
-  <h2>Testing</h2>
-</a>
-<p>To test the tag locally, run the following:</p>
+<a id="md:testing" class="tsd-anchor"></a><h2><a href="#$testing" style="color:inherit;text-decoration:none">Testing</a></h2><p>To test the tag locally, run the following:</p>
 <pre><code class="language-shell"><span class="hl-0">npm </span><span class="hl-1">run</span><span class="hl-0"> </span><span class="hl-1">all</span><br/><span class="hl-0">docker </span><span class="hl-1">compose</span><span class="hl-0"> </span><span class="hl-1">--file</span><span class="hl-0"> </span><span class="hl-1">base.yml</span><span class="hl-0"> </span><span class="hl-1">up</span><span class="hl-0"> </span><span class="hl-1">-d</span><br/><span class="hl-0">docker </span><span class="hl-1">compose</span><span class="hl-0"> </span><span class="hl-1">up</span><span class="hl-0"> </span><span class="hl-1">-d</span><br/><span class="hl-0">open </span><span class="hl-1">https://localhost:</span><span class="hl-7">8080</span><span class="hl-1">/ketchtag/test/</span>
 </code></pre>
 <p>The test page is located in <code>./test/fixtures/index.html</code>. The configuration is in <code>./test/fixtues/boot.js</code>.</p>
 </div></div>
-<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+<div class="col-sidebar">
+<div class="page-menu">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
-<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Settings</h3></summary>
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg>Settings</h3></summary>
 <div class="tsd-accordion-details">
 <div class="tsd-filter-visibility">
 <h4 class="uppercase">Member Visibility</h4><form>
@@ -229,18 +134,48 @@ of the Ketch Tag and the configuration of the plugin.</p>
 <li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-private" name="private"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Private</span></label></li>
 <li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></form></div>
 <div class="tsd-theme-toggle">
-<h4 class="uppercase">Theme</h4><select id="theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
-<nav class="tsd-navigation primary">
-<details class="tsd-index-accordion" open><summary class="tsd-accordion-summary">
-<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg> Modules</h3></summary>
+<h4 class="uppercase">Theme</h4><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-index-accordion tsd-page-navigation"><summary class="tsd-accordion-summary">
+<h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4.93896 8.531L12 15.591L19.061 8.531L16.939 6.409L12 11.349L7.06098 6.409L4.93896 8.531Z" fill="var(--color-text)"></path></svg>On This Page</h3></summary>
 <div class="tsd-accordion-details">
 <ul>
-<li class="current selected"><a href="modules.html">@ketch-<wbr/>sdk/ketch-<wbr/>tag</a>
-<ul></ul></li></ul></div></details></nav>
-<nav class="tsd-navigation secondary menu-sticky">
+<li>
 <ul>
-<li class="tsd-kind-class"><a href="classes/Ketch.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-128-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-128-text"></path></svg>Ketch</a></li>
-<li class="tsd-kind-function"><a href="functions/boot.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-64-path"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)" id="icon-64-text"></path></svg>boot</a></li></ul></nav></div></div>
-<div class="container tsd-generator">
+<li><a href="#md:ketch-tag"><span>ketch-<wbr/>tag</span></a></li>
+<li><a href="#md:prerequisites"><span>Prerequisites</span></a></li>
+<li><a href="#md:local-dx"><span>Local DX</span></a></li>
+<li>
+<ul>
+<li><a href="#md:optional"><span>Optional</span></a></li>
+<li><a href="#md:querystring-parameters"><span>Querystring parameters</span></a></li>
+<li><a href="#md:ketch-function"><span>Ketch function</span></a></li>
+<li><a href="#md:showing-consent-experience"><span>Showing <wbr/>Consent <wbr/>Experience</span></a></li>
+<li><a href="#md:showing-preferences-experience"><span>Showing <wbr/>Preferences <wbr/>Experience</span></a></li>
+<li><a href="#md:events"><span>Events</span></a></li>
+<li>
+<ul>
+<li><a href="#md:on"><span>on</span></a></li>
+<li><a href="#md:once"><span>once</span></a></li>
+<li><a href="#md:off"><span>off</span></a></li>
+<li><a href="#md:consent"><span>consent</span></a></li>
+<li><a href="#md:environment"><span>environment</span></a></li>
+<li><a href="#md:geoip"><span>geoip</span></a></li>
+<li><a href="#md:identities"><span>identities</span></a></li>
+<li><a href="#md:jurisdiction"><span>jurisdiction</span></a></li>
+<li><a href="#md:regioninfo"><span>region<wbr/>Info</span></a></li>
+<li><a href="#md:willshowexperience"><span>will<wbr/>Show<wbr/>Experience</span></a></li>
+<li><a href="#md:hideexperience"><span>hide<wbr/>Experience</span></a></li></ul></li>
+<li><a href="#md:properties"><span>Properties</span></a></li>
+<li>
+<ul>
+<li><a href="#md:config"><span>config</span></a></li></ul></li>
+<li><a href="#md:plugins"><span>Plugins</span></a></li>
+<li><a href="#md:testing"><span>Testing</span></a></li></ul></li></ul></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="modules.html" class="current"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-4-path"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)" id="icon-4-text"></path></svg><span>@ketch-<wbr/>sdk/ketch-<wbr/>tag</span></a>
+<ul class="tsd-small-nested-navigation">
+<li><a href="classes/Ketch.html"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-128-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-128-text"></path></svg><span>Ketch</span></a></li>
+<li><a href="functions/boot.html"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-64-path"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)" id="icon-64-text"></path></svg><span>boot</span></a></li></ul></nav></div></div></div>
+<div class="tsd-generator">
 <p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
-<div class="overlay"></div><script src="assets/main.js"></script></body></html>
+<div class="overlay"></div></body></html>
