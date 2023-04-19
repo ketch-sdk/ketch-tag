@@ -1,6 +1,7 @@
 export default {
   FULFILLED_EVENT: 'fulfilled',
   CONSENT_EVENT: 'consent',
+  SET_CONSENT_EVENT: 'setConsent',
   ENVIRONMENT_EVENT: 'environment',
   GEOIP_EVENT: 'geoip',
   IDENTITIES_EVENT: 'identities',

@@ -84,6 +84,13 @@ export class Ketch extends EventEmitter {
   private readonly _consent: Future<Consent>
 
   /**
+   * _setConsent is the value of the user set consent if it has been changed in this session
+   *
+   * @internal
+   */
+  private readonly _setConsent: Future<Consent>
+
+  /**
    * @internal
    */
   private readonly _environment: Future<Environment>
@@ -162,6 +169,7 @@ export class Ketch extends EventEmitter {
     this._api = api
     this._config = config
     this._consent = new Future<Consent>({ name: constants.CONSENT_EVENT, emitter: this, maxListeners })
+    this._setConsent = new Future<Consent>({ name: constants.SET_CONSENT_EVENT, emitter: this, maxListeners })
     this._environment = new Future<Environment>({ name: constants.ENVIRONMENT_EVENT, emitter: this, maxListeners })
     this._geoip = new Future({ name: constants.GEOIP_EVENT, emitter: this, maxListeners })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
@@ -598,6 +606,7 @@ export class Ketch extends EventEmitter {
     }
 
     this._consent.value = c
+    this._setConsent.value = c
 
     const identities = await this.getIdentities()
 
