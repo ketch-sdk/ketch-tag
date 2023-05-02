@@ -519,7 +519,7 @@ export class Ketch extends EventEmitter {
       const selectedTabs = parameters
         .get(constants.PREFERENCES_TABS)
         ?.split(',')
-        .filter(tab => tab && isTab(tab)) as Tab[]
+        ?.filter(tab => tab && isTab(tab)) as Tab[]
 
       if (selectedTabs?.length) {
         params.showOverviewTab = selectedTabs.includes(Tab.Overview)
