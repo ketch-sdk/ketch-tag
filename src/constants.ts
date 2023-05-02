@@ -22,6 +22,7 @@ export default {
   LANGUAGE: 'lang',
   SHOW: 'show',
   PREFERENCES_TAB: 'preferences_tab',
+  PREFERENCES_TABS: 'preferences_tabs',
   CONSENT: 'cd',
   PREFERENCES: 'preferences',
   API_SERVER: 'shoreline',
