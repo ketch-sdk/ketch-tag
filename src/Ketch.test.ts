@@ -570,6 +570,9 @@ describe('Ketch', () => {
         },
         {
           showSubscriptionsTab: false,
+          showConsentsTab: false,
+          showOverviewTab: false,
+          showRightsTab: true,
           tab: Tab.Rights,
         },
       )
