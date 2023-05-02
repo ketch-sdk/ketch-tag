@@ -473,6 +473,19 @@ export class Ketch extends EventEmitter {
         l.info('tab', tab)
       }
 
+      const selectedTabs = parameters
+        .get(constants.PREFERENCES_TABS)
+        ?.split(',')
+        ?.filter(tab => tab && isTab(tab)) as Tab[]
+
+      if (selectedTabs?.length) {
+        params.showOverviewTab = selectedTabs.includes(Tab.Overview)
+        params.showConsentsTab = selectedTabs.includes(Tab.Consents)
+        params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
+        params.showRightsTab = selectedTabs.includes(Tab.Rights)
+        params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
+      }
+
       const subConfig = await this.getSubscriptionConfiguration()
       if (subConfig !== undefined) {
         if (params.showSubscriptionsTab === undefined) {
@@ -515,19 +528,6 @@ export class Ketch extends EventEmitter {
         params.tab = undefined
       }
 
-      // preferences_tabs in query takes precedence
-      const selectedTabs = parameters
-        .get(constants.PREFERENCES_TABS)
-        ?.split(',')
-        ?.filter(tab => tab && isTab(tab)) as Tab[]
-
-      if (selectedTabs?.length) {
-        params.showOverviewTab = selectedTabs.includes(Tab.Overview)
-        params.showConsentsTab = selectedTabs.includes(Tab.Consents)
-        params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
-        params.showRightsTab = selectedTabs.includes(Tab.Rights)
-        params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
-      }
       this.willShowExperience(ExperienceType.Preference)
       this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
     }
