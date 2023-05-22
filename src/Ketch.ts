@@ -626,13 +626,7 @@ export class Ketch extends EventEmitter {
    */
   async setProvisionalConsent(c: Consent): Promise<void> {
     log.debug('setProvisionalConsent', c)
-
     this._provisionalConsent = c
-    if (this._consent.isFulfilled()) {
-      if (this.overrideWithProvisionalConsent(this._consent.value)) {
-        await this.setConsent(this._consent.value)
-      }
-    }
   }
 
   /**
@@ -640,14 +634,14 @@ export class Ketch extends EventEmitter {
    *
    * @param c current consent
    */
-  overrideWithProvisionalConsent(c: Consent): boolean {
+  async overrideWithProvisionalConsent(c: Consent): Promise<[Consent, boolean]> {
     const l = wrapLogger(log, 'overrideWithProvisionalConsent')
     l.debug(c)
 
     let shouldUpdateConsent = false
     if (!this._provisionalConsent) {
       l.trace('no provisional consent')
-      return shouldUpdateConsent
+      return [c, shouldUpdateConsent]
     }
     for (const key in this._provisionalConsent.purposes) {
       if (c.purposes[key] !== this._provisionalConsent.purposes[key]) {
@@ -657,7 +651,7 @@ export class Ketch extends EventEmitter {
     }
     this._provisionalConsent = undefined
     l.trace('merged', c)
-    return shouldUpdateConsent
+    return [c, shouldUpdateConsent]
   }
 
   /**
@@ -675,8 +669,9 @@ export class Ketch extends EventEmitter {
 
     const identities = await this.getIdentities()
 
-    const c = await this.fetchConsent(identities)
-    let shouldCreatePermits = this.overrideWithProvisionalConsent(c)
+    const consent = await this.fetchConsent(identities)
+    const [c, shouldUpdateConsent] = await this.overrideWithProvisionalConsent(consent)
+    let shouldCreatePermits = shouldUpdateConsent
 
     // selectExperience before populating permits
     const experience = this.selectExperience(c)
