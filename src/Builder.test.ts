@@ -318,6 +318,18 @@ describe('builder', () => {
       ).resolves.toBe('US-CA')
     })
 
+    it('resolves Canadian sub regions', async () => {
+      const ketch = new Builder({} as Configuration)
+
+      return expect(
+        ketch.buildRegionInfo({
+          ip: '10.11.12.13',
+          countryCode: 'CA',
+          regionCode: 'QC',
+        } as IPInfo),
+      ).resolves.toBe('CA-QC')
+    })
+
     it('resolves region on the query', async () => {
       const ketch = new Builder({} as Configuration)
 
