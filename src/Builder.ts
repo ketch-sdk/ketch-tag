@@ -221,7 +221,7 @@ export default class Builder {
       return specifiedRegion
     }
 
-    if (g.countryCode === 'US' && g.regionCode) {
+    if ((g.countryCode === 'US' || g.countryCode === 'CA') && g.regionCode) {
       const region = `${g.countryCode}-${g.regionCode}`
       l.trace(region)
       return region
