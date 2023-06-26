@@ -1,8 +1,14 @@
 import { GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
-import {CACHED_CONSENT_KEY, getCachedConsent, PUBLIC_CONSENT_KEY_V1, setCachedConsent, setPublicConsent} from './cache'
+import {
+  CACHED_CONSENT_KEY,
+  getCachedConsent,
+  PUBLIC_CONSENT_KEY_V1,
+  setCachedConsent,
+  setPublicConsent,
+} from './cache'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
 import constants from './constants'
-import {getCookie} from "@ketch-sdk/ketch-data-layer";
+import { getCookie } from '@ketch-sdk/ketch-data-layer'
 
 describe('cache', () => {
   const request = {
@@ -43,13 +49,13 @@ describe('cache', () => {
     propertyCode: 'axonic',
     purposes: {
       foo: {
-        allowed: "true",
-        legalBasisCode: "consent_opt_in"
+        allowed: 'true',
+        legalBasisCode: 'consent_opt_in',
       },
       bar: {
-        allowed: "false",
-        legalBasisCode: "consent_opt_in"
-      }
+        allowed: 'false',
+        legalBasisCode: 'consent_opt_in',
+      },
     },
   } as GetConsentRequest
 
@@ -64,13 +70,13 @@ describe('cache', () => {
     propertyCode: 'axonic',
     purposes: {
       foo: {
-        allowed: "true",
-        legalBasisCode: "consent_opt_in"
+        allowed: 'true',
+        legalBasisCode: 'consent_opt_in',
       },
       bar: {
-        allowed: "false",
-        legalBasisCode: "consent_opt_in"
-      }
+        allowed: 'false',
+        legalBasisCode: 'consent_opt_in',
+      },
     },
   } as SetConsentRequest
 
@@ -113,10 +119,8 @@ describe('cache', () => {
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString()))
-      .toEqual({'foo': 'denied', 'bar': 'granted'})
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString()))
-      .toEqual({'foo': 'denied', 'bar': 'granted'})
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'denied', bar: 'granted' })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'denied', bar: 'granted' })
   })
 
   it('public cookie set from GetConsentRequest', async () => {
@@ -124,20 +128,16 @@ describe('cache', () => {
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString()))
-      .toEqual({'foo': 'granted', 'bar': 'denied'})
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString()))
-      .toEqual({'foo': 'granted', 'bar': 'denied'})
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
   })
 
-  it( 'public cookie set from SetConsentRequest', async () => {
+  it('public cookie set from SetConsentRequest', async () => {
     await setPublicConsent(setRequestWithConsent as SetConsentRequest)
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString()))
-      .toEqual({'foo': 'granted', 'bar': 'denied'})
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString()))
-      .toEqual({'foo': 'granted', 'bar': 'denied'})
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
   })
 })
