@@ -57,7 +57,7 @@ export async function setPublicConsent(
   }
 
   // create public consent object
-  const consent: { [key: string]: { status: string; ketchPurposes?: string[] } } = {}
+  const consent: { [key: string]: { status: string; canonicalPurposes?: string[] } } = {}
   if (!config.purposes) {
     return
   }
@@ -84,7 +84,7 @@ export async function setPublicConsent(
 
     // TODO canonicalPurposeCode will be deprecated with the addition of ketchPurposeCodes
     if (purpose.canonicalPurposeCode && purpose.canonicalPurposeCode.length > 0) {
-      consent[purpose.code].ketchPurposes = [purpose.canonicalPurposeCode]
+      consent[purpose.code].canonicalPurposes = [purpose.canonicalPurposeCode]
     }
   }
 

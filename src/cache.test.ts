@@ -136,11 +136,11 @@ describe('cache', () => {
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
     expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
-      foo: { status: 'denied', ketchPurposes: ['analytics'] },
+      foo: { status: 'denied', canonicalPurposes: ['analytics'] },
       bar: { status: 'granted' },
     })
     expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
-      foo: { status: 'denied', ketchPurposes: ['analytics'] },
+      foo: { status: 'denied', canonicalPurposes: ['analytics'] },
       bar: { status: 'granted' },
     })
   })
@@ -151,11 +151,11 @@ describe('cache', () => {
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
     expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
-      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      foo: { status: 'granted', canonicalPurposes: ['analytics'] },
       bar: { status: 'denied' },
     })
     expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
-      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      foo: { status: 'granted', canonicalPurposes: ['analytics'] },
       bar: { status: 'denied' },
     })
   })
@@ -166,11 +166,11 @@ describe('cache', () => {
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
     expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
-      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      foo: { status: 'granted', canonicalPurposes: ['analytics'] },
       bar: { status: 'denied' },
     })
     expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
-      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      foo: { status: 'granted', canonicalPurposes: ['analytics'] },
       bar: { status: 'denied' },
     })
   })
