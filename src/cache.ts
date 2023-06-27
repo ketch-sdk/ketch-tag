@@ -1,6 +1,6 @@
 import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
-import { setCookie } from '@ketch-sdk/ketch-data-layer'
+import { setCookie } from '@ketch-com/ketch-cookie'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
@@ -90,7 +90,7 @@ export async function setPublicConsent(
 
   // set public cookie and localStorage if consent
   if (Object.keys(consent).length > 0) {
-    const consentString = Buffer.from(JSON.stringify(consent)).toString('base64')
+    const consentString = btoa(JSON.stringify(consent))
     localStorage.setItem(PUBLIC_CONSENT_KEY_V1, consentString)
     setCookie(window, PUBLIC_CONSENT_KEY_V1, consentString, CACHED_CONSENT_TTL)
   }
