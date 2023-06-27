@@ -806,7 +806,7 @@ export class Ketch extends EventEmitter {
     if (!useCachedConsent) {
       consent = normalizeConsent(await this._api.getConsent(request))
       await setCachedConsent(consent)
-      await setPublicConsent(consent)
+      await setPublicConsent(consent, this._config)
     }
 
     const newConsent: Consent = { purposes: {} }
@@ -895,7 +895,7 @@ export class Ketch extends EventEmitter {
 
     // Save a locally cached consent
     await setCachedConsent(request)
-    await setPublicConsent(request)
+    await setPublicConsent(request, this._config)
 
     return this._api.setConsent(request)
   }

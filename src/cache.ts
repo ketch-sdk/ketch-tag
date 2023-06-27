@@ -1,4 +1,4 @@
-import { GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
+import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
 
@@ -50,21 +50,41 @@ export async function setCachedConsent(
 
 export async function setPublicConsent(
   input: SetConsentRequest | GetConsentRequest | GetConsentResponse,
+  config: Configuration,
 ): Promise<void> {
   if (Object.keys(input).length === 0) {
     return
   }
 
   // create public consent object
-  const consent: { [key: string]: string } = {}
-  for (const key in input.purposes) {
-    const value = input.purposes[key]
+  const consent: { [key: string]: { status: string; ketchPurposes?: string[] } } = {}
+  if (!config.purposes) {
+    return
+  }
+
+  for (const purpose of config.purposes) {
+    if (!Object.prototype.hasOwnProperty.call(input.purposes, purpose.code)) {
+      continue
+    }
+
+    const value = input.purposes[purpose.code]
+    let status = ''
     if (typeof value === 'string') {
-      consent[key] = value === 'true' ? 'granted' : 'denied'
+      status = value === 'true' ? 'granted' : 'denied'
     } else {
       if (value.allowed) {
-        consent[key] = value.allowed === 'true' ? 'granted' : 'denied'
+        status = value.allowed === 'true' ? 'granted' : 'denied'
       }
+    }
+
+    if (status.length == 0) {
+      continue
+    }
+    consent[purpose.code] = { status: status }
+
+    // TODO canonicalPurposeCode will be deprecated with the addition of ketchPurposeCodes
+    if (purpose.canonicalPurposeCode && purpose.canonicalPurposeCode.length > 0) {
+      consent[purpose.code].ketchPurposes = [purpose.canonicalPurposeCode]
     }
   }
 

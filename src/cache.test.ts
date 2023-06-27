@@ -1,4 +1,4 @@
-import { GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
+import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import {
   CACHED_CONSENT_KEY,
   getCachedConsent,
@@ -80,6 +80,22 @@ describe('cache', () => {
     },
   } as SetConsentRequest
 
+  const config = {
+    purposes: [
+      {
+        code: 'foo',
+        canonicalPurposeCode: 'analytics',
+      },
+      {
+        code: 'bar',
+      },
+      {
+        code: 'baz',
+        canonicalPurposeCode: 'nada',
+      },
+    ],
+  } as Configuration
+
   const cacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
 
   it('returns synthetic response for missing item', async () => {
@@ -108,36 +124,54 @@ describe('cache', () => {
   })
 
   it('public cookie not set if no consent', async () => {
-    await setPublicConsent(request as GetConsentRequest)
+    await setPublicConsent(request as GetConsentRequest, config)
 
     expect(getCookie(window, PUBLIC_CONSENT_KEY_V1)).toBeFalsy()
     expect(localStorage.getItem(PUBLIC_CONSENT_KEY_V1)).toBeFalsy()
   })
 
   it('public cookie set from GetConsentResponse', async () => {
-    await setPublicConsent(getResponseWithConsent as GetConsentResponse)
+    await setPublicConsent(getResponseWithConsent as GetConsentResponse, config)
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'denied', bar: 'granted' })
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'denied', bar: 'granted' })
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
+      foo: { status: 'denied', ketchPurposes: ['analytics'] },
+      bar: { status: 'granted' },
+    })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
+      foo: { status: 'denied', ketchPurposes: ['analytics'] },
+      bar: { status: 'granted' },
+    })
   })
 
   it('public cookie set from GetConsentRequest', async () => {
-    await setPublicConsent(getRequestWithConsent as GetConsentRequest)
+    await setPublicConsent(getRequestWithConsent as GetConsentRequest, config)
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
+      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      bar: { status: 'denied' },
+    })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
+      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      bar: { status: 'denied' },
+    })
   })
 
   it('public cookie set from SetConsentRequest', async () => {
-    await setPublicConsent(setRequestWithConsent as SetConsentRequest)
+    await setPublicConsent(setRequestWithConsent as SetConsentRequest, config)
 
     const publicCookie = getCookie(window, PUBLIC_CONSENT_KEY_V1)
     const publicLocalStorage: string = localStorage.getItem(PUBLIC_CONSENT_KEY_V1) || ''
-    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
-    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({ foo: 'granted', bar: 'denied' })
+    expect(JSON.parse(Buffer.from(publicCookie, 'base64').toString())).toEqual({
+      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      bar: { status: 'denied' },
+    })
+    expect(JSON.parse(Buffer.from(publicLocalStorage, 'base64').toString())).toEqual({
+      foo: { status: 'granted', ketchPurposes: ['analytics'] },
+      bar: { status: 'denied' },
+    })
   })
 })
