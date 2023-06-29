@@ -91,7 +91,7 @@ export async function setPublicConsent(
   // set public cookie and localStorage if consent
   if (Object.keys(consent).length > 0) {
     const consentString = btoa(JSON.stringify(consent))
-    localStorage.setItem(PUBLIC_CONSENT_KEY_V1, consentString)
-    setCookie(window, PUBLIC_CONSENT_KEY_V1, consentString, CACHED_CONSENT_TTL)
+    localStorage?.setItem(PUBLIC_CONSENT_KEY_V1, consentString)
+    setCookie(window, PUBLIC_CONSENT_KEY_V1, consentString, 34560000) // 400 days
   }
 }
