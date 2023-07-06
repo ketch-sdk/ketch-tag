@@ -39,7 +39,7 @@ import log from './log'
 import errors from './errors'
 import parameters from './parameters'
 import Watcher from '@ketch-sdk/ketch-data-layer'
-import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent } from './cache'
+import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent, setPublicConsent } from './cache'
 import deepEqual from 'nano-equal'
 import constants from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
@@ -806,6 +806,7 @@ export class Ketch extends EventEmitter {
     if (!useCachedConsent) {
       consent = normalizeConsent(await this._api.getConsent(request))
       await setCachedConsent(consent)
+      await setPublicConsent(consent, this._config)
     }
 
     const newConsent: Consent = { purposes: {} }
@@ -894,6 +895,7 @@ export class Ketch extends EventEmitter {
 
     // Save a locally cached consent
     await setCachedConsent(request)
+    await setPublicConsent(request, this._config)
 
     return this._api.setConsent(request)
   }
