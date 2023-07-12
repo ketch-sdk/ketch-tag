@@ -797,7 +797,7 @@ export class Ketch extends EventEmitter {
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
       l.debug('revalidating cached consent')
     } else if (!deepEqual(identities, consent.identities)) {
-      l.debug('cached consent discarded due to identity mismatch')
+      l.debug('cached consent discarded due to identity mismatch', identities, consent.identities)
     } else {
       l.debug('using cached consent')
       useCachedConsent = true
