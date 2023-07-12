@@ -33,6 +33,7 @@ import {
   GetSubscriptionsRequest,
   SetSubscriptionsRequest,
   Tab,
+  PurposeLegalBasis,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -728,7 +729,7 @@ export class Ketch extends EventEmitter {
    */
   async fetchConsent(identities: Identities): Promise<Consent> {
     const l = wrapLogger(log, 'fetchConsent')
-    l.debug(identities)
+    l.debug('identities', identities)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
@@ -763,6 +764,8 @@ export class Ketch extends EventEmitter {
       }
     }
 
+    l.debug('request', request)
+
     let consent = await getCachedConsent(request)
 
     const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
@@ -793,18 +796,37 @@ export class Ketch extends EventEmitter {
     // Determine whether we should use cached consent
     let useCachedConsent = false
     if (Object.keys(consent.purposes).length === 0) {
-      l.debug('cached consent is empty')
+      l.debug('cached consent is empty', consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
-      l.debug('revalidating cached consent')
+      l.debug('revalidating cached consent', consent)
     } else if (!deepEqual(identities, consent.identities)) {
       l.debug('cached consent discarded due to identity mismatch', identities, consent.identities)
     } else {
-      l.debug('using cached consent')
+      l.debug('using cached consent', consent)
       useCachedConsent = true
     }
 
     if (!useCachedConsent) {
+      if (this._config.purposes && consent.purposes) {
+        for (const p of this._config.purposes) {
+          const cachedPurposeConsent = consent.purposes[p.code]
+          if (cachedPurposeConsent) {
+            if (!request.purposes[p.code]) {
+              request.purposes[p.code] = {} as PurposeLegalBasis
+            }
+            if (typeof cachedPurposeConsent === 'string') {
+              request.purposes[p.code].allowed = cachedPurposeConsent
+            } else {
+              request.purposes[p.code].allowed = cachedPurposeConsent.allowed
+            }
+          }
+        }
+      }
+
+      l.debug('calling getConsent', request)
       consent = normalizeConsent(await this._api.getConsent(request))
+      l.debug('getConsent returned', consent)
+
       await setCachedConsent(consent)
       await setPublicConsent(consent, this._config)
     }
@@ -827,6 +849,8 @@ export class Ketch extends EventEmitter {
     if (consent.vendors) {
       newConsent.vendors = consent.vendors
     }
+
+    l.debug('returning', newConsent)
 
     return newConsent
   }
