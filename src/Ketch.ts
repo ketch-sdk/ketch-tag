@@ -728,7 +728,7 @@ export class Ketch extends EventEmitter {
    */
   async fetchConsent(identities: Identities): Promise<Consent> {
     const l = wrapLogger(log, 'fetchConsent')
-    l.debug(identities)
+    l.debug('identities', identities)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
@@ -763,6 +763,8 @@ export class Ketch extends EventEmitter {
       }
     }
 
+    l.debug('request', request)
+
     let consent = await getCachedConsent(request)
 
     const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
@@ -793,20 +795,14 @@ export class Ketch extends EventEmitter {
     // Determine whether we should use cached consent
     let useCachedConsent = false
     if (Object.keys(consent.purposes).length === 0) {
-      l.debug('cached consent is empty')
+      l.debug('cached consent is empty', consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
-      l.debug('revalidating cached consent')
+      l.debug('revalidating cached consent', consent)
     } else if (!deepEqual(identities, consent.identities)) {
       l.debug('cached consent discarded due to identity mismatch', identities, consent.identities)
     } else {
-      l.debug('using cached consent')
+      l.debug('using cached consent', consent)
       useCachedConsent = true
-    }
-
-    if (!useCachedConsent) {
-      consent = normalizeConsent(await this._api.getConsent(request))
-      await setCachedConsent(consent)
-      await setPublicConsent(consent, this._config)
     }
 
     const newConsent: Consent = { purposes: {} }
@@ -824,9 +820,17 @@ export class Ketch extends EventEmitter {
       }
     }
 
+    if (!useCachedConsent) {
+      consent = normalizeConsent(await this._api.getConsent(request))
+      await setCachedConsent(consent)
+      await setPublicConsent(consent, this._config)
+    }
+
     if (consent.vendors) {
       newConsent.vendors = consent.vendors
     }
+
+    l.debug('returning', newConsent)
 
     return newConsent
   }
