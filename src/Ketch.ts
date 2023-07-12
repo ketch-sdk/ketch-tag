@@ -33,6 +33,7 @@ import {
   GetSubscriptionsRequest,
   SetSubscriptionsRequest,
   Tab,
+  PurposeLegalBasis,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -805,6 +806,31 @@ export class Ketch extends EventEmitter {
       useCachedConsent = true
     }
 
+    if (!useCachedConsent) {
+      if (this._config.purposes && consent.purposes) {
+        for (const p of this._config.purposes) {
+          const cachedPurposeConsent = consent.purposes[p.code]
+          if (cachedPurposeConsent) {
+            if (!request.purposes[p.code]) {
+              request.purposes[p.code] = {} as PurposeLegalBasis
+            }
+            if (typeof cachedPurposeConsent === 'string') {
+              request.purposes[p.code].allowed = cachedPurposeConsent
+            } else {
+              request.purposes[p.code].allowed = cachedPurposeConsent.allowed
+            }
+          }
+        }
+      }
+
+      l.debug('calling getConsent', request)
+      consent = normalizeConsent(await this._api.getConsent(request))
+      l.debug('getConsent returned', consent)
+
+      await setCachedConsent(consent)
+      await setPublicConsent(consent, this._config)
+    }
+
     const newConsent: Consent = { purposes: {} }
 
     if (this._config.purposes && consent.purposes) {
@@ -818,12 +844,6 @@ export class Ketch extends EventEmitter {
           }
         }
       }
-    }
-
-    if (!useCachedConsent) {
-      consent = normalizeConsent(await this._api.getConsent(request))
-      await setCachedConsent(consent)
-      await setPublicConsent(consent, this._config)
     }
 
     if (consent.vendors) {
