@@ -91,9 +91,8 @@ export default class Builder {
     if (!this.overridden) {
       ipInfo = await this.buildGeoIP()
       region = await this.buildRegionInfo(ipInfo)
-      // ipInfoObject = ipInfo
     } else {
-      ipInfo.regionCode = region || "" // placeholder
+      ipInfo.regionCode = region || ""
     }
     const jurisdiction = await this.buildJurisdiction(region)
 
