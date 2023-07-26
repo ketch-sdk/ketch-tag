@@ -1100,9 +1100,9 @@ export class Ketch extends EventEmitter {
    *
    * @param g IPInfo
    */
-  async setGeoIP(g: IPInfo): Promise<IPInfo> {
+  async setGeoIP(g: IPInfo | null): Promise<IPInfo> {
     log.debug('setGeoIP', g)
-    this._geoip.value = g
+    this._geoip.value = <IPInfo>g
     return this._geoip.fulfilled
   }
 
@@ -1264,9 +1264,9 @@ export class Ketch extends EventEmitter {
    *
    * @param info Region information
    */
-  async setRegionInfo(info: string): Promise<string> {
+  async setRegionInfo(info: string | null): Promise<string> {
     log.debug('setRegionInfo', info)
-    this._regionInfo.value = info
+    this._regionInfo.value = <string>info
     return this._regionInfo.fulfilled
   }
 

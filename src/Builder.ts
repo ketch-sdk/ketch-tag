@@ -13,6 +13,7 @@ import { wrapLogger } from '@ketch-sdk/ketch-logging'
  * Builder for building a Ketch object
  */
 export default class Builder {
+  private overridden: any;
   /**
    * Constructor that takes a configuration object
    *
@@ -55,8 +56,45 @@ export default class Builder {
     }
 
     const env = await this.buildEnvironment()
-    const ipInfo = await this.buildGeoIP()
-    const region = await this.buildRegionInfo(ipInfo)
+
+    // check override
+    let region = parameters.get(constants.REGION)
+    if (region) {
+      this.overridden = true
+      l.trace('override', region)
+    }
+
+    let ipInfo: IPInfo = {
+      ip: "",
+      hostname: "",
+      continentCode: "",
+      continentName: "",
+      countryCode: "",
+      countryName: "",
+      regionCode: "",
+      regionName: "",
+      city: "",
+      zip: "",
+      latitude: 0,
+      longitude: 0,
+      location: {
+        geonameId: 0,
+        capital: "",
+        languages: [],
+        countryFlag: "",
+        countryFlagEmoji: "",
+        countryFlagEmojiUnicode: "",
+        callingCode: "",
+        isEU: false,
+      },
+    }
+    if (!this.overridden) {
+      ipInfo = await this.buildGeoIP()
+      region = await this.buildRegionInfo(ipInfo)
+      // ipInfoObject = ipInfo
+    } else {
+      ipInfo.regionCode = region || "" // placeholder
+    }
     const jurisdiction = await this.buildJurisdiction(region)
 
     l.info('loadConfig', env, jurisdiction, language)
@@ -154,7 +192,7 @@ export default class Builder {
   /**
    * Build the jurisdiction from query, page or config.
    */
-  async buildJurisdiction(region: string): Promise<string> {
+  async buildJurisdiction(region: string | null): Promise<string> {
     const l = wrapLogger(log, 'buildJurisdiction')
     l.debug(this._config.jurisdiction)
 
@@ -194,7 +232,7 @@ export default class Builder {
     }
 
     if (jurisdictionInfo.jurisdictions) {
-      const jurisdiction = jurisdictionInfo.jurisdictions[region]
+      const jurisdiction = jurisdictionInfo.jurisdictions[region || ""]
       if (jurisdiction) {
         l.trace('region jurisdiction', jurisdiction)
         return jurisdiction
@@ -214,19 +252,13 @@ export default class Builder {
    */
   async buildRegionInfo(g: IPInfo): Promise<string> {
     const l = wrapLogger(log, 'buildRegionInfo')
-
-    const specifiedRegion = parameters.get(constants.REGION)
-    if (specifiedRegion) {
-      l.trace('override', specifiedRegion)
-      return specifiedRegion
-    }
-
     if ((g.countryCode === 'US' || g.countryCode === 'CA') && g.regionCode) {
+      this.overridden = false
       const region = `${g.countryCode}-${g.regionCode}`
       l.trace(region)
       return region
     }
-
+    this.overridden = false
     const region = g.countryCode ?? 'US'
     l.trace(region)
     return region
@@ -235,7 +267,7 @@ export default class Builder {
   /**
    * Build the IPInfo.
    */
-  async buildGeoIP(): Promise<IPInfo> {
+  async  buildGeoIP(): Promise<IPInfo> {
     log.debug('buildGeoIP')
 
     const r = await this._api.getLocation()

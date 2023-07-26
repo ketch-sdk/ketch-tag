@@ -205,6 +205,39 @@ describe('builder', () => {
       await expect(ketch.getJurisdiction()).resolves.toBe(fullConfig.jurisdiction?.code)
     })
 
+    it('resolves on full configuration using ketch_region in query string', async () => {
+      const config = {
+        organization: {
+          code: 'axonic',
+        },
+        property: {
+          code: 'axonic',
+        },
+        environment: {
+          code: constants.PRODUCTION,
+        },
+        jurisdiction: {
+          code: 'gdpr',
+        },
+      } as Configuration
+      Object.assign(window.location, new URL('https://localhost/?ketch_region=CA'))
+      const builder = new Builder(config)
+      const fullConfig = {
+        organization: config.organization,
+        property: config.property,
+        environment: config.environment,
+        jurisdiction: config.jurisdiction,
+        region: 'CA',
+      }
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(fullConfig))
+      const ketch = await builder.build()
+      expect(ketch).toBeTruthy()
+      await expect(ketch.getConfig()).resolves.toStrictEqual(fullConfig)
+      await expect(ketch.getEnvironment()).resolves.toBe(fullConfig.environment)
+      await expect(ketch.getJurisdiction()).resolves.toBe(fullConfig.jurisdiction?.code)
+      await expect(ketch.getRegionInfo()).resolves.toBe(fullConfig.region)
+    })
+
     it('resolves on full configuration using html lang', async () => {
       const config = {
         organization: {
