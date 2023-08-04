@@ -331,11 +331,9 @@ describe('builder', () => {
       ).resolves.toBe('CA-QC')
     })
 
-    it('resolves region on the query', async () => {
-      // mockParametersGet.mockImplementationOnce(key => (key === constants.REGION ? 'FOO' : ''))
-      const parameters = { get: jest.fn() }
+    it('resolves country on the query', async () => {
       // Spy on and mock the 'get' method
-      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FOU' : ''));
+      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FR' : ''));
       const config = {
         organization: {
           code: 'axonic',
@@ -347,26 +345,123 @@ describe('builder', () => {
           code: constants.PRODUCTION,
         },
         jurisdiction: {
-          code: 'gdpr',
+          code: 'default',
         },
       } as Configuration
       const builder = new Builder(config)
-      const fullConfig = {
-        organization: config.organization,
-        property: config.property,
-        environment: config.environment,
-        jurisdiction: config.jurisdiction,
-        region: 'CA',
-      }
-      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(fullConfig))
+
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
       const ketch = await builder.build()
-      // mockParametersGet.mockImplementationOnce(key => (key === constants.REGION ? 'FOO' : ''))
 
       expect(ketch).toBeTruthy()
-      await expect(ketch.getConfig()).resolves.toStrictEqual(fullConfig)
-      await expect(ketch.getEnvironment()).resolves.toBe(fullConfig.environment)
-      await expect(ketch.getJurisdiction()).resolves.toBe(fullConfig.jurisdiction?.code)
-      await expect(ketch.getRegionInfo()).resolves.toBe(fullConfig.region)
+      await expect(ketch.getConfig()).resolves.toStrictEqual(config)
+      await expect(ketch.getGeoIP()).resolves.toStrictEqual({
+        ip: "",
+        hostname: "",
+        continentCode: "",
+        continentName: "",
+        countryCode: "FR",
+        countryName: "",
+        regionCode: "",
+        regionName: "",
+        city: "",
+        zip: "",
+        latitude: 0,
+        longitude: 0,
+        location: {
+          geonameId: 0,
+          capital: "",
+          languages: [],
+          countryFlag: "",
+          countryFlagEmoji: "",
+          countryFlagEmojiUnicode: "",
+          callingCode: "",
+          isEU: false,
+        },
+      })
+      await expect(ketch.getRegionInfo()).resolves.toBe("FR")
+    })
+
+    it('resolves country and region on the query', async () => {
+      // Spy on and mock the 'get' method
+      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'US-CA' : ''));
+      const config = {
+        organization: {
+          code: 'axonic',
+        },
+        property: {
+          code: 'axonic',
+        },
+        environment: {
+          code: constants.PRODUCTION,
+        },
+        jurisdiction: {
+          code: 'default',
+        },
+      } as Configuration
+      const builder = new Builder(config)
+
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
+      const ketch = await builder.build()
+
+      expect(ketch).toBeTruthy()
+      await expect(ketch.getConfig()).resolves.toStrictEqual(config)
+      await expect(ketch.getGeoIP()).resolves.toStrictEqual({
+        ip: "",
+        hostname: "",
+        continentCode: "",
+        continentName: "",
+        countryCode: "US",
+        countryName: "",
+        regionCode: "CA",
+        regionName: "",
+        city: "",
+        zip: "",
+        latitude: 0,
+        longitude: 0,
+        location: {
+          geonameId: 0,
+          capital: "",
+          languages: [],
+          countryFlag: "",
+          countryFlagEmoji: "",
+          countryFlagEmojiUnicode: "",
+          callingCode: "",
+          isEU: false,
+        },
+      })
+      await expect(ketch.getRegionInfo()).resolves.toBe("US-CA")
+    })
+
+    it('resolves no query param', async () => {
+      const config = {
+        organization: {
+          code: 'axonic',
+        },
+        property: {
+          code: 'axonic',
+        },
+        environment: {
+          code: constants.PRODUCTION,
+        },
+        jurisdiction: {
+          code: 'default',
+        },
+      } as Configuration
+      const builder = new Builder(config)
+      const ip: GetLocationResponse = {
+        // @ts-ignore
+        location: {
+          ip: '1.2.3.5',
+          countryCode: "BR",
+        },
+      } as GetLocationResponse
+      fetchMock.mockResponses(async (): Promise<string> => JSON.stringify(ip))
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
+      const ketch = await builder.build()
+
+      expect(ketch).toBeTruthy()
+      await expect(ketch.getRegionInfo()).resolves.toBe("BR")
     })
   })
 

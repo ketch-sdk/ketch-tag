@@ -13,7 +13,6 @@ import { wrapLogger } from '@ketch-sdk/ketch-logging'
  * Builder for building a Ketch object
  */
 export default class Builder {
-  private overridden: any;
   /**
    * Constructor that takes a configuration object
    *
@@ -59,40 +58,20 @@ export default class Builder {
 
     // check override
     let region = parameters.get(constants.REGION)
-    if (region) {
-      this.overridden = true
-      l.trace('override', region)
-    }
 
-    let ipInfo: IPInfo = {
-      ip: "",
-      hostname: "",
-      continentCode: "",
-      continentName: "",
-      countryCode: "",
-      countryName: "",
-      regionCode: "",
-      regionName: "",
-      city: "",
-      zip: "",
-      latitude: 0,
-      longitude: 0,
-      location: {
-        geonameId: 0,
-        capital: "",
-        languages: [],
-        countryFlag: "",
-        countryFlagEmoji: "",
-        countryFlagEmojiUnicode: "",
-        callingCode: "",
-        isEU: false,
-      },
-    }
-    if (!this.overridden) {
+    let ipInfo = this.newIPInfo()
+    if (!region) {
       ipInfo = await this.buildGeoIP()
       region = await this.buildRegionInfo(ipInfo)
     } else {
-      ipInfo.regionCode = region || ""
+      l.trace('region override', region)
+      const regionParts = region.split('-')
+      if (regionParts.length > 1) {
+        ipInfo.countryCode = regionParts[0]
+        ipInfo.regionCode = regionParts[1]
+      } else {
+        ipInfo.countryCode = region
+      }
     }
     const jurisdiction = await this.buildJurisdiction(region)
 
@@ -252,12 +231,10 @@ export default class Builder {
   async buildRegionInfo(g: IPInfo): Promise<string> {
     const l = wrapLogger(log, 'buildRegionInfo')
     if ((g.countryCode === 'US' || g.countryCode === 'CA') && g.regionCode) {
-      this.overridden = false
       const region = `${g.countryCode}-${g.regionCode}`
       l.trace(region)
       return region
     }
-    this.overridden = false
     const region = g.countryCode ?? 'US'
     l.trace(region)
     return region
@@ -279,4 +256,31 @@ export default class Builder {
 
   private readonly _api: KetchWebAPI
   private readonly _config: Configuration
+
+  newIPInfo(): IPInfo {
+    return {
+      ip: "",
+      hostname: "",
+      continentCode: "",
+      continentName: "",
+      countryCode: "",
+      countryName: "",
+      regionCode: "",
+      regionName: "",
+      city: "",
+      zip: "",
+      latitude: 0,
+      longitude: 0,
+      location: {
+        geonameId: 0,
+        capital: "",
+        languages: [],
+        countryFlag: "",
+        countryFlagEmoji: "",
+        countryFlagEmojiUnicode: "",
+        callingCode: "",
+        isEU: false,
+      },
+    }
+  }
 }
