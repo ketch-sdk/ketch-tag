@@ -58,14 +58,12 @@ export default class Builder {
 
     // check region parameter
     let region = parameters.get(constants.REGION)
-    let ipInfo: IPInfo | null = null
+    let ipInfo: IPInfo | undefined
 
-    // if no region parameter get ipInfo normally, otherwise skip get ipInfo and use region parameter
+    // if no override get ipInfo normally, otherwise skip get ipInfo and use region parameter
     if (!region) {
       ipInfo = await this.buildGeoIP()
       region = await this.buildRegionInfo(ipInfo)
-    } else {
-      l.trace('region override', region)
     }
     const jurisdiction = await this.buildJurisdiction(region)
 
