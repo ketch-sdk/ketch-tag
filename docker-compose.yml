@@ -31,15 +31,6 @@ services:
       DECKHAND_HEADER_CACHE_CONTROL: "no-cache"
       DECKHAND_ASSET_HEADER_CACHE_CONTROL: "no-cache"
       DECKHAND_REDIRECT_HEADER_CACHE_CONTROL: "no-cache"
-      NATS_SERVER_TLS_ENABLED: true
-      NATS_SERVER_TLS_CERT_ID: keys/nats-tls
-      NATS_SERVER_TLS_KEY_ID: keys/nats-tls
-      NATS_SERVER_MIDDLEWARE_LOGGING_ENABLED: true
-      NATS_VAULT_ENABLED: true
-      NATS_VAULT_ADDRESS: http://vault:8200
-      NATS_VAULT_PREFIX: secret
-      NATS_VAULT_TLS_ENABLED: false
-      NATS_VAULT_TOKEN: ketch
 
   vault-loader:
     image: ghcr.io/ketch-com/vault-loader
@@ -49,7 +40,7 @@ services:
       VAULT_ADDR: http://vault:8200
       VAULT_TOKEN: ketch
       VAULT_PREFIX: secret
-      VAULT_PKI_SERVICES: deckhand;nats
+      VAULT_PKI_SERVICES: deckhand
 
 networks:
   ketch:

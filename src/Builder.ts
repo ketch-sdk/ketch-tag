@@ -170,7 +170,7 @@ export default class Builder {
   /**
    * Build the jurisdiction from query, page or config.
    */
-  async buildJurisdiction(region: string | null): Promise<string> {
+  async buildJurisdiction(region: string): Promise<string> {
     const l = wrapLogger(log, 'buildJurisdiction')
     l.debug(this._config.jurisdiction)
 
@@ -210,7 +210,7 @@ export default class Builder {
     }
 
     if (jurisdictionInfo.jurisdictions) {
-      const jurisdiction = jurisdictionInfo.jurisdictions[region || ""]
+      const jurisdiction = jurisdictionInfo.jurisdictions[region]
       if (jurisdiction) {
         l.trace('region jurisdiction', jurisdiction)
         return jurisdiction

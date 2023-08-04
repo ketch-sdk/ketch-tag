@@ -205,7 +205,6 @@ describe('builder', () => {
       await expect(ketch.getJurisdiction()).resolves.toBe(fullConfig.jurisdiction?.code)
     })
 
-
     it('resolves on full configuration using html lang', async () => {
       const config = {
         organization: {
@@ -431,6 +430,7 @@ describe('builder', () => {
         },
       })
       await expect(ketch.getRegionInfo()).resolves.toBe("US-CA")
+      jest.spyOn(parameters, 'get').mockRestore()
     })
 
     it('resolves no query param', async () => {
