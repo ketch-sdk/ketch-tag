@@ -332,7 +332,7 @@ describe('builder', () => {
 
     it('resolves query param country', async () => {
       // Spy on and mock the 'get' method
-      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FR' : ''));
+      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FR' : ''))
       const config = {
         organization: {
           code: 'axonic',
@@ -355,35 +355,35 @@ describe('builder', () => {
       expect(ketch).toBeTruthy()
       await expect(ketch.getConfig()).resolves.toStrictEqual(config)
       await expect(ketch.getGeoIP()).resolves.toStrictEqual({
-        ip: "",
-        hostname: "",
-        continentCode: "",
-        continentName: "",
-        countryCode: "FR",
-        countryName: "",
-        regionCode: "",
-        regionName: "",
-        city: "",
-        zip: "",
+        ip: '',
+        hostname: '',
+        continentCode: '',
+        continentName: '',
+        countryCode: 'FR',
+        countryName: '',
+        regionCode: '',
+        regionName: '',
+        city: '',
+        zip: '',
         latitude: 0,
         longitude: 0,
         location: {
           geonameId: 0,
-          capital: "",
+          capital: '',
           languages: [],
-          countryFlag: "",
-          countryFlagEmoji: "",
-          countryFlagEmojiUnicode: "",
-          callingCode: "",
+          countryFlag: '',
+          countryFlagEmoji: '',
+          countryFlagEmojiUnicode: '',
+          callingCode: '',
           isEU: false,
         },
       })
-      await expect(ketch.getRegionInfo()).resolves.toBe("FR")
+      await expect(ketch.getRegionInfo()).resolves.toBe('FR')
     })
 
     it('resolves query param country and region', async () => {
       // Spy on and mock the 'get' method
-      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'US-CA' : ''));
+      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'US-CA' : ''))
       const config = {
         organization: {
           code: 'axonic',
@@ -406,30 +406,30 @@ describe('builder', () => {
       expect(ketch).toBeTruthy()
       await expect(ketch.getConfig()).resolves.toStrictEqual(config)
       await expect(ketch.getGeoIP()).resolves.toStrictEqual({
-        ip: "",
-        hostname: "",
-        continentCode: "",
-        continentName: "",
-        countryCode: "US",
-        countryName: "",
-        regionCode: "CA",
-        regionName: "",
-        city: "",
-        zip: "",
+        ip: '',
+        hostname: '',
+        continentCode: '',
+        continentName: '',
+        countryCode: 'US',
+        countryName: '',
+        regionCode: 'CA',
+        regionName: '',
+        city: '',
+        zip: '',
         latitude: 0,
         longitude: 0,
         location: {
           geonameId: 0,
-          capital: "",
+          capital: '',
           languages: [],
-          countryFlag: "",
-          countryFlagEmoji: "",
-          countryFlagEmojiUnicode: "",
-          callingCode: "",
+          countryFlag: '',
+          countryFlagEmoji: '',
+          countryFlagEmojiUnicode: '',
+          callingCode: '',
           isEU: false,
         },
       })
-      await expect(ketch.getRegionInfo()).resolves.toBe("US-CA")
+      await expect(ketch.getRegionInfo()).resolves.toBe('US-CA')
       jest.spyOn(parameters, 'get').mockRestore()
     })
 
@@ -453,7 +453,7 @@ describe('builder', () => {
         // @ts-ignore
         location: {
           ip: '1.2.3.5',
-          countryCode: "BR",
+          countryCode: 'BR',
         },
       } as GetLocationResponse
       fetchMock.mockResponses(async (): Promise<string> => JSON.stringify(ip))
@@ -461,7 +461,7 @@ describe('builder', () => {
       const ketch = await builder.build()
 
       expect(ketch).toBeTruthy()
-      await expect(ketch.getRegionInfo()).resolves.toBe("BR")
+      await expect(ketch.getRegionInfo()).resolves.toBe('BR')
     })
   })
 
