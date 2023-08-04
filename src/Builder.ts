@@ -55,8 +55,16 @@ export default class Builder {
     }
 
     const env = await this.buildEnvironment()
-    const ipInfo = await this.buildGeoIP()
-    const region = await this.buildRegionInfo(ipInfo)
+
+    // check region parameter
+    let region = parameters.get(constants.REGION)
+    let ipInfo: IPInfo | undefined
+
+    // if no override get ipInfo normally, otherwise skip get ipInfo and use region parameter
+    if (!region) {
+      ipInfo = await this.buildGeoIP()
+      region = await this.buildRegionInfo(ipInfo)
+    }
     const jurisdiction = await this.buildJurisdiction(region)
 
     l.info('loadConfig', env, jurisdiction, language)
@@ -75,7 +83,7 @@ export default class Builder {
     const k = new Ketch(this._api, cfg)
 
     await k.setEnvironment(env)
-    await k.setGeoIP(ipInfo)
+    if (ipInfo) await k.setGeoIP(ipInfo)
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
@@ -214,13 +222,6 @@ export default class Builder {
    */
   async buildRegionInfo(g: IPInfo): Promise<string> {
     const l = wrapLogger(log, 'buildRegionInfo')
-
-    const specifiedRegion = parameters.get(constants.REGION)
-    if (specifiedRegion) {
-      l.trace('override', specifiedRegion)
-      return specifiedRegion
-    }
-
     if ((g.countryCode === 'US' || g.countryCode === 'CA') && g.regionCode) {
       const region = `${g.countryCode}-${g.regionCode}`
       l.trace(region)

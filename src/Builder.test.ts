@@ -330,17 +330,63 @@ describe('builder', () => {
       ).resolves.toBe('CA-QC')
     })
 
-    it('resolves region on the query', async () => {
-      const ketch = new Builder({} as Configuration)
+    it('resolves query param country', async () => {
+      // Spy on and mock the 'get' method
+      jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FR' : ''))
+      const config = {
+        organization: {
+          code: 'axonic',
+        },
+        property: {
+          code: 'axonic',
+        },
+        environment: {
+          code: constants.PRODUCTION,
+        },
+        jurisdiction: {
+          code: 'default',
+        },
+      } as Configuration
+      const builder = new Builder(config)
 
-      mockParametersGet.mockImplementationOnce(key => (key === constants.REGION ? 'FOO' : ''))
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
+      const ketch = await builder.build()
 
-      return expect(
-        ketch.buildRegionInfo({
-          ip: '10.11.12.13',
-          countryCode: 'AU',
-        } as IPInfo),
-      ).resolves.toBe('FOO')
+      expect(ketch).toBeTruthy()
+      await expect(ketch.getConfig()).resolves.toStrictEqual(config)
+      await expect(ketch.getRegionInfo()).resolves.toBe('FR')
+      jest.spyOn(parameters, 'get').mockRestore()
+    })
+
+    it('resolves no query param', async () => {
+      const config = {
+        organization: {
+          code: 'axonic',
+        },
+        property: {
+          code: 'axonic',
+        },
+        environment: {
+          code: constants.PRODUCTION,
+        },
+        jurisdiction: {
+          code: 'default',
+        },
+      } as Configuration
+      const builder = new Builder(config)
+      const ip: GetLocationResponse = {
+        // @ts-ignore
+        location: {
+          ip: '1.2.3.5',
+          countryCode: 'BR',
+        },
+      } as GetLocationResponse
+      fetchMock.mockResponses(async (): Promise<string> => JSON.stringify(ip))
+      fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
+      const ketch = await builder.build()
+
+      expect(ketch).toBeTruthy()
+      await expect(ketch.getRegionInfo()).resolves.toBe('BR')
     })
   })
 
