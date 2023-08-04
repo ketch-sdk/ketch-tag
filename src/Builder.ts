@@ -56,10 +56,11 @@ export default class Builder {
 
     const env = await this.buildEnvironment()
 
-    // check override
+    // check region parameter
     let region = parameters.get(constants.REGION)
 
     let ipInfo = this.newIPInfo()
+    // if no override get ipInfo normally, otherwise skip get ipInfo and use region parameter
     if (!region) {
       ipInfo = await this.buildGeoIP()
       region = await this.buildRegionInfo(ipInfo)
@@ -235,6 +236,7 @@ export default class Builder {
       l.trace(region)
       return region
     }
+
     const region = g.countryCode ?? 'US'
     l.trace(region)
     return region
@@ -243,7 +245,7 @@ export default class Builder {
   /**
    * Build the IPInfo.
    */
-  async  buildGeoIP(): Promise<IPInfo> {
+  async buildGeoIP(): Promise<IPInfo> {
     log.debug('buildGeoIP')
 
     const r = await this._api.getLocation()

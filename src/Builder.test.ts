@@ -330,7 +330,7 @@ describe('builder', () => {
       ).resolves.toBe('CA-QC')
     })
 
-    it('resolves country on the query', async () => {
+    it('resolves query param country', async () => {
       // Spy on and mock the 'get' method
       jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'FR' : ''));
       const config = {
@@ -381,7 +381,7 @@ describe('builder', () => {
       await expect(ketch.getRegionInfo()).resolves.toBe("FR")
     })
 
-    it('resolves country and region on the query', async () => {
+    it('resolves query param country and region', async () => {
       // Spy on and mock the 'get' method
       jest.spyOn(parameters, 'get').mockImplementation(key => (key === constants.REGION ? 'US-CA' : ''));
       const config = {
