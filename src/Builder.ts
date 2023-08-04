@@ -58,21 +58,14 @@ export default class Builder {
 
     // check region parameter
     let region = parameters.get(constants.REGION)
+    let ipInfo: IPInfo | null = null
 
-    let ipInfo = this.newIPInfo()
-    // if no override get ipInfo normally, otherwise skip get ipInfo and use region parameter
+    // if no region parameter get ipInfo normally, otherwise skip get ipInfo and use region parameter
     if (!region) {
       ipInfo = await this.buildGeoIP()
       region = await this.buildRegionInfo(ipInfo)
     } else {
       l.trace('region override', region)
-      const regionParts = region.split('-')
-      if (regionParts.length > 1) {
-        ipInfo.countryCode = regionParts[0]
-        ipInfo.regionCode = regionParts[1]
-      } else {
-        ipInfo.countryCode = region
-      }
     }
     const jurisdiction = await this.buildJurisdiction(region)
 
@@ -92,7 +85,7 @@ export default class Builder {
     const k = new Ketch(this._api, cfg)
 
     await k.setEnvironment(env)
-    await k.setGeoIP(ipInfo)
+    if (ipInfo) await k.setGeoIP(ipInfo)
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
@@ -258,31 +251,4 @@ export default class Builder {
 
   private readonly _api: KetchWebAPI
   private readonly _config: Configuration
-
-  newIPInfo(): IPInfo {
-    return {
-      ip: '',
-      hostname: '',
-      continentCode: '',
-      continentName: '',
-      countryCode: '',
-      countryName: '',
-      regionCode: '',
-      regionName: '',
-      city: '',
-      zip: '',
-      latitude: 0,
-      longitude: 0,
-      location: {
-        geonameId: 0,
-        capital: '',
-        languages: [],
-        countryFlag: '',
-        countryFlagEmoji: '',
-        countryFlagEmojiUnicode: '',
-        callingCode: '',
-        isEU: false,
-      },
-    }
-  }
 }
