@@ -60,7 +60,7 @@ describe('Ketch', () => {
             extensions: {},
           },
         },
-      }
+      } as Configuration
       const ketch = new Ketch(webAPI, config)
       const consent = {
         purposes: {},
