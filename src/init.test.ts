@@ -79,6 +79,7 @@ describe('init', () => {
                 legalBasisCode: 'consent_optin',
               },
             ],
+            formTemplates: [],
           } as Configuration),
         )
       }

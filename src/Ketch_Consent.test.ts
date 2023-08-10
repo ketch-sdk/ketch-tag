@@ -57,11 +57,13 @@ describe('consent', () => {
         code: 'portability',
         name: 'Portability',
         description: 'Right to have all data provided to you.',
+        canonicalRightCode: 'get',
       },
       {
         code: 'rtbf',
         name: 'Data Deletion',
         description: 'Right to be forgotten.',
+        canonicalRightCode: 'delete',
       },
     ],
     purposes: [
@@ -123,11 +125,13 @@ describe('consent', () => {
         code: 'portability',
         name: 'Portability',
         description: 'Right to have all data provided to you.',
+        canonicalRightCode: 'get',
       },
       {
         code: 'rtbf',
         name: 'Data Deletion',
         description: 'Right to be forgotten.',
+        canonicalRightCode: 'delete',
       },
     ],
     purposes: [

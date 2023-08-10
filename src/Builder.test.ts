@@ -527,6 +527,7 @@ describe('builder', () => {
           code: '',
         },
         environment: test,
+        formTemplates: [],
       }
       const ketch = new Builder(config)
 
@@ -540,6 +541,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [],
+        formTemplates: [],
       }
       const ketch = new Builder(config)
 
@@ -553,6 +555,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [prod, dev, test],
+        formTemplates: [],
       }
       const ketch = new Builder(config)
 
@@ -566,6 +569,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [devShort, dev],
+        formTemplates: [],
       }
       const ketch = new Builder(config)
 
@@ -579,6 +583,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [prod, dev, test],
+        formTemplates: [],
       }
 
       mockParametersGet.mockImplementationOnce(key => {
@@ -597,6 +602,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [prod, dev, test],
+        formTemplates: [],
       }
 
       mockParametersGet.mockImplementationOnce(key => {
@@ -615,6 +621,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [prod, test],
+        formTemplates: [],
       }
 
       const ketch = new Builder(config)
@@ -628,6 +635,7 @@ describe('builder', () => {
           code: '',
         },
         environments: [test],
+        formTemplates: [],
       }
 
       const ketch = new Builder(config)
