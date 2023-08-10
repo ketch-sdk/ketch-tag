@@ -828,8 +828,10 @@ export class Ketch extends EventEmitter {
       l.debug('getConsent returned', consent)
 
       await setCachedConsent(consent)
-      await setPublicConsent(consent, this._config)
     }
+
+    // always set on every fetch consent
+    await setPublicConsent(consent, this._config)
 
     const newConsent: Consent = { purposes: {} }
 
