@@ -83,8 +83,10 @@ export async function setPublicConsent(
     }
     consent[purpose.code] = { status: status }
 
-    // TODO canonicalPurposeCode will be deprecated with the addition of ketchPurposeCodes
-    if (purpose.canonicalPurposeCode && purpose.canonicalPurposeCode.length > 0) {
+    if (purpose.canonicalPurposeCodes) {
+      consent[purpose.code].canonicalPurposes = purpose.canonicalPurposeCodes
+    } else if (purpose.canonicalPurposeCode && purpose.canonicalPurposeCode.length > 0) {
+      // TODO remove after all configurations update with purpose.canonicalPurposeCodes
       consent[purpose.code].canonicalPurposes = [purpose.canonicalPurposeCode]
     }
   }
