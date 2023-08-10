@@ -21,13 +21,13 @@ describe('identities', () => {
         code: 'portability',
         name: 'Portability',
         description: 'Right to have all data provided to you.',
-        canonicalRightCode: 'get'
+        canonicalRightCode: 'get',
       },
       {
         code: 'rtbf',
         name: 'Data Deletion',
         description: 'Right to be forgotten.',
-        canonicalRightCode: 'delete'
+        canonicalRightCode: 'delete',
       },
     ],
     purposes: [
