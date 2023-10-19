@@ -1125,12 +1125,12 @@ export class Ketch extends EventEmitter {
    * @param input GA cookie value
    */
   extractGAID(input: string): string {
-    const pattern = /^GA\d\.\d\.(\d+\.\d+)$/;
-    const match = pattern.exec(input);
+    const pattern = /^GA\d\.\d\.(\d+\.\d+)$/
+    const match = pattern.exec(input)
 
     if (match) {
       // If a match is found, return the identity component
-      return match[1];
+      return match[1]
     }
 
     return input
