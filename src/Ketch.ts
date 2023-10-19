@@ -1118,6 +1118,25 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * This is a customer use case for extracting the identity from a Google Analytics cookie
+   * The cookie is formatted as GA1.2.123.123 or GA1.1.123.123 where the first version is set by universal analytics
+   * and the second version is set by GA4. Some customers have both tags on the page leading to inconsistent identity.
+   *
+   * @param input GA cookie value
+   */
+  extractGAID(input: string): string {
+    const pattern = /^GA\d\.\d\.(\d+\.\d+)$/;
+    const match = pattern.exec(input);
+
+    if (match) {
+      // If a match is found, return the identity component
+      return match[1];
+    }
+
+    return input
+  }
+
+  /**
    * Sets the identities.
    *
    * @param newIdentities Identities to set
@@ -1132,6 +1151,13 @@ export class Ketch extends EventEmitter {
       identities = this._identities.value
     }
     for (const key in newIdentities) {
+      // this is a solution for customers who use the Google Analytics identifier as their primary identity space
+      // with the identity space code google_analytics_cookie
+      if (key === 'google_analytics_cookie') {
+        l.debug('trimming google_analytics_cookie to get only id without GA1.X. prefix')
+        newIdentities[key] = this.extractGAID(newIdentities[key])
+      }
+
       identities[key] = newIdentities[key]
     }
     this._identities.value = identities
