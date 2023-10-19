@@ -1129,8 +1129,8 @@ export class Ketch extends EventEmitter {
     const match = pattern.exec(input)
 
     if (match) {
-      // If a match is found, return the identity component
-      return match[1]
+      // If a match is found, convert to GA4 identity GA1.1.X
+      return "GA1.1."+match[1]
     }
 
     return input
@@ -1153,8 +1153,9 @@ export class Ketch extends EventEmitter {
     for (const key in newIdentities) {
       // this is a solution for customers who use the Google Analytics identifier as their primary identity space
       // with the identity space code google_analytics_cookie
-      if (key === 'google_analytics_cookie') {
-        l.debug('trimming google_analytics_cookie to get only id without GA1.X. prefix')
+      if (key === 'google_analytics_cookie' &&
+        (this._config.organization.code === 'utc' || this._config.organization.code === 'vara_labs')) {
+        l.debug('altering google_analytics_cookie to get id with GA1.1. prefix')
         newIdentities[key] = this.extractGAID(newIdentities[key])
       }
 
