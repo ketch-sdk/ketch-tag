@@ -1,4 +1,10 @@
-import { Configuration, Environment, GetFullConfigurationRequest, IPInfo } from '@ketch-sdk/ketch-types'
+import {
+  Configuration,
+  Environment,
+  GetConsentRequest,
+  GetFullConfigurationRequest,
+  IPInfo,
+} from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
@@ -8,6 +14,7 @@ import { Ketch } from './Ketch'
 import dataLayer from './dataLayer'
 import getApiUrl from './getApiUrl'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import { getCachedConsent } from './cache'
 
 /**
  * Builder for building a Ketch object
@@ -97,16 +104,46 @@ export default class Builder {
       return
     }
 
+    const telemetryURL = new URL(cfg.services.telemetry)
+
+    const request: GetConsentRequest = {
+      organizationCode: cfg.organization.code ?? '',
+      propertyCode: cfg.property?.code ?? '',
+      environmentCode: cfg.environment?.code ?? '',
+      jurisdictionCode: cfg.jurisdiction?.code ?? '',
+      purposes: {},
+      identities: {},
+    }
+
+    const consent = await getCachedConsent(request)
+    let hasConsent = false
+    if (consent.collectedAt && consent.collectedAt > 0) {
+      hasConsent = true
+    }
+
+    const shouldSendBeacon = true
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && shouldSendBeacon) {
+        this.collectAndSendTelemetry(telemetryURL, hasConsent, k, cfg)
+      }
+    })
+  }
+
+  async collectAndSendTelemetry(url: URL, hasConsent: boolean, k: Ketch, cfg: Configuration): Promise<void> {
     const data = new FormData()
 
-    const consent = k.hasConsent()
-    const url = window.location.href
+    const region = await k.getRegionInfo()
 
-    data.append('hasConsent', `${consent}`)
-    data.append('url', url)
-    data.append('prop', `${cfg.property?.code}`)
+    const currentURL = window.location.href
 
-    navigator.sendBeacon(cfg.services?.telemetry, data)
+    data.append('hasConsent', `${hasConsent}`)
+    data.append('url', currentURL)
+    data.append('propertyCode', `${cfg.property?.code}`)
+    data.append('environment', `${cfg.environment?.code}`)
+    data.append('region', region)
+    data.append('jurisdiction', `${cfg.jurisdiction?.code}`)
+
+    navigator.sendBeacon(url, data)
   }
 
   /**
