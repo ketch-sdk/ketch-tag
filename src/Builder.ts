@@ -103,7 +103,7 @@ export default class Builder {
     const url = window.location.href
 
     data.append('hasConsent', `${consent}`)
-    data.append('ur', url)
+    data.append('url', url)
     data.append('propertyCode', `${cfg.property?.code}`)
 
     navigator.sendBeacon(cfg.services?.telemetry, data)
