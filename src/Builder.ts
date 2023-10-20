@@ -93,7 +93,7 @@ export default class Builder {
   }
 
   async setupTelemetry(k: Ketch, cfg: Configuration): Promise<void> {
-    if (!cfg.services?.telemetry || cfg.services?.telemetry === '') {
+    if (!cfg.services || !cfg.services.telemetry || cfg.services.telemetry === '') {
       return
     }
 
