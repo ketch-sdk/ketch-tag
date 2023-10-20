@@ -1,18 +1,13 @@
-import {
-  Configuration,
-  Environment,
-  GetFullConfigurationRequest,
-  IPInfo
-} from '@ketch-sdk/ketch-types'
+import { Configuration, Environment, GetFullConfigurationRequest, IPInfo } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
-import {KetchWebAPI} from '@ketch-sdk/ketch-web-api'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import constants from './constants'
 import parameters from './parameters'
-import {Ketch} from './Ketch'
+import { Ketch } from './Ketch'
 import dataLayer from './dataLayer'
 import getApiUrl from './getApiUrl'
-import {wrapLogger} from '@ketch-sdk/ketch-logging'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
 /**
  * Builder for building a Ketch object
@@ -92,15 +87,13 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
-
     await this.setupTelemetry(k, cfg)
-
 
     return k
   }
 
-  async setupTelemetry(k : Ketch, cfg : Configuration): Promise<void> {
-    if(!cfg.services?.telemetry || cfg.services?.telemetry === '' ){
+  async setupTelemetry(k: Ketch, cfg: Configuration): Promise<void> {
+    if (!cfg.services?.telemetry || cfg.services?.telemetry === '') {
       return
     }
 
@@ -109,10 +102,9 @@ export default class Builder {
     const consent = k.hasConsent()
     const url = window.location.href
 
-    data.append("hasConsent", `${consent}`)
-    data.append("ur", url)
-    data.append("propertyCode", `${cfg.property?.code}`)
-
+    data.append('hasConsent', `${consent}`)
+    data.append('ur', url)
+    data.append('propertyCode', `${cfg.property?.code}`)
 
     navigator.sendBeacon(cfg.services?.telemetry, data)
   }
