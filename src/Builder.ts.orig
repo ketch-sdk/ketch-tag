@@ -121,10 +121,9 @@ export default class Builder {
       hasConsent = true
     }
 
-    let shouldSendBeacon = true
+    const shouldSendBeacon = true
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
-        shouldSendBeacon = false
         this.collectAndSendTelemetry(telemetryURL, hasConsent, k, cfg)
       }
     })
@@ -135,6 +134,11 @@ export default class Builder {
 
     const region = await k.getRegionInfo()
 
+<<<<<<< HEAD
+    data.append('hasConsent', `${consent}`)
+    data.append('url', url)
+    data.append('prop', `${cfg.property?.code}`)
+=======
     const currentURL = window.location.href
 
     data.append('hasConsent', `${hasConsent}`)
@@ -143,6 +147,7 @@ export default class Builder {
     data.append('environment', `${cfg.environment?.code}`)
     data.append('region', region)
     data.append('jurisdiction', `${cfg.jurisdiction?.code}`)
+>>>>>>> e84791f (chore(more): Add additional details to telemetry)
 
     navigator.sendBeacon(url, data)
   }
