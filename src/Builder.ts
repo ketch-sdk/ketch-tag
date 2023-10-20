@@ -104,7 +104,7 @@ export default class Builder {
 
     data.append('hasConsent', `${consent}`)
     data.append('url', url)
-    data.append('propertyCode', `${cfg.property?.code}`)
+    data.append('prop', `${cfg.property?.code}`)
 
     navigator.sendBeacon(cfg.services?.telemetry, data)
   }
