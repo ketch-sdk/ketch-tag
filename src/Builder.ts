@@ -143,6 +143,7 @@ export default class Builder {
     data.append('environment', `${cfg.environment?.code}`)
     data.append('region', region)
     data.append('jurisdiction', `${cfg.jurisdiction?.code}`)
+    data.append("tenant", `${cfg.organization.code}`)
 
     navigator.sendBeacon(url, data)
   }
