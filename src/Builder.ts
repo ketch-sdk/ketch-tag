@@ -135,7 +135,7 @@ export default class Builder {
 
     const region = await k.getRegionInfo()
 
-    const currentURL = window.location.href
+    const currentURL = window.location.protocol + '//' + window.location.host + window.location.pathname
 
     data.append('hasConsent', `${hasConsent}`)
     data.append('url', currentURL)
