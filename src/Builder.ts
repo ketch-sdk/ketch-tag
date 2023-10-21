@@ -104,9 +104,9 @@ export default class Builder {
       return false
     }
 
-    const percentage = parseFloat(cfg.options?.beaconPercentage|| "0.1")
+    const percentage = parseFloat(cfg.options?.beaconPercentage || '0.1')
     let shouldSendBeacon = Math.random() < percentage
-    if(!shouldSendBeacon){
+    if (!shouldSendBeacon) {
       return false
     }
 
@@ -123,7 +123,6 @@ export default class Builder {
 
     const consent = await getCachedConsent(request)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
-
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {

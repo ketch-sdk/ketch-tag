@@ -654,9 +654,9 @@ describe('builder', () => {
         services: {
           shoreline: 'https://shoreline.ketch.com',
         },
-        options:{
-          beaconPercentage: "1"
-        }
+        options: {
+          beaconPercentage: '1',
+        },
       }
       const k = new Builder(config)
 
@@ -673,9 +673,9 @@ describe('builder', () => {
           shoreline: 'https://shoreline.ketch.com',
           telemetry: '',
         },
-        options:{
-          beaconPercentage: "1"
-        }
+        options: {
+          beaconPercentage: '1',
+        },
       }
       const k = new Builder(config)
 
@@ -692,9 +692,9 @@ describe('builder', () => {
           shoreline: 'https://shoreline.ketch.com',
           telemetry: 'https://shoreline.ketch.com',
         },
-        options:{
-          beaconPercentage: "1"
-        }
+        options: {
+          beaconPercentage: '1',
+        },
       }
       const k = new Builder(config)
 
@@ -724,9 +724,9 @@ describe('builder', () => {
           code: 'myDeployCode',
           version: 12334,
         },
-        options:{
-          beaconPercentage: "1"
-        }
+        options: {
+          beaconPercentage: '1',
+        },
       }
       const k = new Builder(config)
 
