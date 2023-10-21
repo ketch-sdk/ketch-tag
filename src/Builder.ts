@@ -116,10 +116,7 @@ export default class Builder {
     }
 
     const consent = await getCachedConsent(request)
-    let hasConsent = false
-    if (consent.collectedAt && consent.collectedAt > 0) {
-      hasConsent = true
-    }
+    const hasConsent = (consent.collectedAt && consent.collectedAt > 0)
 
     let shouldSendBeacon = true
     document.addEventListener('visibilitychange', () => {
