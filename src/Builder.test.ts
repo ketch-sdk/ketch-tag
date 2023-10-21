@@ -738,7 +738,7 @@ describe('builder', () => {
       expect(resp.get('environment')).toBe('myEnv')
       expect(resp.get('jurisdiction')).toBe('myJurisdiction')
       expect(resp.get('tenant')).toBe('blah')
-      expect(resp.get('dVer')).toBe(`${12334}`)
+      expect(resp.get('dver')).toBe(`${12334}`)
       expect(resp.get('region')).toBe('US')
     })
   })
