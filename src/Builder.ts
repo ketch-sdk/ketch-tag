@@ -94,14 +94,14 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
-    await this.setupTelemetry(k, cfg)
+    await this.setupTelemetry(cfg)
 
     return k
   }
 
-  async setupTelemetry(k: Ketch, cfg: Configuration): Promise<void> {
+  async setupTelemetry(cfg: Configuration): Promise<boolean> {
     if (!cfg.services || !cfg.services.telemetry || cfg.services.telemetry === '') {
-      return
+      return false
     }
 
     const telemetryURL = new URL(cfg.services.telemetry)
@@ -125,15 +125,15 @@ export default class Builder {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
-        this.collectAndSendTelemetry(telemetryURL, hasConsent, k, cfg)
+        const data = this.collectTelemetry(hasConsent, cfg)
+        navigator.sendBeacon(telemetryURL, data)
       }
     })
+    return true
   }
 
-  async collectAndSendTelemetry(url: URL, hasConsent: boolean, k: Ketch, cfg: Configuration): Promise<void> {
+  collectTelemetry(hasConsent: boolean, cfg: Configuration): FormData {
     const data = new FormData()
-
-    const region = await k.getRegionInfo()
 
     const currentURL = window.location.protocol + '//' + window.location.host + window.location.pathname
 
@@ -141,12 +141,11 @@ export default class Builder {
     data.append('url', currentURL)
     data.append('propertyCode', `${cfg.property?.code}`)
     data.append('environment', `${cfg.environment?.code}`)
-    data.append('region', region)
     data.append('jurisdiction', `${cfg.jurisdiction?.code}`)
     data.append('tenant', `${cfg.organization.code}`)
-    data.append("deploymentVersion", `${cfg.deployment?.version}`)
+    data.append('deploymentVersion', `${cfg.deployment?.version}`)
 
-    navigator.sendBeacon(url, data)
+    return data
   }
 
   /**

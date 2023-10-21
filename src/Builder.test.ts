@@ -643,4 +643,90 @@ describe('builder', () => {
       return expect(env).rejects.toBe(errors.noEnvironmentError)
     })
   })
+
+  describe('buildTelemetry', () => {
+    it('skips telemetry setup if service is not provided', async () => {
+      const config: Configuration = {
+        formTemplates: [],
+        organization: {
+          code: 'blah',
+        },
+        services: {
+          shoreline: 'https://shoreline.ketch.com',
+        },
+      }
+      const k = new Builder(config)
+
+      const resp = await k.setupTelemetry(config)
+      expect(resp).toBeFalsy()
+    })
+    it('skips telemetry setup if service is empty', async () => {
+      const config: Configuration = {
+        formTemplates: [],
+        organization: {
+          code: 'blah',
+        },
+        services: {
+          shoreline: 'https://shoreline.ketch.com',
+          telemetry: '',
+        },
+      }
+      const k = new Builder(config)
+
+      const resp = await k.setupTelemetry(config)
+      expect(resp).toBeFalsy()
+    })
+    it('sets up telemetry if service is present', async () => {
+      const config: Configuration = {
+        formTemplates: [],
+        organization: {
+          code: 'blah',
+        },
+        services: {
+          shoreline: 'https://shoreline.ketch.com',
+          telemetry: 'https://shoreline.ketch.com',
+        },
+      }
+      const k = new Builder(config)
+
+      const resp = await k.setupTelemetry(config)
+      expect(resp).toBeTruthy()
+    })
+    it('collects config data as formData', async () => {
+      const config: Configuration = {
+        formTemplates: [],
+        organization: {
+          code: 'blah',
+        },
+        services: {
+          shoreline: 'https://shoreline.ketch.com',
+          telemetry: 'https://shoreline.ketch.com',
+        },
+        property: {
+          code: 'myProp',
+        },
+        environment: {
+          code: 'myEnv',
+        },
+        jurisdiction: {
+          code: 'myJurisdiction',
+        },
+        deployment: {
+          code: 'myDeployCode',
+          version: 12334,
+        },
+      }
+      const k = new Builder(config)
+
+      const resp = k.collectTelemetry(true, config)
+      expect(resp).toBeTruthy()
+      expect(resp.get('hasConsent')).toBeTruthy()
+      expect(resp.get('url')).toBeDefined()
+      expect(resp.get('propertyCode')).toBe('myProp')
+      expect(resp.get('environment')).toBe('myEnv')
+      expect(resp.get('jurisdiction')).toBe('myJurisdiction')
+      expect(resp.get('tenant')).toBe('blah')
+      expect(resp.get('deploymentVersion')).toBe(`${12334}`)
+    })
+  })
 })
