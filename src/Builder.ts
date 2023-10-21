@@ -132,7 +132,7 @@ export default class Builder {
   collectTelemetry(hasConsent: boolean, cfg: Configuration): FormData {
     const data = new FormData()
 
-    const currentURL = window.location.protocol + '//' + window.location.host + window.location.pathname
+    const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
 
     data.append('hasConsent', `${hasConsent}`)
     data.append('url', currentURL)
