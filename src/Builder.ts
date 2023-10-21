@@ -128,21 +128,16 @@ export default class Builder {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
         const data = this.collectTelemetry(hasConsent, cfg, params)
-        this.sendBeacon(url, data)
+        // https://developer.fastly.com/solutions/tutorials/beacon-termination/
+        // Use url params as recommended
+        navigator.sendBeacon(`${url}?${data.toString()}`)
       }
     })
     return true
   }
 
-  sendBeacon(url: string, data: FormData) {
-    // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams#options
-    const urlParams = new URLSearchParams(data as any).toString()
-
-    navigator.sendBeacon(`${url}?${urlParams}`)
-  }
-
-  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): FormData {
-    const data = new FormData()
+  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): URLSearchParams {
+    const data = new URLSearchParams()
 
     const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
 
