@@ -145,7 +145,7 @@ export default class Builder {
     data.append('environment', cfg.environment?.code || '')
     data.append('jurisdiction', cfg.jurisdiction?.code || '')
     data.append('tenant', cfg.organization.code)
-    data.append('dVer', `${cfg.deployment?.version}`)
+    data.append('dver', `${cfg.deployment?.version}`)
     for (const [k, v] of Object.entries(params)) {
       data.append(k, v)
     }
