@@ -657,7 +657,7 @@ describe('builder', () => {
       }
       const k = new Builder(config)
 
-      const resp = await k.setupTelemetry(config)
+      const resp = await k.setupTelemetry(config, { region: 'US' })
       expect(resp).toBeFalsy()
     })
     it('skips telemetry setup if service is empty', async () => {
@@ -673,7 +673,7 @@ describe('builder', () => {
       }
       const k = new Builder(config)
 
-      const resp = await k.setupTelemetry(config)
+      const resp = await k.setupTelemetry(config, { region: 'US' })
       expect(resp).toBeFalsy()
     })
     it('sets up telemetry if service is present', async () => {
@@ -689,7 +689,7 @@ describe('builder', () => {
       }
       const k = new Builder(config)
 
-      const resp = await k.setupTelemetry(config)
+      const resp = await k.setupTelemetry(config, { region: 'US' })
       expect(resp).toBeTruthy()
     })
     it('collects config data as formData', async () => {
@@ -718,7 +718,7 @@ describe('builder', () => {
       }
       const k = new Builder(config)
 
-      const resp = k.collectTelemetry(true, config)
+      const resp = k.collectTelemetry(true, config, { region: 'US' })
       expect(resp).toBeTruthy()
       expect(resp.get('hasConsent')).toBeTruthy()
       expect(resp.get('url')).toBeDefined()
@@ -727,6 +727,7 @@ describe('builder', () => {
       expect(resp.get('jurisdiction')).toBe('myJurisdiction')
       expect(resp.get('tenant')).toBe('blah')
       expect(resp.get('dVer')).toBe(`${12334}`)
+      expect(resp.get('region')).toBe('US')
     })
   })
 })

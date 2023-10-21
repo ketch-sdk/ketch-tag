@@ -94,12 +94,12 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
-    await this.setupTelemetry(cfg)
+    await this.setupTelemetry(cfg, { region: region })
 
     return k
   }
 
-  async setupTelemetry(cfg: Configuration): Promise<boolean> {
+  async setupTelemetry(cfg: Configuration, params: object): Promise<boolean> {
     if (!cfg.services || !cfg.services.telemetry || cfg.services.telemetry === '') {
       return false
     }
@@ -118,18 +118,18 @@ export default class Builder {
     const consent = await getCachedConsent(request)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
 
-    let shouldSendBeacon = true
+    let shouldSendBeacon = Math.random() < 0.1
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
-        const data = this.collectTelemetry(hasConsent, cfg)
+        const data = this.collectTelemetry(hasConsent, cfg, params)
         navigator.sendBeacon(telemetryURL, data)
       }
     })
     return true
   }
 
-  collectTelemetry(hasConsent: boolean, cfg: Configuration): FormData {
+  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): FormData {
     const data = new FormData()
 
     const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
@@ -141,6 +141,9 @@ export default class Builder {
     data.append('jurisdiction', cfg.jurisdiction?.code || '')
     data.append('tenant', cfg.organization.code)
     data.append('dVer', `${cfg.deployment?.version}`)
+    for (const [k, v] of Object.entries(params)) {
+      data.append(k, v)
+    }
 
     return data
   }
