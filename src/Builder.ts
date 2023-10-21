@@ -104,6 +104,12 @@ export default class Builder {
       return false
     }
 
+    const percentage = parseFloat(cfg.options?.beaconPercentage|| "0.1")
+    let shouldSendBeacon = Math.random() < percentage
+    if(!shouldSendBeacon){
+      return false
+    }
+
     const telemetryURL = new URL(cfg.services.telemetry)
 
     const request: GetConsentRequest = {
@@ -118,7 +124,7 @@ export default class Builder {
     const consent = await getCachedConsent(request)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
 
-    let shouldSendBeacon = Math.random() < 0.1
+
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
