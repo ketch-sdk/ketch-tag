@@ -104,13 +104,13 @@ export default class Builder {
       return false
     }
 
+    const url = cfg.services.telemetry
+
     const percentage = parseFloat(cfg.options?.beaconPercentage || '0.1')
     let shouldSendBeacon = Math.random() < percentage
     if (!shouldSendBeacon) {
       return false
     }
-
-    const telemetryURL = new URL(cfg.services.telemetry)
 
     const request: GetConsentRequest = {
       organizationCode: cfg.organization.code ?? '',
@@ -128,10 +128,17 @@ export default class Builder {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
         const data = this.collectTelemetry(hasConsent, cfg, params)
-        navigator.sendBeacon(telemetryURL, data)
+        this.sendBeacon(url, data)
       }
     })
     return true
+  }
+
+  sendBeacon(url: string, data: FormData) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams#options
+    const urlParams = new URLSearchParams(data as any).toString()
+
+    navigator.sendBeacon(`${url}?${urlParams}`)
   }
 
   collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): FormData {
