@@ -137,7 +137,7 @@ export default class Builder {
     data.append('hasConsent', `${hasConsent}`)
     data.append('url', currentURL)
     data.append('property', cfg.property?.code)
-    data.append('environment', `${cfg.environment?.code}`)
+    data.append('environment', cfg.environment?.code)
     data.append('jurisdiction', `${cfg.jurisdiction?.code}`)
     data.append('tenant', `${cfg.organization.code}`)
     data.append('deploymentVersion', `${cfg.deployment?.version}`)
