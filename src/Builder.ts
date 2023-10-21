@@ -1,4 +1,10 @@
-import { Configuration, Environment, GetFullConfigurationRequest, IPInfo } from '@ketch-sdk/ketch-types'
+import {
+  Configuration,
+  Environment,
+  GetConsentRequest,
+  GetFullConfigurationRequest,
+  IPInfo,
+} from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
@@ -8,6 +14,7 @@ import { Ketch } from './Ketch'
 import dataLayer from './dataLayer'
 import getApiUrl from './getApiUrl'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import { getCachedConsent } from './cache'
 
 /**
  * Builder for building a Ketch object
@@ -87,7 +94,63 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
+    await this.setupTelemetry(cfg, { region: region })
+
     return k
+  }
+
+  async setupTelemetry(cfg: Configuration, params: object): Promise<boolean> {
+    if (!cfg.services || !cfg.services.telemetry || cfg.services.telemetry === '') {
+      return false
+    }
+
+    const percentage = parseFloat(cfg.options?.beaconPercentage || '0.1')
+    let shouldSendBeacon = Math.random() < percentage
+    if (!shouldSendBeacon) {
+      return false
+    }
+
+    const telemetryURL = new URL(cfg.services.telemetry)
+
+    const request: GetConsentRequest = {
+      organizationCode: cfg.organization.code ?? '',
+      propertyCode: cfg.property?.code ?? '',
+      environmentCode: cfg.environment?.code ?? '',
+      jurisdictionCode: cfg.jurisdiction?.code ?? '',
+      purposes: {},
+      identities: {},
+    }
+
+    const consent = await getCachedConsent(request)
+    const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && shouldSendBeacon) {
+        shouldSendBeacon = false
+        const data = this.collectTelemetry(hasConsent, cfg, params)
+        navigator.sendBeacon(telemetryURL, data)
+      }
+    })
+    return true
+  }
+
+  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): FormData {
+    const data = new FormData()
+
+    const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
+
+    data.append('hasConsent', `${hasConsent}`)
+    data.append('url', currentURL)
+    data.append('property', cfg.property?.code || '')
+    data.append('environment', cfg.environment?.code || '')
+    data.append('jurisdiction', cfg.jurisdiction?.code || '')
+    data.append('tenant', cfg.organization.code)
+    data.append('dver', `${cfg.deployment?.version}`)
+    for (const [k, v] of Object.entries(params)) {
+      data.append(k, v)
+    }
+
+    return data
   }
 
   /**
