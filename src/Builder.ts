@@ -110,8 +110,6 @@ export default class Builder {
       return false
     }
 
-    const telemetryURL = new URL(cfg.services.telemetry)
-
     const request: GetConsentRequest = {
       organizationCode: cfg.organization.code ?? '',
       propertyCode: cfg.property?.code ?? '',
@@ -128,14 +126,16 @@ export default class Builder {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
         const data = this.collectTelemetry(hasConsent, cfg, params)
-        navigator.sendBeacon(telemetryURL, data)
+        // https://developer.fastly.com/solutions/tutorials/beacon-termination/
+        // Use url params as recommended
+        navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
       }
     })
     return true
   }
 
-  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): FormData {
-    const data = new FormData()
+  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): URLSearchParams {
+    const data = new URLSearchParams()
 
     const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
 
