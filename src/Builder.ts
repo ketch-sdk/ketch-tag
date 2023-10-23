@@ -104,8 +104,6 @@ export default class Builder {
       return false
     }
 
-    const url = cfg.services.telemetry
-
     const percentage = parseFloat(cfg.options?.beaconPercentage || '0.1')
     let shouldSendBeacon = Math.random() < percentage
     if (!shouldSendBeacon) {
@@ -130,7 +128,7 @@ export default class Builder {
         const data = this.collectTelemetry(hasConsent, cfg, params)
         // https://developer.fastly.com/solutions/tutorials/beacon-termination/
         // Use url params as recommended
-        navigator.sendBeacon(`${url}?${data.toString()}`)
+        navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
       }
     })
     return true
