@@ -355,8 +355,6 @@ export class Ketch extends EventEmitter {
   /**
    * Selects the correct experience. If the default experience is modal, but there are no purposes requiring opt in
    * then the experience is changed to banner.
-   * Per https://ketch-com.atlassian.net/browse/KD-10138 this function is now dead code (not referenced) as this
-   * check is no longer desired
    */
   selectConsentExperience(): ConsentExperienceType {
     const l = wrapLogger(log, 'selectConsentExperience')
