@@ -366,7 +366,7 @@ export class Ketch extends EventEmitter {
       this._config.experiences?.consent?.experienceDefault === ExperienceDefault.MODAL
     ) {
       for (const pa of this._config.purposes) {
-        if (pa.requiresOptIn) {
+        if (!pa.requiresDisplay) {
           l.debug(ConsentExperienceType.Modal)
           return ConsentExperienceType.Modal
         }
@@ -441,9 +441,10 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
       this.willShowExperience(ExperienceType.Consent)
-      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, {
-        displayHint: this._config.experiences?.consent?.experienceDefault,
-      })
+      // this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, {
+      //   displayHint: this._config.experiences?.consent?.experienceDefault || ExperienceDefault.MODAL,
+      // })
+      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
     }
 
     return consent
