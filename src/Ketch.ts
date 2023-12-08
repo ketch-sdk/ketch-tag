@@ -1068,6 +1068,7 @@ export class Ketch extends EventEmitter {
       organizationCode: this._config?.organization?.code ?? '',
       propertyCode: this._config?.property?.code ?? '',
       languageCode: this._config?.language ?? '',
+      experienceCode: this._config?.experiences?.preference?.code ?? '',
     })
 
     l.trace('loaded', config)
