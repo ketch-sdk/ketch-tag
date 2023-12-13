@@ -495,9 +495,7 @@ export class Ketch extends EventEmitter {
 
         if (
           subConfig.topics === undefined ||
-          subConfig.controls === undefined ||
           subConfig.topics.length === 0 ||
-          subConfig.controls.length === 0 ||
           Object.keys(subConfig.identities).length === 0
         ) {
           params.showSubscriptionsTab = false
