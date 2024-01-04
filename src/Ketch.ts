@@ -234,7 +234,7 @@ export class Ketch extends EventEmitter {
       this.on(constants.SHOW_PREVIEW_MODE_EVENT, (consents, options) => {
         if ((plugin as any).showPreviewMode !== undefined) {
           // TODO:BAC - this._config needs to be ConfigurationV2
-          (plugin as any).showPreferenceExperience(router, this._config, consents, options)
+          (plugin as any).showPreviewMode(router, this._config, consents, options)
         }
       })
     }
