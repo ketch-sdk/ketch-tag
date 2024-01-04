@@ -74,6 +74,7 @@ describe('consent', () => {
         description: 'We will use data collected about you to perform critical product enhancements.',
         legalBasisCode: 'disclosure',
         requiresPrivacyPolicy: true,
+        requiresDisplay: true,
       },
       // @ts-ignore
       {
@@ -388,7 +389,7 @@ describe('consent', () => {
   })
 
   describe('selectExperience', () => {
-    it('returns modal if any purposes requires opt in and defaultExperience is modal', () => {
+    it('returns modal if any purposes requires display in and defaultExperience is modal', () => {
       const ketch = new Ketch(new KetchWebAPI(''), {
         purposes: [
           {
@@ -397,6 +398,7 @@ describe('consent', () => {
             description: '',
             legalBasisCode: '',
             requiresOptIn: true,
+            requiresDisplay: true,
           },
         ],
         experiences: {

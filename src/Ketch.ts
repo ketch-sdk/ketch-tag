@@ -364,7 +364,7 @@ export class Ketch extends EventEmitter {
       this._config.experiences?.consent?.experienceDefault === ExperienceDefault.MODAL
     ) {
       for (const pa of this._config.purposes) {
-        if (pa.requiresOptIn) {
+        if (pa.requiresDisplay) {
           l.debug(ConsentExperienceType.Modal)
           return ConsentExperienceType.Modal
         }
