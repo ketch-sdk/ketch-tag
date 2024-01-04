@@ -11,8 +11,11 @@ export default {
   SUBSCRIPTION_CONFIG_EVENT: 'subscriptionConfig',
   RIGHT_INVOKED_EVENT: 'rightInvoked',
   WILL_SHOW_EXPERIENCE_EVENT: 'willShowExperience',
+
   SHOW_CONSENT_EXPERIENCE_EVENT: 'showConsentExperience',
   SHOW_PREFERENCE_EXPERIENCE_EVENT: 'showPreferenceExperience',
+  SHOW_PREVIEW_MODE_EVENT: 'showPreviewMode',
+
   HIDE_EXPERIENCE_EVENT: 'hideExperience',
   NONE: 'none',
   ENV: 'env',

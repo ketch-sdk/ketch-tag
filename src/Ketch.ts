@@ -227,6 +227,17 @@ export class Ketch extends EventEmitter {
         }
       })
     }
+
+    // eslint-disable-next-line max-len
+    // showPreviewMode?: (host: Ketch, config: Configuration, consents: Consent, options?: ShowPreferenceOptions) => void;
+    if ((plugin as any).showPreviewMode !== undefined) {
+      this.on(constants.SHOW_PREVIEW_MODE_EVENT, (consents, options) => {
+        if ((plugin as any).showPreviewMode !== undefined) {
+          // TODO:BAC - this._config needs to be ConfigurationV2
+          (plugin as any).showPreferenceExperience(router, this._config, consents, options)
+        }
+      })
+    }
     if (plugin.consentChanged !== undefined) {
       this.on(constants.CONSENT_EVENT, consent => {
         if (plugin.consentChanged !== undefined) {
@@ -440,6 +451,25 @@ export class Ketch extends EventEmitter {
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
       this.willShowExperience(ExperienceType.Consent)
       this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
+    }
+
+    return consent
+  }
+
+  /**
+   * Shows preview mode.
+   */
+  async showPreviewMode(): Promise<Consent> {
+    log.debug('showPreviewMode')
+
+    const consent = await this.retrieveConsent()
+
+    if (this.listenerCount(constants.SHOW_PREVIEW_MODE_EVENT) > 0) {
+      // this.willShowExperience(ExperienceType.Consent) // TODO:BAC - maybe don't need this with preview mode?
+
+      /* Maybe don't need displayHint because view mode should be controlled by postMessage from
+       figurehead parent into iframe, then picked up by listener in <PreviewMode /> component */
+      this.emit(constants.SHOW_PREVIEW_MODE_EVENT, consent, { displayHint: this.selectConsentExperience() })
     }
 
     return consent
