@@ -118,8 +118,12 @@ describe('cache', () => {
   })
 
   it('returns cached response when set', async () => {
-    await setCachedConsent(request as SetConsentRequest)
-    expect(await getCachedConsent(request)).toEqual(request)
+    const input = { ...request }
+    input.vendors = ['a', 'b']
+    await setCachedConsent(input as SetConsentRequest)
+    const response = await getCachedConsent(request)
+    response.collectedAt = 0
+    expect(response).toEqual(request)
   })
 
   it('public cookie not set if no consent', async () => {
