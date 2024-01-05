@@ -1110,6 +1110,7 @@ export class Ketch extends EventEmitter {
     }
 
     const consentConfig = await this._api.getConsentConfiguration({
+      organizationCode: this._config.organization.code,
       propertyCode: this._config.property?.code ?? '',
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',
@@ -1137,6 +1138,7 @@ export class Ketch extends EventEmitter {
     }
 
     const preferenceConfig = await this._api.getPreferenceConfiguration({
+      organizationCode: this._config.organization.code,
       propertyCode: this._config.property?.code ?? '',
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',

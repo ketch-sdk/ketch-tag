@@ -1,6 +1,7 @@
 import Router from './Router'
 import { Ketch } from './Ketch'
 import {
+  ConfigurationV2,
   Consent,
   ExperienceClosedReason,
   InvokeRightEvent,
@@ -47,5 +48,19 @@ export default class InternalRouter extends Router implements KetchAPI {
    */
   getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
     return this._ketch.getSubscriptionConfiguration()
+  }
+
+  /**
+   * Get Consent configuration
+   */
+  getConsentConfiguration(): Promise<ConfigurationV2> {
+    return this._ketch.getConsentConfiguration()
+  }
+
+  /**
+   * Get Preference configuration
+   */
+  getPreferenceConfiguration(): Promise<ConfigurationV2> {
+    return this._ketch.getPreferenceConfiguration()
   }
 }
