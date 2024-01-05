@@ -311,6 +311,7 @@ describe('Ketch', () => {
           {
             code: 'analytics',
             requiresOptIn: true,
+            requiresDisplay: true,
           },
         ],
         experiences: {
