@@ -21,7 +21,7 @@ describe('cache', () => {
     organizationCode: 'axonic',
     propertyCode: 'axonic',
     purposes: {},
-    vendors: ["a","b"]
+    vendors: ['a', 'b'],
   } as GetConsentRequest
 
   const getResponseWithConsent = {
@@ -121,7 +121,7 @@ describe('cache', () => {
   it('returns cached response when set', async () => {
     await setCachedConsent(request as SetConsentRequest)
     const response = await getCachedConsent(request)
-    const expectedResponse = {...request}
+    const expectedResponse = { ...request }
     expectedResponse.vendors = undefined
     expect(response).toEqual(expectedResponse)
   })

@@ -47,7 +47,7 @@ export async function setCachedConsent(
   input.collectedAt = Math.floor(Date.now() / 1000)
 
   //TODO: remove below code once we fix vendor save issue on backend
-  const obj = {...input}
+  const obj = { ...input }
   obj.vendors = undefined
 
   await consentCacher.setItem(CACHED_CONSENT_KEY, obj)
