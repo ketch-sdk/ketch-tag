@@ -1114,7 +1114,7 @@ export class Ketch extends EventEmitter {
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',
       langCode: this._config.language ?? '',
-      hash: '',
+      hash: '', // TODO:JB - Generate hash
     })
 
     l.trace('loaded', consentConfig)
@@ -1141,7 +1141,7 @@ export class Ketch extends EventEmitter {
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',
       langCode: this._config.language ?? '',
-      hash: '',
+      hash: '', // TODO:JB - Generate hash
     })
 
     l.trace('loaded', preferenceConfig)
