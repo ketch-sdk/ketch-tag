@@ -21,7 +21,6 @@ describe('cache', () => {
     organizationCode: 'axonic',
     propertyCode: 'axonic',
     purposes: {},
-    vendors: ['a', 'b'],
   } as GetConsentRequest
 
   const getResponseWithConsent = {
@@ -119,11 +118,12 @@ describe('cache', () => {
   })
 
   it('returns cached response when set', async () => {
-    await setCachedConsent(request as SetConsentRequest)
+    const input = {...request}
+    input.vendors = ["a", "b"]
+    await setCachedConsent(input as SetConsentRequest)
     const response = await getCachedConsent(request)
-    const expectedResponse = { ...request }
-    expectedResponse.vendors = undefined
-    expect(response).toEqual(expectedResponse)
+    response.collectedAt = 0
+    expect(response).toEqual(request)
   })
 
   it('public cookie not set if no consent', async () => {
