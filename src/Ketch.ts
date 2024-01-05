@@ -118,12 +118,12 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
-  private readonly _consentConfigV2: Future<ConfigurationV2>
+  private readonly _consentConfig: Future<ConfigurationV2>
 
   /**
    * @internal
    */
-  private readonly _preferenceConfigV2: Future<ConfigurationV2>
+  private readonly _preferenceConfig: Future<ConfigurationV2>
 
   /**
    * @internal
@@ -189,12 +189,12 @@ export class Ketch extends EventEmitter {
       emitter: this,
       maxListeners,
     })
-    this._consentConfigV2 = new Future<ConfigurationV2>({
+    this._consentConfig = new Future<ConfigurationV2>({
       name: constants.SHOW_CONSENT_EXPERIENCE_EVENT,
       emitter: this,
       maxListeners,
     })
-    this._preferenceConfigV2 = new Future<ConfigurationV2>({
+    this._preferenceConfig = new Future<ConfigurationV2>({
       name: constants.SHOW_PREFERENCE_EXPERIENCE_EVENT,
       emitter: this,
       maxListeners,
@@ -1104,9 +1104,9 @@ export class Ketch extends EventEmitter {
     const l = wrapLogger(log, 'getConsentConfiguration')
     l.trace('config', this._config)
 
-    if (this._consentConfigV2.isFulfilled()) {
-      l.trace('cached', this._consentConfigV2.value)
-      return this._consentConfigV2
+    if (this._consentConfig.isFulfilled()) {
+      l.trace('cached', this._consentConfig.value)
+      return this._consentConfig
     }
 
     const consentConfig = await this._api.getConsentConfiguration({
@@ -1119,7 +1119,7 @@ export class Ketch extends EventEmitter {
 
     l.trace('loaded', consentConfig)
 
-    this._consentConfigV2.value = consentConfig
+    this._consentConfig.value = consentConfig
 
     return consentConfig
   }
@@ -1131,9 +1131,9 @@ export class Ketch extends EventEmitter {
     const l = wrapLogger(log, 'getPreferenceConfiguration')
     l.trace('config', this._config)
 
-    if (this._preferenceConfigV2.isFulfilled()) {
-      l.trace('cached', this._preferenceConfigV2.value)
-      return this._preferenceConfigV2
+    if (this._preferenceConfig.isFulfilled()) {
+      l.trace('cached', this._preferenceConfig.value)
+      return this._preferenceConfig
     }
 
     const preferenceConfig = await this._api.getPreferenceConfiguration({
@@ -1146,7 +1146,7 @@ export class Ketch extends EventEmitter {
 
     l.trace('loaded', preferenceConfig)
 
-    this._preferenceConfigV2.value = preferenceConfig
+    this._preferenceConfig.value = preferenceConfig
 
     return preferenceConfig
   }
