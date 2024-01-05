@@ -1100,8 +1100,8 @@ export class Ketch extends EventEmitter {
   /**
    * Get ConfigurationV2 object with consent experience information
    */
-  async getConsentConfigurationV2(): Promise<ConfigurationV2> {
-    const l = wrapLogger(log, 'getConsentConfigurationV2')
+  async getConsentConfiguration(): Promise<ConfigurationV2> {
+    const l = wrapLogger(log, 'getConsentConfiguration')
     l.trace('config', this._config)
 
     if (this._consentConfigV2.isFulfilled()) {
@@ -1109,12 +1109,12 @@ export class Ketch extends EventEmitter {
       return this._consentConfigV2
     }
 
-    const consentConfig = await this._api.getConsentConfigurationV2({
+    const consentConfig = await this._api.getConsentConfiguration({
       propertyCode: this._config.property?.code ?? '',
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',
       langCode: this._config.language ?? '',
-      hash: '', // TODO:JB - Generate hash
+      hash: this._config.environment?.hash,
     })
 
     l.trace('loaded', consentConfig)
@@ -1127,8 +1127,8 @@ export class Ketch extends EventEmitter {
   /**
    * Get ConfigurationV2 object with preference experience information
    */
-  async getPreferenceConfigurationV2(): Promise<ConfigurationV2> {
-    const l = wrapLogger(log, 'getPreferenceConfigurationV2')
+  async getPreferenceConfiguration(): Promise<ConfigurationV2> {
+    const l = wrapLogger(log, 'getPreferenceConfiguration')
     l.trace('config', this._config)
 
     if (this._preferenceConfigV2.isFulfilled()) {
@@ -1136,12 +1136,12 @@ export class Ketch extends EventEmitter {
       return this._preferenceConfigV2
     }
 
-    const preferenceConfig = await this._api.getPreferenceConfigurationV2({
+    const preferenceConfig = await this._api.getPreferenceConfiguration({
       propertyCode: this._config.property?.code ?? '',
       envCode: this._config.environment?.code ?? '',
       jurisdictionCode: this._config.jurisdiction?.code ?? '',
       langCode: this._config.language ?? '',
-      hash: '', // TODO:JB - Generate hash
+      hash: this._config.environment?.hash,
     })
 
     l.trace('loaded', preferenceConfig)

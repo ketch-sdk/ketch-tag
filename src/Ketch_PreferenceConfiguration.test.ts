@@ -3,8 +3,8 @@ import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import fetchMock from 'jest-fetch-mock'
 import { Configuration, ConfigurationV2 } from '@ketch-sdk/ketch-types'
 
-describe('preferenceConfigurationV2', () => {
-  describe('getPreferenceConfigurationV2', () => {
+describe('preferenceConfiguration', () => {
+  describe('getPreferenceConfiguration', () => {
     it('returns configuration', () => {
       const ketch = new Ketch(new KetchWebAPI(''), {
         organization: { code: 'axonic' },
@@ -21,7 +21,7 @@ describe('preferenceConfigurationV2', () => {
         return JSON.stringify(config)
       })
 
-      return expect(ketch.getPreferenceConfigurationV2()).resolves.toStrictEqual(config)
+      return expect(ketch.getPreferenceConfiguration()).resolves.toStrictEqual(config)
     })
   })
 })
