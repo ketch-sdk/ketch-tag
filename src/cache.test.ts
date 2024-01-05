@@ -118,8 +118,8 @@ describe('cache', () => {
   })
 
   it('returns cached response when set', async () => {
-    const input = {...request}
-    input.vendors = ["a", "b"]
+    const input = { ...request }
+    input.vendors = ['a', 'b']
     await setCachedConsent(input as SetConsentRequest)
     const response = await getCachedConsent(request)
     response.collectedAt = 0
