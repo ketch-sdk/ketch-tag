@@ -15,8 +15,8 @@ export default function getApiUrl(config: Configuration): string {
       url = url.slice(0, -1)
     }
 
-    // url must end in /web/v2 if not set
-    if (!url.endsWith('/web/v2')) {
+    // url must end in /web/v2 or /web/v3 if not set
+    if (!url.endsWith('/web/v2') || !url.endsWith('/web/v3')) {
       url = url + '/web/v2'
     }
 
