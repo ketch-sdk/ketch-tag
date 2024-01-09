@@ -27,6 +27,8 @@ describe('Ketch', () => {
     preferenceQR: jest.fn(), // () => request: GetPreferenceQRRequest): Promise<string>
     webReport: jest.fn(), // () => channel: string, request: WebReportRequest): Promise<void>
     getSubscriptionsConfiguration: jest.fn(),
+    getConsentConfiguration: jest.fn(),
+    getPreferenceConfiguration: jest.fn(),
   }
   const webAPI = webAPIMock as unknown as KetchWebAPI
   const emptyConfig = {} as Configuration

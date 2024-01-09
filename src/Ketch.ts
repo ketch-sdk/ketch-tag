@@ -34,6 +34,7 @@ import {
   SetSubscriptionsRequest,
   Tab,
   PurposeLegalBasis,
+  ConfigurationV2,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -117,6 +118,16 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
+  private readonly _consentConfig: Future<ConfigurationV2>
+
+  /**
+   * @internal
+   */
+  private readonly _preferenceConfig: Future<ConfigurationV2>
+
+  /**
+   * @internal
+   */
   private readonly _subscriptions: Future<Subscriptions>
 
   /**
@@ -175,6 +186,16 @@ export class Ketch extends EventEmitter {
     })
     this._subscriptions = new Future<Subscriptions>({
       name: constants.SUBSCRIPTION_CONFIG_EVENT,
+      emitter: this,
+      maxListeners,
+    })
+    this._consentConfig = new Future<ConfigurationV2>({
+      name: constants.SHOW_CONSENT_EXPERIENCE_EVENT,
+      emitter: this,
+      maxListeners,
+    })
+    this._preferenceConfig = new Future<ConfigurationV2>({
+      name: constants.SHOW_PREFERENCE_EXPERIENCE_EVENT,
       emitter: this,
       maxListeners,
     })
@@ -1074,6 +1095,62 @@ export class Ketch extends EventEmitter {
     this._subscriptionConfig.value = config
 
     return config
+  }
+
+  /**
+   * Get ConfigurationV2 object with consent experience information
+   */
+  async getConsentConfiguration(): Promise<ConfigurationV2> {
+    const l = wrapLogger(log, 'getConsentConfiguration')
+    l.trace('config', this._config)
+
+    if (this._consentConfig.isFulfilled()) {
+      l.trace('cached', this._consentConfig.value)
+      return this._consentConfig
+    }
+
+    const consentConfig = await this._api.getConsentConfiguration({
+      organizationCode: this._config.organization.code,
+      propertyCode: this._config.property?.code ?? '',
+      envCode: this._config.environment?.code ?? '',
+      jurisdictionCode: this._config.jurisdiction?.code ?? '',
+      langCode: this._config.language ?? '',
+      hash: this._config.environment?.hash,
+    })
+
+    l.trace('loaded', consentConfig)
+
+    this._consentConfig.value = consentConfig
+
+    return consentConfig
+  }
+
+  /**
+   * Get ConfigurationV2 object with preference experience information
+   */
+  async getPreferenceConfiguration(): Promise<ConfigurationV2> {
+    const l = wrapLogger(log, 'getPreferenceConfiguration')
+    l.trace('config', this._config)
+
+    if (this._preferenceConfig.isFulfilled()) {
+      l.trace('cached', this._preferenceConfig.value)
+      return this._preferenceConfig
+    }
+
+    const preferenceConfig = await this._api.getPreferenceConfiguration({
+      organizationCode: this._config.organization.code,
+      propertyCode: this._config.property?.code ?? '',
+      envCode: this._config.environment?.code ?? '',
+      jurisdictionCode: this._config.jurisdiction?.code ?? '',
+      langCode: this._config.language ?? '',
+      hash: this._config.environment?.hash,
+    })
+
+    l.trace('loaded', preferenceConfig)
+
+    this._preferenceConfig.value = preferenceConfig
+
+    return preferenceConfig
   }
 
   /**
