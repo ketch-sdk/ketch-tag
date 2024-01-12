@@ -189,16 +189,6 @@ export class Ketch extends EventEmitter {
       emitter: this,
       maxListeners,
     })
-    this._consentConfig = new Future<ConfigurationV2>({
-      name: constants.SHOW_CONSENT_EXPERIENCE_EVENT,
-      emitter: this,
-      maxListeners,
-    })
-    this._preferenceConfig = new Future<ConfigurationV2>({
-      name: constants.SHOW_PREFERENCE_EXPERIENCE_EVENT,
-      emitter: this,
-      maxListeners,
-    })
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = false
     this._provisionalConsent = undefined
