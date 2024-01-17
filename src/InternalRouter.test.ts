@@ -76,6 +76,7 @@ describe('InternalRouter', () => {
     })
 
     it('calls willChangeExperience', async () => {
+      // TODO:JA - Review that this is testing the proper thing
       const willChangeExperience = jest.fn().mockResolvedValue(undefined)
       const router = new InternalRouter({
         willChangeExperience,
@@ -85,6 +86,7 @@ describe('InternalRouter', () => {
     })
 
     it('calls hasChangedExperience', async () => {
+      // TODO:JA - Review that this is testing the proper thing
       const hasChangedExperience = jest.fn().mockResolvedValue(undefined)
       const router = new InternalRouter({
         hasChangedExperience,
@@ -94,6 +96,7 @@ describe('InternalRouter', () => {
     })
 
     it('calls hasShownExperience', async () => {
+      // TODO:JA - Review that this is testing the proper thing
       const hasShownExperience = jest.fn().mockResolvedValue(undefined)
       const router = new InternalRouter({
         hasShownExperience,

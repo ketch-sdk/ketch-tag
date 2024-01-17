@@ -3,6 +3,7 @@ import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import { Configuration, ExperienceDisplayType } from '@ketch-sdk/ketch-types'
 
 describe('WillChangeExperience', () => {
+  // TODO:JA - Review that this is testing the proper thing
   describe('WillChangeExperience', () => {
     it('resolves to undefined', () => {
       const ketch = new Ketch(new KetchWebAPI(''), {
