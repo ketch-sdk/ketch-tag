@@ -129,6 +129,18 @@ export default class Router {
     return this._ketch.getRegionInfo()
   }
 
+  willChangeExperience(): any {
+    return
+  }
+
+  hasChangedExperience(): any {
+    return
+  }
+
+  hasShownExperience(): any {
+    return
+  }
+
   onConsent(listener: (...args: any[]) => void): Promise<void> {
     log.debug(`onConsent is deprecated - use ketch("on", "${constants.CONSENT_EVENT}", listener) instead`)
     this._ketch.on(constants.CONSENT_EVENT, listener)
