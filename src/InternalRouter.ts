@@ -66,14 +66,17 @@ export default class InternalRouter extends Router implements KetchAPI {
   }
 
   willChangeExperience(type: ExperienceDisplayType): Promise<void> {
+    // TODO:JA - Implement
     return this._ketch.willChangeExperience(type).then(() => {})
   }
 
   hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
+    // TODO:JA - Implement
     return this._ketch.hasChangedExperience(type).then(() => {})
   }
 
   hasShownExperience(): Promise<void> {
+    // TODO:JA - Implement
     return this._ketch.hasShownExperience().then(() => {})
   }
 }

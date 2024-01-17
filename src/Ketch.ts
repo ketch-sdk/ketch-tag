@@ -442,14 +442,18 @@ export class Ketch extends EventEmitter {
   }
 
   async willChangeExperience(type: ExperienceDisplayType): Promise<void> {
+    // TODO:JA - Implement
     log.debug(type)
   }
 
   async hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
+    // TODO:JA - Implement
     log.debug(type)
   }
 
-  async hasShownExperience(): Promise<void> {}
+  async hasShownExperience(): Promise<void> {
+    // TODO:JA - Implement
+  }
 
   async showExperience(_options: ExperienceOptions): Promise<void> {}
 
