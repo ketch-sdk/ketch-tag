@@ -35,6 +35,7 @@ import {
   Tab,
   PurposeLegalBasis,
   ConfigurationV2,
+  ExperienceDisplayType,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -439,6 +440,16 @@ export class Ketch extends EventEmitter {
 
     return this.retrieveConsent()
   }
+
+  async willChangeExperience(type: ExperienceDisplayType): Promise<void> {
+    log.debug(type)
+  }
+
+  async hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
+    log.debug(type)
+  }
+
+  async hasShownExperience(): Promise<void> {}
 
   async showExperience(_options: ExperienceOptions): Promise<void> {}
 

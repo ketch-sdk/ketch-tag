@@ -4,6 +4,7 @@ import {
   ConfigurationV2,
   Consent,
   ExperienceClosedReason,
+  ExperienceDisplayType,
   InvokeRightEvent,
   Ketch as KetchAPI,
   SubscriptionConfiguration,
@@ -62,5 +63,17 @@ export default class InternalRouter extends Router implements KetchAPI {
    */
   getPreferenceConfiguration(): Promise<ConfigurationV2> {
     return this._ketch.getPreferenceConfiguration()
+  }
+
+  willChangeExperience(type: ExperienceDisplayType): Promise<void> {
+    return this._ketch.willChangeExperience(type).then(() => {})
+  }
+
+  hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
+    return this._ketch.hasChangedExperience(type).then(() => {})
+  }
+
+  hasShownExperience(): Promise<void> {
+    return this._ketch.hasShownExperience().then(() => {})
   }
 }
