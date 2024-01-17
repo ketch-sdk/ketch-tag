@@ -56,5 +56,50 @@ describe('InternalRouter', () => {
       await router.route('getSubscriptionConfiguration')
       return expect(getSubscriptionConfiguration).toHaveBeenCalled()
     })
+
+    it('calls getConsentConfiguration', async () => {
+      const getConsentConfiguration = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        getConsentConfiguration,
+      } as any as Ketch)
+      await router.route('getConsentConfiguration')
+      return expect(getConsentConfiguration).toHaveBeenCalled()
+    })
+
+    it('calls getPreferenceConfiguration', async () => {
+      const getPreferenceConfiguration = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        getPreferenceConfiguration,
+      } as any as Ketch)
+      await router.route('getPreferenceConfiguration')
+      return expect(getPreferenceConfiguration).toHaveBeenCalled()
+    })
+
+    it('calls willChangeExperience', async () => {
+      const willChangeExperience = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        willChangeExperience,
+      } as any as Ketch)
+      await router.route('willChangeExperience')
+      return expect(willChangeExperience).toHaveBeenCalled()
+    })
+
+    it('calls hasChangedExperience', async () => {
+      const hasChangedExperience = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        hasChangedExperience,
+      } as any as Ketch)
+      await router.route('hasChangedExperience')
+      return expect(hasChangedExperience).toHaveBeenCalled()
+    })
+
+    it('calls hasShownExperience', async () => {
+      const hasShownExperience = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({
+        hasShownExperience,
+      } as any as Ketch)
+      await router.route('hasShownExperience')
+      return expect(hasShownExperience).toHaveBeenCalled()
+    })
   })
 })
