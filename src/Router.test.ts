@@ -176,6 +176,15 @@ describe('Router', () => {
       return expect(getRegionInfo).toHaveBeenCalled()
     })
 
+    it('calls getFullConfig', async () => {
+      const getFullConfig = jest.fn().mockResolvedValue({})
+      const router = new Router({
+        getFullConfig,
+      } as any as Ketch)
+      await router.route('getFullConfig')
+      return expect(getFullConfig).toHaveBeenCalled()
+    })
+
     it('calls onConsent', async () => {
       const on = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
