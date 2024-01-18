@@ -334,23 +334,8 @@ export class Ketch extends EventEmitter {
    */
   async getFullConfig(): Promise<ConfigurationV2> {
     // Get consent config
-    let consentConfiguration = {} as ConfigurationV2
-    try {
-      consentConfiguration = await this.getConsentConfiguration()
-    } catch (e: any) {
-      log.error(e)
-      log.error('Consent configuration fetch failed')
-    }
-
-    // Get preference config
-    let preferenceConfiguration = {} as ConfigurationV2
-    try {
-      preferenceConfiguration = await this.getPreferenceConfiguration()
-    } catch (e: any) {
-      log.error(e)
-      log.error('Preference configuration fetch failed')
-    }
-
+    const consentConfiguration = await this.getConsentConfiguration()
+    const preferenceConfiguration = await this.getPreferenceConfiguration()
     const baseConfig = this._config
 
     return {
