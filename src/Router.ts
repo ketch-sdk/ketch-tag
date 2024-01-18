@@ -10,7 +10,7 @@ import {
   ExperienceOptions,
   ExperienceServer,
   StorageOriginPolicy,
-  StorageProvider,
+  StorageProvider, ConfigurationV2,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
@@ -103,6 +103,10 @@ export default class Router {
 
   getConfig(): Promise<Configuration> {
     return this._ketch.getConfig()
+  }
+
+  getFullConfig(): Promise<ConfigurationV2> {
+    return this._ketch.getFullConfig()
   }
 
   getConsent(): Promise<Consent> {
