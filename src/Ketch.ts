@@ -473,17 +473,18 @@ export class Ketch extends EventEmitter {
   }
 
   async willChangeExperience(type: ExperienceDisplayType): Promise<void> {
-    // TODO:JA - Implement
-    log.debug(type)
+    log.debug('willChangeExperience', type)
+    this.emit(constants.WILL_CHANGE_EXPERIENCE_EVENT, type)
   }
 
   async hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
-    // TODO:JA - Implement
-    log.debug(type)
+    log.debug('hasChangedExperience', type)
+    this.emit(constants.HAS_CHANGED_EXPERIENCE_EVENT, type)
   }
 
   async hasShownExperience(): Promise<void> {
-    // TODO:JA - Implement
+    log.debug('hasShownExperience')
+    this.emit(constants.HAS_SHOWN_EXPERIENCE_EVENT)
   }
 
   async showExperience(_options: ExperienceOptions): Promise<void> {}
