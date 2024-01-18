@@ -330,6 +330,37 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Returns the full configuration.
+   */
+  async getFullConfig(): Promise<ConfigurationV2> {
+    // Get consent config
+    const consentConfiguration = await this.getConsentConfiguration()
+    const preferenceConfiguration = await this.getPreferenceConfiguration()
+    const baseConfig = this._config
+
+    return {
+      ...baseConfig,
+      theme: {
+        banner: consentConfiguration.theme?.banner,
+        modal: consentConfiguration.theme?.modal,
+        preference: preferenceConfiguration.theme?.preference,
+      },
+      experiences: {
+        content: {
+          banner: consentConfiguration.experiences?.content?.banner,
+          modal: consentConfiguration.experiences?.content?.modal,
+          preference: preferenceConfiguration.experiences?.content?.preference,
+        },
+        layout: {
+          banner: consentConfiguration.experiences?.layout?.banner,
+          modal: consentConfiguration.experiences?.layout?.modal,
+          preference: preferenceConfiguration.experiences?.layout?.preference,
+        },
+      },
+    }
+  }
+
+  /**
    * Determines which experience type to show if we should show an experience.
    *
    * @param c Consent to be used
