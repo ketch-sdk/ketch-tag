@@ -1,7 +1,7 @@
 import type { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
-import fetchMock from "jest-fetch-mock";
+import fetchMock from 'jest-fetch-mock'
 
 jest.mock('./parameters')
 
@@ -55,7 +55,7 @@ describe('full config', () => {
         options: {
           migration: '3',
         },
-        formTemplates: []
+        formTemplates: [],
       }
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
@@ -82,67 +82,67 @@ describe('full config', () => {
       })
 
       return expect(ketch.getFullConfig()).resolves.toStrictEqual({
-        "environment": {
-          "code": "env"
+        environment: {
+          code: 'env',
         },
-        "experiences": {
-          "content": {
-            "banner": {},
-            "modal": {},
-            "preference": {}
+        experiences: {
+          content: {
+            banner: {},
+            modal: {},
+            preference: {},
           },
-          "layout": {
-            "banner": {},
-            "modal": {},
-            "preference": {}
-          }
-        },
-        "formTemplates": [],
-        "jurisdiction": {
-          "code": "ps"
-        },
-        "options": {
-          "migration": "3"
-        },
-        "organization": {
-          "code": "org"
-        },
-        "property": {
-          "code": "app"
-        },
-        "purposes": [
-          {
-            "code": "pacode1",
-            "legalBasisCode": "lb1"
+          layout: {
+            banner: {},
+            modal: {},
+            preference: {},
           },
+        },
+        formTemplates: [],
+        jurisdiction: {
+          code: 'ps',
+        },
+        options: {
+          migration: '3',
+        },
+        organization: {
+          code: 'org',
+        },
+        property: {
+          code: 'app',
+        },
+        purposes: [
           {
-            "code": "pacode2",
-            "legalBasisCode": "lb2"
+            code: 'pacode1',
+            legalBasisCode: 'lb1',
           },
           {
-            "code": "pacode4",
-            "legalBasisCode": "lb4"
-          }
+            code: 'pacode2',
+            legalBasisCode: 'lb2',
+          },
+          {
+            code: 'pacode4',
+            legalBasisCode: 'lb4',
+          },
         ],
-        "rights": [
+        rights: [
           {
-            "canonicalRightCode": "get",
-            "code": "portability",
-            "description": "Right to have all data provided to you.",
-            "name": "Portability"
+            canonicalRightCode: 'get',
+            code: 'portability',
+            description: 'Right to have all data provided to you.',
+            name: 'Portability',
           },
           {
-            "canonicalRightCode": "delete",
-            "code": "rtbf",
-            "description": "Right to be forgotten.",
-            "name": "Data Deletion"
-          }
+            canonicalRightCode: 'delete',
+            code: 'rtbf',
+            description: 'Right to be forgotten.',
+            name: 'Data Deletion',
+          },
         ],
-        "theme": {
-          "banner": {},
-          "modal": {},
-          "preference": {}
-        }
+        theme: {
+          banner: {},
+          modal: {},
+          preference: {},
+        },
       })
     })
   })
