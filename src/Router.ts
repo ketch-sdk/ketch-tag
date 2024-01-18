@@ -10,7 +10,8 @@ import {
   ExperienceOptions,
   ExperienceServer,
   StorageOriginPolicy,
-  StorageProvider, ConfigurationV2,
+  StorageProvider,
+  ConfigurationV2,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'

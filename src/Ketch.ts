@@ -351,7 +351,7 @@ export class Ketch extends EventEmitter {
       log.error('Preference configuration fetch failed')
     }
 
-    const baseConfig= this._config
+    const baseConfig = this._config
 
     return {
       ...baseConfig,
@@ -370,7 +370,7 @@ export class Ketch extends EventEmitter {
           banner: consentConfiguration.experiences?.layout?.banner,
           modal: consentConfiguration.experiences?.layout?.modal,
           preference: preferenceConfiguration.experiences?.layout?.preference,
-        }
+        },
       },
     }
   }
