@@ -1,18 +1,13 @@
 import { Ketch } from './Ketch'
-import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
-import { Configuration } from '@ketch-sdk/ketch-types'
+import constants from './constants'
+import { emptyConfig, webAPI } from './__mocks__/webApi'
 
 describe('hasShownExperience', () => {
-  // TODO:JA - Review that this is testing the proper thing
-  describe('hasShownExperience', () => {
-    it('resolves to undefined', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), {
-        organization: { code: 'axonic' },
-        property: { code: 'axonic' },
-        language: 'en',
-      } as Configuration)
-
-      return expect(ketch.hasShownExperience()).resolves.toStrictEqual(undefined)
-    })
+  it('emits hasShownExperience event', () => {
+    const ketch = new Ketch(webAPI, emptyConfig)
+    const listenerSpy = jest.fn()
+    ketch.on(constants.HAS_SHOWN_EXPERIENCE_EVENT, listenerSpy)
+    ketch.hasShownExperience()
+    expect(listenerSpy).toHaveBeenCalledWith()
   })
 })
