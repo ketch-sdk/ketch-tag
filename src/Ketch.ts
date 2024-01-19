@@ -669,6 +669,7 @@ export class Ketch extends EventEmitter {
           c.purposes[key] = existingConsent.purposes[key]
         }
       }
+      c.protocols = existingConsent.protocols
     }
 
     this._consent.value = c
@@ -848,6 +849,8 @@ export class Ketch extends EventEmitter {
         }
       }
 
+      input.protocols
+
       l.trace('normalized', input)
 
       return input
@@ -910,6 +913,10 @@ export class Ketch extends EventEmitter {
 
     if (consent.vendors) {
       newConsent.vendors = consent.vendors
+    }
+
+    if (consent.protocols) {
+      newConsent.protocols = consent.protocols
     }
 
     l.debug('returning', newConsent)
@@ -1132,12 +1139,12 @@ export class Ketch extends EventEmitter {
         identities: {},
         language: this._config?.language ?? '',
         organization: {
-          code: this._config?.organization?.code ?? ''
+          code: this._config?.organization?.code ?? '',
         },
         property: {
-          code: this._config?.property?.code ?? ''
+          code: this._config?.property?.code ?? '',
         },
-        topics: []
+        topics: [],
       }
       return this._subscriptionConfig.value
     }
