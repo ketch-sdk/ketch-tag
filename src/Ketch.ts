@@ -849,8 +849,6 @@ export class Ketch extends EventEmitter {
         }
       }
 
-      input.protocols
-
       l.trace('normalized', input)
 
       return input
