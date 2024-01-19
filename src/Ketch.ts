@@ -349,7 +349,9 @@ export class Ketch extends EventEmitter {
         content: {
           banner: consentConfiguration.experiences?.content?.banner,
           modal: consentConfiguration.experiences?.content?.modal,
+          display: consentConfiguration.experiences?.content?.display,
           preference: preferenceConfiguration.experiences?.content?.preference,
+          static: consentConfiguration.experiences?.content?.static,
         },
         layout: {
           banner: consentConfiguration.experiences?.layout?.banner,
