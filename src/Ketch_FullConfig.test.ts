@@ -71,8 +71,8 @@ describe('full config', () => {
               banner: {},
               modal: {},
               preference: {},
-              display: "banner",
-              static: {}
+              display: 'banner',
+              static: {},
             },
             layout: {
               banner: {},
@@ -92,8 +92,8 @@ describe('full config', () => {
             banner: {},
             modal: {},
             preference: {},
-            display: "banner",
-            static: {}
+            display: 'banner',
+            static: {},
           },
           layout: {
             banner: {},
