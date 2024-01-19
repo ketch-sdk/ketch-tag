@@ -1124,6 +1124,24 @@ export class Ketch extends EventEmitter {
       return this._subscriptionConfig
     }
 
+    // empty subscriptions if parameters not present
+    if (!this._config?.experiences?.preference?.code) {
+      this._subscriptionConfig.value = {
+        contactMethods: {},
+        controls: [],
+        identities: {},
+        language: this._config?.language ?? '',
+        organization: {
+          code: this._config?.organization?.code ?? ''
+        },
+        property: {
+          code: this._config?.property?.code ?? ''
+        },
+        topics: []
+      }
+      return this._subscriptionConfig.value
+    }
+
     const config = await this._api.getSubscriptionsConfiguration({
       organizationCode: this._config?.organization?.code ?? '',
       propertyCode: this._config?.property?.code ?? '',
