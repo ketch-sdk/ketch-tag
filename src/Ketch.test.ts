@@ -1,4 +1,3 @@
-import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import {
   Configuration,
   Consent,
@@ -15,24 +14,9 @@ import {
 import { Ketch } from './Ketch'
 import parameters from './parameters'
 import constants from './constants'
+import { emptyConfig, webAPI, webAPIMock } from './__mocks__/webApi'
 
 describe('Ketch', () => {
-  const webAPIMock = {
-    getLocation: jest.fn(), // () => Promise<GetLocationResponse>
-    getBootstrapConfiguration: jest.fn(), // () => request: GetBootstrapConfigurationRequest): Promise<Configuration>
-    getFullConfiguration: jest.fn(), // () => request: GetFullConfigurationRequest): Promise<Configuration>
-    getConsent: jest.fn(), // () => request: GetConsentRequest): Promise<GetConsentResponse>
-    setConsent: jest.fn(), // () => request: SetConsentRequest): Promise<void>
-    invokeRight: jest.fn(), // () => request: InvokeRightRequest): Promise<void>
-    preferenceQR: jest.fn(), // () => request: GetPreferenceQRRequest): Promise<string>
-    webReport: jest.fn(), // () => channel: string, request: WebReportRequest): Promise<void>
-    getSubscriptionsConfiguration: jest.fn(),
-    getConsentConfiguration: jest.fn(),
-    getPreferenceConfiguration: jest.fn(),
-  }
-  const webAPI = webAPIMock as unknown as KetchWebAPI
-  const emptyConfig = {} as Configuration
-
   describe('registerPlugin', () => {
     it('accepts a plugin function', () => {
       const ketch = new Ketch(webAPI, emptyConfig)

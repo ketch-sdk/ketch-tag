@@ -349,7 +349,9 @@ export class Ketch extends EventEmitter {
         content: {
           banner: consentConfiguration.experiences?.content?.banner,
           modal: consentConfiguration.experiences?.content?.modal,
+          display: consentConfiguration.experiences?.content?.display,
           preference: preferenceConfiguration.experiences?.content?.preference,
+          static: consentConfiguration.experiences?.content?.static,
         },
         layout: {
           banner: consentConfiguration.experiences?.layout?.banner,
@@ -473,17 +475,18 @@ export class Ketch extends EventEmitter {
   }
 
   async willChangeExperience(type: ExperienceDisplayType): Promise<void> {
-    // TODO:JA - Implement
-    log.debug(type)
+    log.debug('willChangeExperience', type)
+    this.emit(constants.WILL_CHANGE_EXPERIENCE_EVENT, type)
   }
 
   async hasChangedExperience(type: ExperienceDisplayType): Promise<void> {
-    // TODO:JA - Implement
-    log.debug(type)
+    log.debug('hasChangedExperience', type)
+    this.emit(constants.HAS_CHANGED_EXPERIENCE_EVENT, type)
   }
 
   async hasShownExperience(): Promise<void> {
-    // TODO:JA - Implement
+    log.debug('hasShownExperience')
+    this.emit(constants.HAS_SHOWN_EXPERIENCE_EVENT)
   }
 
   async showExperience(_options: ExperienceOptions): Promise<void> {}
@@ -666,6 +669,7 @@ export class Ketch extends EventEmitter {
           c.purposes[key] = existingConsent.purposes[key]
         }
       }
+      c.protocols = existingConsent.protocols
     }
 
     this._consent.value = c
@@ -909,6 +913,10 @@ export class Ketch extends EventEmitter {
       newConsent.vendors = consent.vendors
     }
 
+    if (consent.protocols) {
+      newConsent.protocols = consent.protocols
+    }
+
     l.debug('returning', newConsent)
 
     return newConsent
@@ -1119,6 +1127,24 @@ export class Ketch extends EventEmitter {
     if (this._subscriptionConfig.isFulfilled()) {
       l.trace('cached', this._subscriptionConfig.value)
       return this._subscriptionConfig
+    }
+
+    // empty subscriptions if parameters not present
+    if (!this._config?.experiences?.preference?.code) {
+      this._subscriptionConfig.value = {
+        contactMethods: {},
+        controls: [],
+        identities: {},
+        language: this._config?.language ?? '',
+        organization: {
+          code: this._config?.organization?.code ?? '',
+        },
+        property: {
+          code: this._config?.property?.code ?? '',
+        },
+        topics: [],
+      }
+      return this._subscriptionConfig.value
     }
 
     const config = await this._api.getSubscriptionsConfiguration({
