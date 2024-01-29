@@ -53,6 +53,10 @@ export async function setCachedConsent(
   await consentCacher.setItem(CACHED_CONSENT_KEY, obj)
 }
 
+export async function removeCachedConsent(): Promise<void> {
+  await consentCacher.removeItem(CACHED_CONSENT_KEY)
+}
+
 export async function setPublicConsent(
   input: SetConsentRequest | GetConsentRequest | GetConsentResponse,
   config: Configuration,
