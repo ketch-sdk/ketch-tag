@@ -868,7 +868,7 @@ export class Ketch extends EventEmitter {
       l.debug('using cached consent', consent)
       useCachedConsent = true
     }
-    console.log('invalidIdentities', invalidIdentities)
+
     if (!useCachedConsent) {
       /*
           When identities change and the new identity has no consent, below code populates consent of previous identity to request
