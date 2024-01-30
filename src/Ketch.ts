@@ -42,11 +42,12 @@ import log from './log'
 import errors from './errors'
 import parameters from './parameters'
 import Watcher from '@ketch-sdk/ketch-data-layer'
-import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent, setPublicConsent } from './cache'
+import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent, setPublicConsent, CACHED_CONSENT_KEY } from './cache'
 import deepEqual from 'nano-equal'
 import constants from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import InternalRouter from './InternalRouter'
+import { getDefaultCacher } from '@ketch-com/ketch-cache'
 
 declare global {
   type AndroidListener = {
@@ -730,6 +731,34 @@ export class Ketch extends EventEmitter {
     l.debug('obtaining consent')
 
     const identities = await this.getIdentities()
+
+    /* isValidConsentCache = Update cache consent on identity change */
+    const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
+    const cachedConsent = await consentCacher.getItem(CACHED_CONSENT_KEY)
+    const isValidConsentCache = identities && cachedConsent && deepEqual(identities, cachedConsent?.identities)
+
+    if (!isValidConsentCache) {
+      await consentCacher.removeItem(CACHED_CONSENT_KEY)
+      const request: GetConsentRequest = {
+        organizationCode: this._config.organization.code ?? '',
+        propertyCode: this?._config?.property?.code ?? '',
+        environmentCode: this?._config?.environment?.code ?? '',
+        jurisdictionCode: this?._config?.jurisdiction?.code ?? '',
+        identities: identities,
+        purposes: {},
+      }
+
+      // Add the purposes by ID with the legal basis
+      for (const pa of this?._config?.purposes || []) {
+        request.purposes[pa.code] = {
+          legalBasisCode: pa.legalBasisCode,
+        }
+      }
+
+      const identityConsent = await this._api.getConsent(request)
+
+      await setCachedConsent(identityConsent)
+    }
 
     const consent = await this.fetchConsent(identities)
     const [c, shouldUpdateConsent] = await this.overrideWithProvisionalConsent(consent)
