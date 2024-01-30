@@ -856,12 +856,11 @@ export class Ketch extends EventEmitter {
 
     // Determine whether we should use cached consent
     let useCachedConsent = false
-    const hasIdentityChanged = !deepEqual(identities, consent.identities)
     if (Object.keys(consent.purposes).length === 0) {
       l.debug('cached consent is empty', consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
       l.debug('revalidating cached consent', consent)
-    } else if (hasIdentityChanged) {
+    } else if (!deepEqual(identities, consent.identities)) {
       l.debug('cached consent discarded due to identity mismatch', identities, consent.identities)
     } else {
       l.debug('using cached consent', consent)
@@ -869,14 +868,7 @@ export class Ketch extends EventEmitter {
     }
 
     if (!useCachedConsent) {
-      /*
-        consent below is cached
-        Populating request from cache within !useCachedConsent introduces side effects in consent flow
-          - if identities change request may get populated with previous identity consent (resolved by !hasIdentityChanged)
-          - for new identity, no consent and incorrect cache consent this._api.getConsent() will respond the same request with no purposes
-          - for new identity, consent and incorrect cache consent this._api.getConsent() will respond with no purpose consent
-      */
-      if (this._config.purposes && consent.purposes && !hasIdentityChanged) {
+      if (this._config.purposes && consent.purposes) {
         for (const p of this._config.purposes) {
           const cachedPurposeConsent = consent.purposes[p.code]
           if (cachedPurposeConsent) {
