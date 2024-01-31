@@ -1139,6 +1139,12 @@ export class Ketch extends EventEmitter {
 
     // empty subscriptions if parameters not present
     if (!this._config?.experiences?.preference?.code) {
+      // if no experience check if subscription in experiencev2 preference configuration
+      const preferenceConfig = await this.getPreferenceConfiguration()
+      if (preferenceConfig.subscription) {
+        return preferenceConfig.subscription
+      }
+
       this._subscriptionConfig.value = {
         contactMethods: {},
         controls: [],
