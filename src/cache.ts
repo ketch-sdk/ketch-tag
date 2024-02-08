@@ -51,8 +51,8 @@ export async function setCachedConsent(
   obj.vendors = undefined
 
   // do not write protocols
-  if ('protocols' in input) {
-    input.protocols = undefined
+  if ('protocols' in obj) {
+    obj.protocols = undefined
   }
 
   await consentCacher.setItem(CACHED_CONSENT_KEY, obj)
