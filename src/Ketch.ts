@@ -1137,8 +1137,8 @@ export class Ketch extends EventEmitter {
       return this._subscriptionConfig
     }
 
-    // empty subscriptions if parameters not present
-    if (!this._config?.experiences?.preference?.code) {
+    // empty subscriptions if parameters not present or if v3 config
+    if (!this._config?.experiences?.preference?.code || this._config?.services?.shoreline?.includes("v3")){
       // if no experience check if subscription in experiencev2 preference configuration
       const preferenceConfig = await this.getPreferenceConfiguration()
       if (preferenceConfig.subscription) {
