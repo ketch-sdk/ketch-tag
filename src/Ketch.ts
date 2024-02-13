@@ -661,10 +661,10 @@ export class Ketch extends EventEmitter {
     if (this.hasConsent()) {
       l.trace('has consent')
       const existingConsent = this._consent.value
-      for (const key in existingConsent) {
+      for (const key in existingConsent.purposes) {
         if (
-          Object.prototype.hasOwnProperty.call(existingConsent, key) &&
-          !Object.prototype.hasOwnProperty.call(c, key)
+          Object.prototype.hasOwnProperty.call(existingConsent.purposes, key) &&
+          !Object.prototype.hasOwnProperty.call(c.purposes, key)
         ) {
           c.purposes[key] = existingConsent.purposes[key]
         }

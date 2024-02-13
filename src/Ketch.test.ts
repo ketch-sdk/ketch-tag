@@ -647,11 +647,35 @@ describe('Ketch', () => {
         purposes: {
           analytics: true,
         },
+        protocols: {
+          foo: "bar"
+        }
+        // test here
+      })
+      await expect(ketch.retrieveConsent()).resolves.toStrictEqual({
+        purposes: {
+          analytics: true,
+        },
+        protocols: {
+          foo: "bar"
+        }
+      })
+
+      // check merge functionality
+      await ketch.setConsent({
+        purposes: {
+          analytics: true,
+          personalization: false
+        }
       })
       return expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
+          personalization: false
         },
+        protocols: {
+          foo: "bar"
+        }
       })
     })
   })
