@@ -650,7 +650,6 @@ describe('Ketch', () => {
         protocols: {
           foo: "bar"
         }
-        // test here
       })
       await expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
