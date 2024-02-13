@@ -666,13 +666,15 @@ describe('Ketch', () => {
         purposes: {
           analytics: true,
           personalization: false
-        }
+        },
+        vendors: ["1", "2"]
       })
       return expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
           personalization: false
         },
+        vendors: ["1", "2"],
         protocols: {
           foo: "bar"
         }
