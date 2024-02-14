@@ -648,35 +648,35 @@ describe('Ketch', () => {
           analytics: true,
         },
         protocols: {
-          foo: "bar"
-        }
+          foo: 'bar',
+        },
       })
       await expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
         },
         protocols: {
-          foo: "bar"
-        }
+          foo: 'bar',
+        },
       })
 
       // check merge functionality
       await ketch.setConsent({
         purposes: {
           analytics: true,
-          personalization: false
+          personalization: false,
         },
-        vendors: ["1", "2"]
+        vendors: ['1', '2'],
       })
       return expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
-          personalization: false
+          personalization: false,
         },
-        vendors: ["1", "2"],
+        vendors: ['1', '2'],
         protocols: {
-          foo: "bar"
-        }
+          foo: 'bar',
+        },
       })
     })
   })
