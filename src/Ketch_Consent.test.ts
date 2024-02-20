@@ -177,6 +177,7 @@ describe('consent', () => {
 
     it('handles a call with full config and server consent', () => {
       document.cookie = '_swb_consent_=; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure'
+      window.localStorage.removeItem('_swb_consent_')
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
       fetchMock.mockResponse(async (): Promise<string> => {
