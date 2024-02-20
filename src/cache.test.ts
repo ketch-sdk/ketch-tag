@@ -118,12 +118,16 @@ describe('cache', () => {
   })
 
   it('returns cached response when set', async () => {
-    const input = { ...request }
+    const input = { ...request } as GetConsentResponse
     input.vendors = ['a', 'b']
-    await setCachedConsent(input as SetConsentRequest)
+    input.protocols = {
+      'tcf': 'abc',
+      'gpp': 'def'
+    }
+
+    await setCachedConsent(input)
     const response = await getCachedConsent(request)
-    response.collectedAt = 0
-    expect(response).toEqual(request)
+    expect(response).toEqual(input)
   })
 
   it('public cookie not set if no consent', async () => {
