@@ -685,7 +685,7 @@ export class Ketch extends EventEmitter {
 
     const consent = await this.updateConsent(identities, c)
     if (consent.protocols !== undefined) {
-      this._protocols.value = consent.protocols;
+      this._protocols.value = consent.protocols
     }
 
     return c
@@ -766,7 +766,7 @@ export class Ketch extends EventEmitter {
     } else {
       this._consent.value = c
       if (consent.protocols !== undefined) {
-        this._protocols.value = consent.protocols;
+        this._protocols.value = consent.protocols
       }
     }
 

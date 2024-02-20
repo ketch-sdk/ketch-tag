@@ -121,8 +121,8 @@ describe('cache', () => {
     const input = { ...request } as GetConsentResponse
     input.vendors = ['a', 'b']
     input.protocols = {
-      'tcf': 'abc',
-      'gpp': 'def'
+      tcf: 'abc',
+      gpp: 'def',
     }
 
     await setCachedConsent(input)

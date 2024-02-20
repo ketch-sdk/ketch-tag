@@ -51,7 +51,7 @@ export async function getCachedConsent(request: GetConsentRequest): Promise<GetC
 }
 
 export async function setCachedConsent(
-  input: SetConsentRequest | SetConsentResponse | GetConsentRequest | GetConsentResponse
+  input: SetConsentRequest | SetConsentResponse | GetConsentRequest | GetConsentResponse,
 ): Promise<void> {
   if (Object.keys(input).length === 0) {
     return
