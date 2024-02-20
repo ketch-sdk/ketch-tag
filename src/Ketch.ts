@@ -684,13 +684,13 @@ export class Ketch extends EventEmitter {
     const identities = await this.getIdentities()
 
     try {
-      const consent = await this.updateConsent(identities, c);
+      const consent = await this.updateConsent(identities, c)
 
       if (consent.protocols !== undefined) {
         this._protocols.value = consent.protocols
       }
     } catch (error) {
-      l.error("error updating consent:", error);
+      l.error('error updating consent:', error)
     }
 
     return c
@@ -1377,9 +1377,9 @@ export class Ketch extends EventEmitter {
     if (this._hasExperienceBeenDisplayed) {
       l.trace('updating consent because experience displayed')
       try {
-        await this.updateConsent(identities, localConsent);
+        await this.updateConsent(identities, localConsent)
       } catch (error) {
-        l.error("error updating consent:", error);
+        l.error('error updating consent:', error)
       }
       return identities
     }
