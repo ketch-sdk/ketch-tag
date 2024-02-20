@@ -7,4 +7,5 @@ export default {
   noEnvironmentError: new Error('no environment'),
   noJurisdictionError: new Error('no jurisdiction'),
   invalidConfigurationError: new Error('invalid configuration'),
+  emptyConsentError: new Error('empty consent'),
 }
