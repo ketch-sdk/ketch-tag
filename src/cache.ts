@@ -1,13 +1,21 @@
-import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
-import { getDefaultCacher } from '@ketch-com/ketch-cache'
+import {
+  Configuration,
+  GetConsentRequest,
+  GetConsentResponse,
+  SetConsentRequest,
+  SetConsentResponse,
+} from '@ketch-sdk/ketch-types'
+import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
 import { setCookie } from '@ketch-com/ketch-cookie'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
+export const CACHED_PROTOCOLS_KEY = '_swb_consent_'
 export const CACHED_CONSENT_TTL = 300 // 5 min in s
 export const PUBLIC_CONSENT_TTL = 34560000 // 4OO days in s
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
+const consentWebCacher = new WebStorageCacher<GetConsentResponse>(window.localStorage, 86400)
 
 export async function getCachedConsent(request: GetConsentRequest): Promise<GetConsentResponse> {
   const syntheticResponse: GetConsentResponse = {
@@ -34,11 +42,16 @@ export async function getCachedConsent(request: GetConsentRequest): Promise<GetC
     return syntheticResponse
   }
 
-  return cachedConsent as GetConsentResponse
+  const out = cachedConsent as GetConsentResponse
+  const webCachedConsent = await consentWebCacher.getItem(CACHED_PROTOCOLS_KEY)
+  out.vendors = webCachedConsent?.vendors
+  out.protocols = webCachedConsent?.protocols
+
+  return out
 }
 
 export async function setCachedConsent(
-  input: SetConsentRequest | GetConsentRequest | GetConsentResponse,
+  input: SetConsentRequest | SetConsentResponse | GetConsentRequest | GetConsentResponse
 ): Promise<void> {
   if (Object.keys(input).length === 0) {
     return
@@ -46,11 +59,11 @@ export async function setCachedConsent(
 
   input.collectedAt = Math.floor(Date.now() / 1000)
 
-  //TODO: remove below code once we fix vendor save issue on backend
   const obj = { ...input }
-  obj.vendors = undefined
+  await consentWebCacher.setItem(CACHED_PROTOCOLS_KEY, obj as GetConsentResponse)
 
   // do not write protocols
+  obj.vendors = undefined
   if ('protocols' in obj) {
     obj.protocols = undefined
   }

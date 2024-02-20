@@ -4,6 +4,7 @@ import Future from '@ketch-com/future'
 import {
   Configuration,
   Consent,
+  Protocols,
   Environment,
   Identities,
   InvokeRightRequest,
@@ -36,6 +37,7 @@ import {
   PurposeLegalBasis,
   ConfigurationV2,
   ExperienceDisplayType,
+  SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -85,6 +87,11 @@ export class Ketch extends EventEmitter {
    * @internal
    */
   private readonly _consent: Future<Consent>
+
+  /**
+   * @internal
+   */
+  private readonly _protocols: Future<Protocols>
 
   /**
    * @internal
@@ -175,6 +182,7 @@ export class Ketch extends EventEmitter {
     this._api = api
     this._config = config
     this._consent = new Future<Consent>({ name: constants.CONSENT_EVENT, emitter: this, maxListeners })
+    this._protocols = new Future<Protocols>({ name: constants.PROTOCOLS_EVENT, emitter: this, maxListeners })
     this._environment = new Future<Environment>({ name: constants.ENVIRONMENT_EVENT, emitter: this, maxListeners })
     this._geoip = new Future({ name: constants.GEOIP_EVENT, emitter: this, maxListeners })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
@@ -673,10 +681,12 @@ export class Ketch extends EventEmitter {
     }
 
     this._consent.value = c
-
     const identities = await this.getIdentities()
 
-    await this.updateConsent(identities, c)
+    const consent = await this.updateConsent(identities, c)
+    if (consent.protocols !== undefined) {
+      this._protocols.value = consent.protocols;
+    }
 
     return c
   }
@@ -755,6 +765,9 @@ export class Ketch extends EventEmitter {
       await this.setConsent(c)
     } else {
       this._consent.value = c
+      if (consent.protocols !== undefined) {
+        this._protocols.value = consent.protocols;
+      }
     }
 
     switch (experience) {
@@ -858,7 +871,7 @@ export class Ketch extends EventEmitter {
     let useCachedConsent = false
     let invalidIdentities = false
     if (Object.keys(consent.purposes).length === 0) {
-      l.debug('cached consent is empty', consent)
+      l.debug('cached consent is empt y', consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
       l.debug('revalidating cached consent', consent)
     } else if (!deepEqual(identities, consent.identities)) {
@@ -936,14 +949,14 @@ export class Ketch extends EventEmitter {
    * @param identities Identities to update consent for
    * @param consent Consent to update
    */
-  async updateConsent(identities: Identities, consent: Consent): Promise<void> {
+  async updateConsent(identities: Identities, consent: Consent): Promise<SetConsentResponse> {
     const l = wrapLogger(log, 'updateConsent')
     l.debug(identities, consent)
 
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
       l.debug('no identities')
-      return
+      return Promise.reject('no identities')
     }
 
     if (
@@ -956,12 +969,12 @@ export class Ketch extends EventEmitter {
       this._config.purposes.length === 0
     ) {
       l.debug('invalid configuration')
-      return
+      return Promise.reject('invalid configuration')
     }
 
     if (isEmpty(consent) || isEmpty(consent.purposes)) {
       l.debug('empty consent')
-      return
+      return Promise.reject('empty consent')
     }
 
     const request: SetConsentRequest = {
@@ -989,14 +1002,17 @@ export class Ketch extends EventEmitter {
     // Make sure we actually got purposes to update
     if (isEmpty(request.purposes)) {
       l.debug('calculated consents empty')
-      return
+      return request
     }
 
     // Save a locally cached consent
     await setCachedConsent(request)
     await setPublicConsent(request, this._config)
 
-    return this._api.setConsent(request)
+    const resp = await this._api.setConsent(request)
+    await setCachedConsent(resp)
+
+    return resp
   }
 
   /**
