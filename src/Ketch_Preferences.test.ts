@@ -6,12 +6,19 @@ describe('preferences', () => {
   describe('showPreferences', () => {
     it('shows experience', () => {
       const ketch = new Ketch(new KetchWebAPI(''), {
+        organization: {code: 'ketch'},
+        property: {code: 'web'},
+        environment: {code: 'production'},
+        jurisdiction: {code: 'default'},
+        purposes: [{code: 'analytics'}],
         experiences: {
           preference: {
             code: 'test',
           },
         },
+
       } as any as Configuration)
+      ketch.setIdentities({ foo: 'bar' })
 
       const c = {
         purposes: {},
@@ -24,8 +31,15 @@ describe('preferences', () => {
     })
 
     it('does not show experience', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), {} as Configuration)
+      const ketch = new Ketch(new KetchWebAPI(''), {
+        organization: {code: 'ketch'},
+        property: {code: 'web'},
+        environment: {code: 'production'},
+        jurisdiction: {code: 'default'},
+        purposes: [{code: 'analytics'}]
+      } as Configuration)
 
+      ketch.setIdentities({ foo: 'bar' })
       const c = {
         purposes: {},
         vendors: [],

@@ -281,8 +281,8 @@ describe('consent', () => {
     it('skips if no identities', () => {
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
-      return ketch
-        .updateConsent(
+      return expect(
+        ketch.updateConsent(
           {},
           {
             purposes: {
@@ -291,10 +291,8 @@ describe('consent', () => {
             },
             vendors: ['1'],
           },
-        )
-        .then(x => {
-          expect(x).toBeUndefined()
-        })
+        ),
+      ).rejects.toBe(errors.noIdentitiesError)
     })
 
     it('skips if no purposes', () => {
@@ -317,24 +315,24 @@ describe('consent', () => {
         },
       } as any as Configuration)
 
-      return ketch
-        .updateConsent(identities, {
-          purposes: {
-            pacode1: true,
-            pacode2: false,
-          },
-        })
-        .then(x => {
-          expect(x).toBeUndefined()
-        })
+      return expect(
+        ketch
+          .updateConsent(identities, {
+            purposes: {
+              pacode1: true,
+              pacode2: false,
+            },
+          })
+          .then(x => {
+            expect(x).toBeUndefined()
+          }),
+      ).rejects.toBe(errors.invalidConfigurationError)
     })
 
     it('skips if no consents', () => {
       const ketch = new Ketch(new KetchWebAPI(''), config)
 
-      return ketch.updateConsent(identities, { purposes: {} }).then(x => {
-        expect(x).toBeUndefined()
-      })
+      return expect(ketch.updateConsent(identities, { purposes: {} })).rejects.toBe(errors.emptyConsentError)
     })
   })
 

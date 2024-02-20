@@ -683,9 +683,14 @@ export class Ketch extends EventEmitter {
     this._consent.value = c
     const identities = await this.getIdentities()
 
-    const consent = await this.updateConsent(identities, c)
-    if (consent.protocols !== undefined) {
-      this._protocols.value = consent.protocols
+    try {
+      const consent = await this.updateConsent(identities, c);
+
+      if (consent.protocols !== undefined) {
+        this._protocols.value = consent.protocols
+      }
+    } catch (error) {
+      l.error("error updating consent:", error);
     }
 
     return c
@@ -871,7 +876,7 @@ export class Ketch extends EventEmitter {
     let useCachedConsent = false
     let invalidIdentities = false
     if (Object.keys(consent.purposes).length === 0) {
-      l.debug('cached consent is empt y', consent)
+      l.debug('cached consent is empty', consent)
     } else if (consent?.collectedAt && consent.collectedAt < earliestCollectedAt) {
       l.debug('revalidating cached consent', consent)
     } else if (!deepEqual(identities, consent.identities)) {
@@ -956,7 +961,7 @@ export class Ketch extends EventEmitter {
     // If no identities or purposes defined, skip the call.
     if (!identities || Object.keys(identities).length === 0) {
       l.debug('no identities')
-      return Promise.reject('no identities')
+      throw errors.noIdentitiesError
     }
 
     if (
@@ -969,12 +974,12 @@ export class Ketch extends EventEmitter {
       this._config.purposes.length === 0
     ) {
       l.debug('invalid configuration')
-      return Promise.reject('invalid configuration')
+      throw errors.invalidConfigurationError
     }
 
     if (isEmpty(consent) || isEmpty(consent.purposes)) {
       l.debug('empty consent')
-      return Promise.reject('empty consent')
+      throw errors.emptyConsentError
     }
 
     const request: SetConsentRequest = {
@@ -1371,7 +1376,11 @@ export class Ketch extends EventEmitter {
     // if experience has been displayed in session, update permits with already collected consent
     if (this._hasExperienceBeenDisplayed) {
       l.trace('updating consent because experience displayed')
-      await this.updateConsent(identities, localConsent)
+      try {
+        await this.updateConsent(identities, localConsent);
+      } catch (error) {
+        l.error("error updating consent:", error);
+      }
       return identities
     }
 
