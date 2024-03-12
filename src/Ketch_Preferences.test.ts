@@ -1,6 +1,7 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import { EMPTY_CONSENT } from './constants'
 
 describe('preferences', () => {
   describe('showPreferences', () => {
@@ -60,14 +61,8 @@ describe('preferences', () => {
       } as Configuration)
 
       ketch.setIdentities({ foo: 'bar' })
-      const c = {
-        purposes: {},
-        vendors: [],
-      }
 
-      return ketch.setConsent(c).then(() => {
-        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
-      })
+      expect(ketch.showPreferenceExperience()).resolves.toStrictEqual(EMPTY_CONSENT)
     })
   })
 })
