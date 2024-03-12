@@ -46,7 +46,7 @@ import parameters from './parameters'
 import Watcher from '@ketch-sdk/ketch-data-layer'
 import { CACHED_CONSENT_TTL, getCachedConsent, setCachedConsent, setPublicConsent } from './cache'
 import deepEqual from 'nano-equal'
-import constants from './constants'
+import constants, { EMPTY_CONSENT } from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import InternalRouter from './InternalRouter'
 
@@ -524,7 +524,22 @@ export class Ketch extends EventEmitter {
     const l = wrapLogger(log, 'showPreferenceExperience')
     l.debug(params)
 
-    const consent = await this.getConsent()
+    let consent: Consent
+    let showConsentsTab = true
+
+    try {
+      consent = await this.getConsent()
+    } catch (e: any) {
+      // "No Purposes" errors shouldn't block showing a preferences experience
+      // In this case, continue on w/ empty consent, and hide the consents tab
+      if (e === errors.noPurposesError) {
+        l.debug('No purposes detected, experience will not display consents tab')
+        consent = EMPTY_CONSENT
+        showConsentsTab = false
+      } else {
+        throw e
+      }
+    }
 
     // if no preference experience configured do not show
     if (!this._config.experiences?.preference) {
@@ -551,7 +566,7 @@ export class Ketch extends EventEmitter {
 
       if (selectedTabs?.length) {
         params.showOverviewTab = selectedTabs.includes(Tab.Overview)
-        params.showConsentsTab = selectedTabs.includes(Tab.Consents)
+        params.showConsentsTab = showConsentsTab && selectedTabs.includes(Tab.Consents)
         params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
         params.showRightsTab = selectedTabs.includes(Tab.Rights)
         params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
