@@ -1,3 +1,5 @@
+import { Consent } from '@ketch-sdk/ketch-types'
+
 export default {
   FULFILLED_EVENT: 'fulfilled',
   CONSENT_EVENT: 'consent',
@@ -31,4 +33,10 @@ export default {
   PREFERENCES: 'preferences',
   API_SERVER: 'shoreline',
   API_SERVER_BASE_URL: 'https://global.ketchcdn.com/web/v2',
+}
+
+export const EMPTY_CONSENT: Consent = {
+  purposes: {},
+  vendors: [],
+  protocols: {},
 }
