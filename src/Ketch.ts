@@ -533,6 +533,7 @@ export class Ketch extends EventEmitter {
       // "No Purposes" errors shouldn't block showing a preferences experience
       // In this case, continue on w/ empty consent, and hide the consents tab
       if (e === errors.noPurposesError) {
+        l.debug('No purposes detected, experience will not display consents tab')
         consent = EMPTY_CONSENT
         showConsentsTab = false
       } else {
