@@ -1572,7 +1572,7 @@ export class Ketch extends EventEmitter {
     const l = wrapLogger(log, 'emit')
     l.trace(event, args)
 
-    if (window.androidListener || window.webkit?.messageHandlers) {
+    if (window.androidListener || window.webkit?.messageHandlers || window.ReactNativeWebView?.postMessage) {
       const eventName = event.toString()
 
       const filteredArgs: any[] = []
@@ -1601,6 +1601,8 @@ export class Ketch extends EventEmitter {
       } else if (window.webkit?.messageHandlers && eventName in window.webkit.messageHandlers) {
         l.trace('webkitMessageHandlers', window.webkit?.messageHandlers, argument)
         window.webkit.messageHandlers[eventName].postMessage(argument)
+      } else if (window.ReactNativeWebView?.postMessage) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ event, data: argument }))
       } else {
         l.warn(`Can't pass message to native code because "${eventName}" handler is not registered`)
       }
