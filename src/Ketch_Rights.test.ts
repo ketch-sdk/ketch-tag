@@ -92,6 +92,68 @@ describe('rights', () => {
       })
     })
 
+    const identities = {
+      space1: 'id1',
+    }
+
+    it('invoke right does not populate email in update consent', () => {
+      fetchMock.mockResponse(JSON.stringify({}))
+
+      ketch.invokeRight(data).then(() => {
+        const { property, jurisdiction, organization, environment } = config
+        expect(property).not.toBeNull()
+        expect(jurisdiction).not.toBeNull()
+        expect(organization).not.toBeNull()
+        expect(environment).not.toBeNull()
+
+        if (property && jurisdiction && organization && environment) {
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/rights/org/invoke', {
+            body: '{"organizationCode":"org","propertyCode":"app","environmentCode":"env","controllerCode":"","identities":{"email":"rights@email.com"},"jurisdictionCode":"ps","rightCode":"portability","user":{"email":"rights@email.com","firstName":"first","lastName":"last","country":"United States","stateRegion":"California"}}',
+            credentials: 'omit',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            mode: 'cors',
+          })
+        }
+      })
+
+      fetchMock.mockResponse(async (): Promise<string> => JSON.stringify({}))
+      return ketch
+        .updateConsent(identities, {
+          purposes: {
+            pacode1: true,
+            pacode2: false,
+          },
+          vendors: ['1'],
+        })
+        .then(() => {
+          const { property, jurisdiction, organization, environment } = config
+          expect(property).not.toBeNull()
+          expect(jurisdiction).not.toBeNull()
+          expect(organization).not.toBeNull()
+          expect(environment).not.toBeNull()
+
+          if (property && jurisdiction && organization && environment) {
+            expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
+              body: `{"organizationCode":"org","propertyCode":"app","environmentCode":"env","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"vendors":["1"],"collectedAt":${Math.floor(
+                Date.now() / 1000,
+              )}}`,
+              credentials: 'omit',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              method: 'POST',
+              mode: 'cors',
+            })
+          }
+        })
+    })
+
     const dataNoEmail = {
       right: 'portability',
       subject: {
