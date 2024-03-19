@@ -662,7 +662,23 @@ export class Ketch extends EventEmitter {
     this._watcher.stop()
     await this._watcher.start()
 
-    return this.setConsent(consent)
+    // check if consent updated to conditionally fire event
+    let consentEqual = false
+    if (this.hasConsent()) {
+      log.trace('has consent')
+      const existingConsent = this._consent.value
+      consentEqual = deepEqual(existingConsent, consent)
+    }
+
+    return this.setConsent(consent).then(consent => {
+      if (!consentEqual) {
+        // fire the 'user_consent_change_saved' event when all the following conditions are true
+        // 1) if the consent is updated by a user (experiences call this changeConsent function so this is true)
+        // 2) if the consent values have changed (!consentEqual)
+        // 3) once the server responds confirming that consent has been saved in the database (setConsent promise)
+        this.emit('user_consent_change_saved', consent)
+      }
+    })
   }
 
   /**
