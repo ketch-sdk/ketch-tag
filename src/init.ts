@@ -1,6 +1,8 @@
 import log from './log'
 import Builder from './Builder'
 import Router from './Router'
+import { WebStorageCacher } from '@ketch-com/ketch-cache'
+import Trackers from './Trackers'
 
 /**
  * This is the entry point when this package is first loaded.
@@ -38,6 +40,14 @@ export default async function init(): Promise<void> {
   // Note that the tag has loaded
   window.semaphore.loaded = true
 
-  // Ensure consent has been loaded
-  await ketch.getConsent()
+  const emulatorWebCacher = new WebStorageCacher<boolean>(window.localStorage)
+  const isEmulatorFlow = await emulatorWebCacher.getItem('emulator')
+
+  if (isEmulatorFlow) {
+    const trackers = new Trackers(ketch, cfg)
+    await trackers.enableAllConsent()
+  } else {
+    // Ensure consent has been loaded
+    await ketch.getConsent()
+  }
 }
