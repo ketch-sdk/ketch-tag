@@ -38,6 +38,43 @@ export default class Builder {
       throw errors.invalidConfigurationError
     }
 
+    // TODO remove post experience cut over
+    // This is loads the requested version of lanyard to check experience cut over
+    const experienceVersion = parameters.get(constants.EXPERIENCE_VERSION)
+    if (experienceVersion) {
+      let lanyardScript = ''
+      // Find the lanyard script
+      if (this._config.scripts) {
+        for (let i = 0; i < this._config.scripts.length; i++) {
+          if (this._config.scripts[i].includes('lanyard')) {
+            lanyardScript = this._config.scripts[i]
+          }
+        }
+      }
+
+      // Note: experienceVersion new -> lanyardVersion v2; experienceVersion old -> lanyardVersion v1
+      let shouldRequestLanyard = false
+      if (lanyardScript.includes('/v1/') && experienceVersion === 'new') {
+        // Note: lanyard version for experience new is v2
+        lanyardScript = lanyardScript.replace('/v1/', '/v2/')
+        shouldRequestLanyard = true
+      } else if (lanyardScript.includes('/v2/') && experienceVersion === 'old') {
+        // Note: lanyard version for experience old is v1
+        lanyardScript = lanyardScript.replace('/v2/', '/v1/')
+        shouldRequestLanyard = true
+      }
+
+      // append script
+      if (shouldRequestLanyard) {
+        const n = document.getElementsByTagName('head')[0]
+        const i = document.createElement('script')
+        i.type = 'text/javascript'
+        i.defer = i.async = !0
+        i.src = lanyardScript
+        n.appendChild(i)
+      }
+    }
+
     const language =
       new URLSearchParams(window.location.search).get(constants.LANGUAGE) || // ?lang
       parameters.get(constants.LANGUAGE) || // ? ketch_lang
