@@ -1,6 +1,6 @@
 import { Configuration } from '@ketch-sdk/ketch-types'
 import constants from './constants'
-import parameters from "./parameters";
+import parameters from './parameters'
 
 /**
  * Service url
@@ -21,10 +21,10 @@ export default function getApiUrl(config: Configuration): string {
     const experienceVersion = parameters.get(constants.EXPERIENCE_VERSION)
     if (experienceVersion) {
       // Note: experienceVersion new -> shorelineVersion v3; experienceVersion old -> shorelineVersion v2
-      if (url.includes("v3") && experienceVersion === "old") {
-        url = url.replace("v3", "v2")
-      } else if (url.includes("v2") && experienceVersion === "new") {
-        url = url.replace("v2", "v3")
+      if (url.includes('v3') && experienceVersion === 'old') {
+        url = url.replace('v3', 'v2')
+      } else if (url.includes('v2') && experienceVersion === 'new') {
+        url = url.replace('v2', 'v3')
       }
     }
 
