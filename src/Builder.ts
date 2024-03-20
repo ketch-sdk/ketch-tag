@@ -173,7 +173,12 @@ export default class Builder {
         const data = this.collectTelemetry(hasConsent, cfg, params)
         // https://developer.fastly.com/solutions/tutorials/beacon-termination/
         // Use url params as recommended
-        navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
+        try {
+          navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
+        } catch (error) {
+          // continue if error
+          log.debug('telemetry error', error)
+        }
       }
     })
     return true
