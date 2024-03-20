@@ -17,16 +17,16 @@ export const webAPIMock = {
 export const webAPI = webAPIMock as unknown as KetchWebAPI
 export const emptyConfig = {
   property: {
-    code: "property"
+    code: 'property',
   },
   organization: {
-    code: "organization"
+    code: 'organization',
   },
   environment: {
-    code: "production"
+    code: 'production',
   },
-  purposes: [{code: 'purpose1', legalBasisCode: "consent_optin"}],
+  purposes: [{ code: 'purpose1', legalBasisCode: 'consent_optin' }],
   jurisdiction: {
-    code: "jurisdiction"
-  }
+    code: 'jurisdiction',
+  },
 } as Configuration

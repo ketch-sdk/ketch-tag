@@ -621,19 +621,19 @@ describe('Ketch', () => {
   describe('changeConsent', () => {
     const ketch = new Ketch(webAPI, emptyConfig)
     it('sets consent', async () => {
-      await ketch.setIdentities({"id": "value"})
+      await ketch.setIdentities({ id: 'value' })
       await ketch.changeConsent({
         purposes: {
           purpose1: true,
-        }
+        },
       })
     })
     it('sets consent and fires event', async () => {
-      await ketch.setIdentities({"id": "value"})
+      await ketch.setIdentities({ id: 'value' })
       await ketch.changeConsent({
         purposes: {
           purpose1: false,
-        }
+        },
       })
     })
   })
