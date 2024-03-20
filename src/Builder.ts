@@ -124,6 +124,13 @@ export default class Builder {
 
     const cfg = await this._api.getFullConfiguration(request)
 
+    // TODO remove post experience cut over
+    // This is uses the requested version of shoreline for experience cut over only if user experienceVersion param set
+    // getApiUrl has logic to replace the url
+    if (experienceVersion && cfg.services) {
+      cfg.services[constants.API_SERVER] = getApiUrl(this._config)
+    }
+
     const k = new Ketch(this._api, cfg)
 
     await k.setEnvironment(env)
