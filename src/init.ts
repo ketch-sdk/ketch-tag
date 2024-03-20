@@ -1,7 +1,6 @@
 import log from './log'
 import Builder from './Builder'
 import Router from './Router'
-import { WebStorageCacher } from '@ketch-com/ketch-cache'
 import Trackers from './Trackers'
 
 /**
@@ -40,11 +39,11 @@ export default async function init(): Promise<void> {
   // Note that the tag has loaded
   window.semaphore.loaded = true
 
-  const emulatorWebCacher = new WebStorageCacher<boolean>(window.localStorage)
-  const isEmulatorFlow = await emulatorWebCacher.getItem('emulator')
+  const shouldOverrideConsent = window.localStorage.getItem('overrideConsent')
 
-  if (isEmulatorFlow) {
-    const trackers = new Trackers(ketch, cfg)
+  if (shouldOverrideConsent) {
+    const ketchFullConfig = await ketch.getConfig()
+    const trackers = new Trackers(ketch, ketchFullConfig)
     await trackers.enableAllConsent()
   } else {
     // Ensure consent has been loaded
