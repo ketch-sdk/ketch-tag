@@ -36,17 +36,17 @@ describe('Trackers', () => {
     purposes: [
       // @ts-ignore
       {
-        code: 'pacode1',
+        code: '0',
         legalBasisCode: 'lb1',
       },
       // @ts-ignore
       {
-        code: 'pacode2',
+        code: '1',
         legalBasisCode: 'lb2',
       },
       // @ts-ignore
       {
-        code: 'pacode4',
+        code: '2',
         legalBasisCode: 'lb4',
       },
     ],
