@@ -1540,13 +1540,15 @@ export class Ketch extends EventEmitter {
       return
     }
 
-    let identities: Identities = {}
+    const rightInvocationIdentities: Identities = {}
     if (this._identities.isFulfilled()) {
-      identities = this._identities.value
+      Object.entries(this._identities.value).forEach(([key, value]) => {
+        rightInvocationIdentities[key] = value
+      })
     }
 
     // add email identity from rights form
-    identities['email'] = eventData.subject.email
+    rightInvocationIdentities['email'] = eventData.subject.email
 
     if (
       !this._config ||
@@ -1568,7 +1570,7 @@ export class Ketch extends EventEmitter {
       propertyCode: this._config.property.code ?? '',
       environmentCode: this._config.environment.code,
       controllerCode: '',
-      identities: identities,
+      identities: rightInvocationIdentities,
       jurisdictionCode: this._config.jurisdiction.code ?? '',
       rightCode: eventData.right,
       user: user,

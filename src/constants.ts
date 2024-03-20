@@ -33,6 +33,7 @@ export default {
   PREFERENCES: 'preferences',
   API_SERVER: 'shoreline',
   API_SERVER_BASE_URL: 'https://global.ketchcdn.com/web/v2',
+  EXPERIENCE_VERSION: 'experience_version',
 }
 
 export const EMPTY_CONSENT: Consent = {
