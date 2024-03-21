@@ -15,4 +15,18 @@ export const webAPIMock = {
   getPreferenceConfiguration: jest.fn(),
 }
 export const webAPI = webAPIMock as unknown as KetchWebAPI
-export const emptyConfig = {} as Configuration
+export const emptyConfig = {
+  property: {
+    code: 'property',
+  },
+  organization: {
+    code: 'organization',
+  },
+  environment: {
+    code: 'production',
+  },
+  purposes: [{ code: 'purpose1', legalBasisCode: 'consent_optin' }],
+  jurisdiction: {
+    code: 'jurisdiction',
+  },
+} as Configuration
