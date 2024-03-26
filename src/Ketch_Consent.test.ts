@@ -1,11 +1,12 @@
 import {
   Configuration,
-  IdentityFormat,
-  IdentityType,
-  ExperienceType,
-  GetConsentRequest,
   ConsentExperienceType,
   ExperienceClosedReason,
+  ExperienceType,
+  GetConsentRequest,
+  IdentityFormat,
+  IdentityType,
+  SetConsentReason,
 } from '@ketch-sdk/ketch-types'
 import errors from './errors'
 import { Ketch } from './'
@@ -15,150 +16,150 @@ import { CACHED_CONSENT_KEY, getCachedConsent } from './cache'
 import { setCookie } from '@ketch-sdk/ketch-data-layer'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 
-describe('consent', () => {
-  // @ts-ignore
-  const config2: Configuration = {
-    organization: {
-      code: 'org',
-    },
-    property: {
-      code: 'axonic',
-      name: 'axonic.io',
-      platform: 'WEB',
-    },
-    environments: [
-      {
-        code: constants.PRODUCTION,
-        hash: '1392568836159292875',
-      },
-    ],
-    jurisdiction: {
-      code: 'ccpa',
-      defaultJurisdictionCode: 'ccpa',
-      variable: 'scope_tag',
-    },
-    identities: {
-      axonic_cookie: {
-        variable: 'huid',
-        type: IdentityType.IDENTITY_TYPE_DATA_LAYER,
-        format: IdentityFormat.IDENTITY_FORMAT_STRING,
-      },
-    },
-    environment: {
+// @ts-ignore
+const config2: Configuration = {
+  organization: {
+    code: 'org',
+  },
+  property: {
+    code: 'axonic',
+    name: 'axonic.io',
+    platform: 'WEB',
+  },
+  environments: [
+    {
       code: constants.PRODUCTION,
       hash: '1392568836159292875',
     },
-    deployment: {
-      code: 'axonic_dep',
-      version: 2,
+  ],
+  jurisdiction: {
+    code: 'ccpa',
+    defaultJurisdictionCode: 'ccpa',
+    variable: 'scope_tag',
+  },
+  identities: {
+    axonic_cookie: {
+      variable: 'huid',
+      type: IdentityType.IDENTITY_TYPE_DATA_LAYER,
+      format: IdentityFormat.IDENTITY_FORMAT_STRING,
     },
-    rights: [
-      {
-        code: 'portability',
-        name: 'Portability',
-        description: 'Right to have all data provided to you.',
-        canonicalRightCode: 'get',
-      },
-      {
-        code: 'rtbf',
-        name: 'Data Deletion',
-        description: 'Right to be forgotten.',
-        canonicalRightCode: 'delete',
-      },
-    ],
-    purposes: [
-      // @ts-ignore
-      {
-        code: 'productresearch',
-        name: 'Product Research',
-        description: 'We will use data collected about you to perform critical product enhancements.',
-        legalBasisCode: 'disclosure',
-        requiresPrivacyPolicy: true,
-      },
-      // @ts-ignore
-      {
-        code: 'analytics',
-        name: 'Analytics',
-        description: 'We perform analytics on your data to get smarter.',
-        legalBasisCode: 'consent-optin',
-        requiresOptIn: true,
-        requiresPrivacyPolicy: true,
-      },
-      // @ts-ignore
-      {
-        code: 'datasales',
-        name: 'Data Sales',
-        description: 'We will sell your personal data to other institutions. ',
-        legalBasisCode: 'consent-optout',
-        allowsOptOut: true,
-        requiresPrivacyPolicy: true,
-      },
-    ],
-    experiences: {
-      // @ts-ignore
-      consent: {
-        experienceDefault: 2,
-      },
+  },
+  environment: {
+    code: constants.PRODUCTION,
+    hash: '1392568836159292875',
+  },
+  deployment: {
+    code: 'axonic_dep',
+    version: 2,
+  },
+  rights: [
+    {
+      code: 'portability',
+      name: 'Portability',
+      description: 'Right to have all data provided to you.',
+      canonicalRightCode: 'get',
     },
-    options: {
-      localStorage: '1',
-      migration: '1',
+    {
+      code: 'rtbf',
+      name: 'Data Deletion',
+      description: 'Right to be forgotten.',
+      canonicalRightCode: 'delete',
     },
-  }
+  ],
+  purposes: [
+    // @ts-ignore
+    {
+      code: 'productresearch',
+      name: 'Product Research',
+      description: 'We will use data collected about you to perform critical product enhancements.',
+      legalBasisCode: 'disclosure',
+      requiresPrivacyPolicy: true,
+    },
+    // @ts-ignore
+    {
+      code: 'analytics',
+      name: 'Analytics',
+      description: 'We perform analytics on your data to get smarter.',
+      legalBasisCode: 'consent-optin',
+      requiresOptIn: true,
+      requiresPrivacyPolicy: true,
+    },
+    // @ts-ignore
+    {
+      code: 'datasales',
+      name: 'Data Sales',
+      description: 'We will sell your personal data to other institutions. ',
+      legalBasisCode: 'consent-optout',
+      allowsOptOut: true,
+      requiresPrivacyPolicy: true,
+    },
+  ],
+  experiences: {
+    // @ts-ignore
+    consent: {
+      experienceDefault: 2,
+    },
+  },
+  options: {
+    localStorage: '1',
+    migration: '1',
+  },
+}
 
-  // @ts-ignore
-  const config: Configuration = {
-    organization: {
-      code: 'org',
+// @ts-ignore
+const config: Configuration = {
+  organization: {
+    code: 'org',
+  },
+  property: {
+    code: 'app',
+  },
+  environment: {
+    code: 'env',
+  },
+  jurisdiction: {
+    code: 'ps',
+  },
+  rights: [
+    {
+      code: 'portability',
+      name: 'Portability',
+      description: 'Right to have all data provided to you.',
+      canonicalRightCode: 'get',
     },
-    property: {
-      code: 'app',
+    {
+      code: 'rtbf',
+      name: 'Data Deletion',
+      description: 'Right to be forgotten.',
+      canonicalRightCode: 'delete',
     },
-    environment: {
-      code: 'env',
+  ],
+  purposes: [
+    // @ts-ignore
+    {
+      code: 'pacode1',
+      legalBasisCode: 'lb1',
     },
-    jurisdiction: {
-      code: 'ps',
+    // @ts-ignore
+    {
+      code: 'pacode2',
+      legalBasisCode: 'lb2',
     },
-    rights: [
-      {
-        code: 'portability',
-        name: 'Portability',
-        description: 'Right to have all data provided to you.',
-        canonicalRightCode: 'get',
-      },
-      {
-        code: 'rtbf',
-        name: 'Data Deletion',
-        description: 'Right to be forgotten.',
-        canonicalRightCode: 'delete',
-      },
-    ],
-    purposes: [
-      // @ts-ignore
-      {
-        code: 'pacode1',
-        legalBasisCode: 'lb1',
-      },
-      // @ts-ignore
-      {
-        code: 'pacode2',
-        legalBasisCode: 'lb2',
-      },
-      // @ts-ignore
-      {
-        code: 'pacode4',
-        legalBasisCode: 'lb4',
-      },
-    ],
-    options: {
-      migration: '3',
+    // @ts-ignore
+    {
+      code: 'pacode4',
+      legalBasisCode: 'lb4',
     },
-  }
-  const identities = {
-    space1: 'id1',
-  }
+  ],
+  options: {
+    migration: '3',
+  },
+}
+const identities = {
+  space1: 'id1',
+}
 
+describe('consent', () => {
   describe('fetchConsent', () => {
     it('handles a call with full config and no server consent', () => {
       document.cookie = '_swb_consent_=; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure'
@@ -264,6 +265,7 @@ describe('consent', () => {
 
           if (property && jurisdiction && organization && environment) {
             expect(fetchMock).toHaveBeenCalledWith('https://global.ketchcdn.com/web/v2/consent/org/update', {
+              // eslint-disable-next-line max-len
               body: `{"organizationCode":"org","propertyCode":"app","environmentCode":"env","identities":{"space1":"id1"},"jurisdictionCode":"ps","purposes":{"pacode1":{"allowed":"true","legalBasisCode":"lb1"},"pacode2":{"allowed":"false","legalBasisCode":"lb2"}},"vendors":["1"],"collectedAt":${Math.floor(
                 Date.now() / 1000,
               )}}`,
@@ -338,8 +340,9 @@ describe('consent', () => {
   })
 
   describe('getConsent', () => {
-    it('returns the existing consent', () => {
+    it('returns the existing consent', async () => {
       const ketch = new Ketch(new KetchWebAPI(''), config)
+      await ketch.setIdentities({ id: 'value' })
       const c = {
         purposes: {
           ip: true,
@@ -352,7 +355,7 @@ describe('consent', () => {
 
       expect(ketch.hasConsent()).not.toBeTruthy()
       return ketch
-        .setConsent(c)
+        .setConsent(c, SetConsentReason.USER_UPDATE)
         .then(x => {
           expect(x).toEqual({
             purposes: {
@@ -497,31 +500,20 @@ describe('consent', () => {
   })
 
   describe('showConsent', () => {
-    it('calls lanyard', () => {
+    it('calls lanyard', async () => {
       const ketch = new Ketch(new KetchWebAPI(''), config2)
+      await ketch.setIdentities({ id: 'value' })
 
       const c = { purposes: { datasales: true } }
 
-      expect(ketch.setConsent(c)).resolves.toBe(c)
-      expect(ketch.showConsentExperience()).resolves.toBe(c)
+      await expect(ketch.setConsent(c, SetConsentReason.USER_UPDATE)).resolves.toBe(c)
+      await expect(ketch.showConsentExperience()).resolves.toBe(c)
     })
   })
 })
 
 describe('experience consent', () => {
-  const ketch = new Ketch(new KetchWebAPI(''), {
-    purposes: [
-      {
-        code: 'analytics',
-      },
-      {
-        code: 'advertising',
-      },
-      {
-        code: 'data_sales',
-      },
-    ],
-  } as any as Configuration)
+  const ketch = new Ketch(new KetchWebAPI(''), config)
   const c = {
     purposes: {
       ip: true,
@@ -529,8 +521,9 @@ describe('experience consent', () => {
     vendors: ['1'],
   }
 
-  it('retrieve consent on experience closed', () => {
-    return ketch.setConsent(c).then(() => {
+  it('retrieve consent on experience closed', async () => {
+    await ketch.setIdentities({ id: 'value' })
+    return ketch.setConsent(c, SetConsentReason.USER_UPDATE).then(() => {
       ketch.experienceClosed(ExperienceClosedReason.CLOSE).then(consent => {
         expect(consent).toEqual(c)
       })
