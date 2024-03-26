@@ -672,7 +672,7 @@ export class Ketch extends EventEmitter {
     if (this.hasConsent()) {
       l.trace('has consent')
       const existingConsent = this._consent.value
-      consentEqual = deepEqual(existingConsent, c)
+      consentEqual = deepEqual(existingConsent.purposes, c.purposes)
       for (const key in existingConsent.purposes) {
         if (
           Object.prototype.hasOwnProperty.call(existingConsent.purposes, key) &&
@@ -699,11 +699,11 @@ export class Ketch extends EventEmitter {
 
           // check if consent updated to conditionally fire event
           if (!consentEqual) {
-            // fire the 'user_consent_change_saved' event when all the following conditions are true
-            // 1) if the consent is updated by a user (experiences call this changeConsent function so this is true)
-            // 2) if the consent values have changed (!consentEqual)
-            // 3) once the server responds confirming that consent has been saved in the database (setConsent promise)
-            this.emit('user_consent_saved', consent)
+            // fire the 'userConsentUpdated' event when all the following conditions are true
+            // 1) if the consent is updated by a user (SetConsentReason.USER_UPDATE)
+            // 2) if the consent purpose values have changed (!consentEqual)
+            // 3) once the server responds confirming that consent has been saved (await this.updateConsent)
+            this.emit(constants.USER_CONSENT_UPDATED_EVENT, consent)
           }
         }
       }

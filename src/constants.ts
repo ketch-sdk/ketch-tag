@@ -20,6 +20,7 @@ export default {
   HAS_CHANGED_EXPERIENCE_EVENT: 'hasChangedExperience',
   HAS_SHOWN_EXPERIENCE_EVENT: 'hasShownExperience',
   HIDE_EXPERIENCE_EVENT: 'hideExperience',
+  USER_CONSENT_UPDATED_EVENT: 'userConsentUpdated',
   NONE: 'none',
   ENV: 'env',
   PRODUCTION: 'production',
