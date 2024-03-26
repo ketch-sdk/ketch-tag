@@ -12,6 +12,7 @@ import {
   StorageOriginPolicy,
   StorageProvider,
   ConfigurationV2,
+  SetConsentReason,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
@@ -237,8 +238,8 @@ export default class Router {
     return this._ketch.registerStorageProvider(policy, provider)
   }
 
-  setConsent(consent: Consent): Promise<void> {
-    return this._ketch.setConsent(consent).then(() => {})
+  setConsent(consent: Consent, reason: SetConsentReason): Promise<void> {
+    return this._ketch.setConsent(consent, reason).then(() => {})
   }
 
   showExperience(options: ExperienceOptions): Promise<void> {

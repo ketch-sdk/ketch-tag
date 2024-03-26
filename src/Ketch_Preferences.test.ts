@@ -1,4 +1,4 @@
-import { Configuration } from '@ketch-sdk/ketch-types'
+import { Configuration, SetConsentReason } from '@ketch-sdk/ketch-types'
 import { Ketch } from './'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import { EMPTY_CONSENT } from './constants'
@@ -21,12 +21,19 @@ describe('preferences', () => {
       ketch.setIdentities({ foo: 'bar' })
 
       const c = {
-        purposes: {},
+        purposes: {
+          purpose1: true,
+        },
         vendors: [],
       }
 
-      return ketch.setConsent(c).then(() => {
-        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
+      return ketch.setConsent(c, SetConsentReason.USER_UPDATE).then(() => {
+        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({
+          purposes: {
+            purpose1: true,
+          },
+          vendors: [],
+        })
       })
     })
 
@@ -41,12 +48,19 @@ describe('preferences', () => {
 
       ketch.setIdentities({ foo: 'bar' })
       const c = {
-        purposes: {},
+        purposes: {
+          purpose1: true,
+        },
         vendors: [],
       }
 
-      return ketch.setConsent(c).then(() => {
-        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
+      return ketch.setConsent(c, SetConsentReason.USER_UPDATE).then(() => {
+        return expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({
+          purposes: {
+            purpose1: true,
+          },
+          vendors: [],
+        })
       })
     })
 

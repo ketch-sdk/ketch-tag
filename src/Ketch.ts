@@ -3,41 +3,42 @@ import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import Future from '@ketch-com/future'
 import {
   Configuration,
+  ConfigurationV2,
   Consent,
-  Protocols,
-  Environment,
-  Identities,
-  InvokeRightRequest,
-  InvokeRightEvent,
-  IPInfo,
-  Plugin,
-  ShowPreferenceOptions,
-  SetConsentRequest,
-  DataSubject,
-  GetConsentRequest,
-  ExperienceType,
   ConsentExperienceType,
-  isTab,
+  DataSubject,
+  Environment,
   ExperienceClosedReason,
-  ShowConsentOptions,
-  GetConsentResponse,
-  IdentityType,
-  IdentityProvider,
-  StorageProvider,
   ExperienceDefault,
-  Identity,
-  StorageOriginPolicy,
-  ExperienceServer,
+  ExperienceDisplayType,
   ExperienceOptions,
+  ExperienceServer,
+  ExperienceType,
+  GetConsentRequest,
+  GetConsentResponse,
+  GetSubscriptionsRequest,
+  Identities,
+  Identity,
+  IdentityProvider,
+  IdentityType,
+  InvokeRightEvent,
+  InvokeRightRequest,
+  IPInfo,
+  isTab,
+  Plugin,
+  Protocols,
+  PurposeLegalBasis,
+  SetConsentReason,
+  SetConsentRequest,
+  SetConsentResponse,
+  SetSubscriptionsRequest,
+  ShowConsentOptions,
+  ShowPreferenceOptions,
+  StorageOriginPolicy,
+  StorageProvider,
   SubscriptionConfiguration,
   Subscriptions,
-  GetSubscriptionsRequest,
-  SetSubscriptionsRequest,
   Tab,
-  PurposeLegalBasis,
-  ConfigurationV2,
-  ExperienceDisplayType,
-  SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
 import isEmpty from './isEmpty'
 import log from './log'
@@ -470,7 +471,7 @@ export class Ketch extends EventEmitter {
         }
       }
 
-      await this.setConsent(consent)
+      await this.setConsent(consent, SetConsentReason.USER_EXPERIENCE_DISMISSAL)
     }
 
     // Call functions registered using onHideExperience
@@ -651,42 +652,12 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Called when experience renderer tells us the user has updated consent.
-   *
-   * @param consent Consent to change
-   */
-  async changeConsent(consent: Consent): Promise<any> {
-    log.debug('changeConsent', consent)
-
-    // check for new identifiers for tags that may fire after consent collected
-    this._watcher.stop()
-    await this._watcher.start()
-
-    // check if consent updated to conditionally fire event
-    let consentEqual = false
-    if (this.hasConsent()) {
-      log.trace('has consent')
-      const existingConsent = this._consent.value
-      consentEqual = deepEqual(existingConsent, consent)
-    }
-
-    return this.setConsent(consent).then(consent => {
-      if (!consentEqual) {
-        // fire the 'user_consent_change_saved' event when all the following conditions are true
-        // 1) if the consent is updated by a user (experiences call this changeConsent function so this is true)
-        // 2) if the consent values have changed (!consentEqual)
-        // 3) once the server responds confirming that consent has been saved in the database (setConsent promise)
-        this.emit('user_consent_change_saved', consent)
-      }
-    })
-  }
-
-  /**
    * Sets the consent.
    *
    * @param c Consent to set
+   * @param reason set consent reason
    */
-  async setConsent(c: Consent): Promise<Consent> {
+  async setConsent(c: Consent, reason: SetConsentReason): Promise<Consent> {
     const l = wrapLogger(log, 'setConsent')
     l.debug(c)
 
@@ -697,9 +668,11 @@ export class Ketch extends EventEmitter {
     }
 
     // Merge new consent into existing consent
+    let consentEqual = false
     if (this.hasConsent()) {
       l.trace('has consent')
       const existingConsent = this._consent.value
+      consentEqual = deepEqual(existingConsent, c)
       for (const key in existingConsent.purposes) {
         if (
           Object.prototype.hasOwnProperty.call(existingConsent.purposes, key) &&
@@ -719,9 +692,27 @@ export class Ketch extends EventEmitter {
 
       if (consent && consent.protocols !== undefined) {
         this._protocols.value = consent.protocols
+        if (reason === SetConsentReason.USER_UPDATE) {
+          // check for new identifiers for tags that may fire after consent collected
+          this._watcher.stop()
+          await this._watcher.start()
+
+          // check if consent updated to conditionally fire event
+          if (!consentEqual) {
+            // fire the 'user_consent_change_saved' event when all the following conditions are true
+            // 1) if the consent is updated by a user (experiences call this changeConsent function so this is true)
+            // 2) if the consent values have changed (!consentEqual)
+            // 3) once the server responds confirming that consent has been saved in the database (setConsent promise)
+            this.emit('user_consent_saved', consent)
+          }
+        }
       }
     } catch (error) {
-      l.error('error updating consent:', error)
+      let errorMessage = ''
+      if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      l.warn('unable to update consent', errorMessage)
     }
 
     return c
@@ -798,7 +789,7 @@ export class Ketch extends EventEmitter {
 
     // first set consent value then proceed to show experience and/or create permits
     if (shouldCreatePermits) {
-      await this.setConsent(c)
+      await this.setConsent(c, SetConsentReason.DEFAULT_STATE)
     } else {
       this._consent.value = c
       if (consent.protocols !== undefined) {
@@ -1410,7 +1401,11 @@ export class Ketch extends EventEmitter {
       try {
         await this.updateConsent(identities, localConsent)
       } catch (error) {
-        l.error('error updating consent:', error)
+        let errorMessage = ''
+        if (error instanceof Error) {
+          errorMessage = error.message
+        }
+        l.warn('unable to update consent', errorMessage)
       }
       return identities
     }

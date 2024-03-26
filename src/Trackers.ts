@@ -1,10 +1,10 @@
-import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
-import { Configuration, Consent, GetConsentRequest, GetConsentResponse } from '@ketch-sdk/ketch-types'
+import {KetchWebAPI} from '@ketch-sdk/ketch-web-api'
+import {Configuration, Consent, GetConsentRequest, GetConsentResponse, SetConsentReason} from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
-import { setCachedConsent, setPublicConsent } from './cache'
-import { wrapLogger } from '@ketch-sdk/ketch-logging'
-import { Ketch } from './Ketch'
+import {setCachedConsent, setPublicConsent} from './cache'
+import {wrapLogger} from '@ketch-sdk/ketch-logging'
+import {Ketch} from './Ketch'
 import getApiUrl from './getApiUrl'
 
 export default class Trackers {
@@ -105,7 +105,7 @@ export default class Trackers {
 
     l.debug('trackers: newConsent', newConsent)
 
-    await this._ketch.setConsent(newConsent)
+    await this._ketch.setConsent(newConsent, SetConsentReason.USER_UPDATE)
     return newConsent
   }
 

@@ -8,13 +8,14 @@ import {
   InvokeRightEvent,
   IPInfo,
   Ketch as KetchAPI,
+  SetConsentReason,
   StorageOriginPolicy,
   Tab,
 } from '@ketch-sdk/ketch-types'
-import { Ketch } from './Ketch'
+import {Ketch} from './Ketch'
 import parameters from './parameters'
 import constants from './constants'
-import { emptyConfig, webAPI, webAPIMock } from './__mocks__/webApi'
+import {emptyConfig, webAPI, webAPIMock} from './__mocks__/webApi'
 
 describe('Ketch', () => {
   describe('registerPlugin', () => {
@@ -145,8 +146,7 @@ describe('Ketch', () => {
       await ketch.setEnvironment({ code: constants.PRODUCTION })
       await ketch.setGeoIP(geoip)
       await ketch.setIdentities(identities)
-      await ketch.changeConsent(consent)
-      await ketch.setConsent(consent)
+      await ketch.setConsent(consent, SetConsentReason.USER_UPDATE)
       await ketch.setJurisdiction('gdpr')
       await ketch.setRegionInfo('US-CA')
       await ketch.showConsentExperience()
@@ -611,30 +611,31 @@ describe('Ketch', () => {
 
     it('returns true if consent', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       await ketch.setConsent({
         purposes: {},
-      })
+      }, SetConsentReason.DEFAULT_STATE)
       expect(ketch.hasConsent()).toBeTruthy()
     })
   })
 
-  describe('changeConsent', () => {
+  describe('setConsent user', () => {
     const ketch = new Ketch(webAPI, emptyConfig)
     it('sets consent', async () => {
       await ketch.setIdentities({ id: 'value' })
-      await ketch.changeConsent({
+      await ketch.setConsent({
         purposes: {
           purpose1: true,
         },
-      })
+      }, SetConsentReason.USER_UPDATE)
     })
     it('sets consent and fires event', async () => {
       await ketch.setIdentities({ id: 'value' })
-      await ketch.changeConsent({
+      await ketch.setConsent({
         purposes: {
           purpose1: false,
         },
-      })
+      }, SetConsentReason.USER_UPDATE)
     })
   })
 
@@ -649,11 +650,13 @@ describe('Ketch', () => {
   describe('retrieveConsent', () => {
     it('returns synthetic if not fulfilled', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       return expect(ketch.retrieveConsent()).resolves.toStrictEqual({ purposes: {}, vendors: [] })
     })
 
     it('returns consent if set', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       await ketch.setConsent({
         purposes: {
           analytics: true,
@@ -661,7 +664,7 @@ describe('Ketch', () => {
         protocols: {
           foo: 'bar',
         },
-      })
+      }, SetConsentReason.USER_UPDATE)
       await expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
@@ -678,7 +681,7 @@ describe('Ketch', () => {
           personalization: false,
         },
         vendors: ['1', '2'],
-      })
+      }, SetConsentReason.USER_UPDATE)
       return expect(ketch.retrieveConsent()).resolves.toStrictEqual({
         purposes: {
           analytics: true,
@@ -962,20 +965,22 @@ describe('Ketch', () => {
       expect(listener).toHaveBeenCalledTimes(2)
     })
 
-    it('removes a future listener', () => {
+    it('removes a future listener', async() => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       const eventName = constants.CONSENT_EVENT
       const listener = jest.fn()
       ketch.on(eventName, listener)
-      expect(ketch.setConsent({ purposes: { analytics: true } })).toBeTruthy()
-      expect(ketch.setConsent({ purposes: { analytics: false } })).toBeTruthy()
+      expect(ketch.setConsent({ purposes: { purpose1: true } }, SetConsentReason.USER_UPDATE)).toBeTruthy()
+      expect(ketch.setConsent({ purposes: { purpose1: false } }, SetConsentReason.USER_UPDATE)).toBeTruthy()
       expect(listener).toHaveBeenCalledTimes(2)
     })
   })
 
   describe('once', () => {
-    it('registers a normal listener that is only called once', () => {
+    it('registers a normal listener that is only called once', async() => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       const eventName = 'unknown'
       const listener = jest.fn()
       ketch.once(eventName, listener)
@@ -986,11 +991,12 @@ describe('Ketch', () => {
 
     it('registers a future listener that is only called once', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       const eventName = constants.CONSENT_EVENT
       const listener = jest.fn()
       ketch.once(eventName, listener)
-      await ketch.setConsent({ purposes: { analytics: true } })
-      await ketch.setConsent({ purposes: { analytics: false } })
+      await ketch.setConsent({ purposes: { purpose1: true } }, SetConsentReason.USER_UPDATE)
+      await ketch.setConsent({ purposes: { purpose1: false } }, SetConsentReason.USER_UPDATE)
       expect(listener).toHaveBeenCalledTimes(1)
     })
   })
@@ -1009,12 +1015,13 @@ describe('Ketch', () => {
 
     it('removes a future listener', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)
+      await ketch.setIdentities({ id: 'value' })
       const eventName = constants.CONSENT_EVENT
       const listener = jest.fn()
       ketch.addListener(eventName, listener)
       ketch.removeListener(eventName, listener)
-      await ketch.setConsent({ purposes: { analytics: true } })
-      await ketch.setConsent({ purposes: { analytics: false } })
+      await ketch.setConsent({ purposes: { purpose1: true } }, SetConsentReason.USER_UPDATE)
+      await ketch.setConsent({ purposes: { purpose1: false } }, SetConsentReason.USER_UPDATE)
       expect(listener).toHaveBeenCalledTimes(0)
     })
   })
