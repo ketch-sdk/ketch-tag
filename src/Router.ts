@@ -238,7 +238,7 @@ export default class Router {
     return this._ketch.registerStorageProvider(policy, provider)
   }
 
-  setConsent(consent: Consent, reason: SetConsentReason): Promise<void> {
+  setConsent(consent: Consent, reason?: SetConsentReason): Promise<void> {
     return this._ketch.setConsent(consent, reason).then(() => {})
   }
 

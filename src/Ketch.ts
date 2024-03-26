@@ -657,7 +657,7 @@ export class Ketch extends EventEmitter {
    * @param c Consent to set
    * @param reason set consent reason
    */
-  async setConsent(c: Consent, reason: SetConsentReason): Promise<Consent> {
+  async setConsent(c: Consent, reason?: SetConsentReason): Promise<Consent> {
     const l = wrapLogger(log, 'setConsent')
     l.debug(c)
 
