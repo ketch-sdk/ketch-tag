@@ -692,19 +692,19 @@ export class Ketch extends EventEmitter {
 
       if (consent && consent.protocols !== undefined) {
         this._protocols.value = consent.protocols
-        if (reason === SetConsentReason.USER_UPDATE) {
-          // check for new identifiers for tags that may fire after consent collected
-          this._watcher.stop()
-          await this._watcher.start()
+      }
+      if (reason === SetConsentReason.USER_UPDATE) {
+        // check for new identifiers for tags that may fire after consent collected
+        this._watcher.stop()
+        await this._watcher.start()
 
-          // check if consent updated to conditionally fire event
-          if (!consentEqual) {
-            // fire the 'userConsentUpdated' event when all the following conditions are true
-            // 1) if the consent is updated by a user (SetConsentReason.USER_UPDATE)
-            // 2) if the consent purpose values have changed (!consentEqual)
-            // 3) once the server responds confirming that consent has been saved (await this.updateConsent)
-            this.emit(constants.USER_CONSENT_UPDATED_EVENT, consent)
-          }
+        // check if consent updated to conditionally fire event
+        if (!consentEqual) {
+          // fire the 'userConsentUpdated' event when all the following conditions are true
+          // 1) if the consent is updated by a user (SetConsentReason.USER_UPDATE)
+          // 2) if the consent purpose values have changed (!consentEqual)
+          // 3) once the server responds confirming that consent has been saved (await this.updateConsent)
+          this.emit(constants.USER_CONSENT_UPDATED_EVENT, consent)
         }
       }
     } catch (error) {
