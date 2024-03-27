@@ -788,17 +788,17 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    if (!this._config.deployment?.isOrchestrationOnly) {
-      l.debug('shouldCreatePermits', shouldCreatePermits)
+    if (!this._config.deployment?.isOrchestrationOnly) return {} as Consent
 
-      // first set consent value then proceed to show experience and/or create permits
-      if (shouldCreatePermits) {
-        await this.setConsent(c, SetConsentReason.DEFAULT_STATE)
-      } else {
-        this._consent.value = c
-        if (consent.protocols !== undefined) {
-          this._protocols.value = consent.protocols
-        }
+    l.debug('shouldCreatePermits', shouldCreatePermits)
+
+    // first set consent value then proceed to show experience and/or create permits
+    if (shouldCreatePermits) {
+      await this.setConsent(c, SetConsentReason.DEFAULT_STATE)
+    } else {
+      this._consent.value = c
+      if (consent.protocols !== undefined) {
+        this._protocols.value = consent.protocols
       }
     }
 
