@@ -504,6 +504,7 @@ export class Ketch extends EventEmitter {
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
     log.debug('showConsentExperience')
 
     const consent = await this.retrieveConsent()
@@ -522,6 +523,8 @@ export class Ketch extends EventEmitter {
    * @param params Preferences Manager preferences
    */
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
+
     const l = wrapLogger(log, 'showPreferenceExperience')
     l.debug(params)
 
@@ -784,6 +787,8 @@ export class Ketch extends EventEmitter {
         }
       }
     }
+
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
 
     l.debug('shouldCreatePermits', shouldCreatePermits)
 
