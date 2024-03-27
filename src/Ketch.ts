@@ -707,7 +707,7 @@ export class Ketch extends EventEmitter {
           // 1) if the consent is updated by a user (SetConsentReason.USER_UPDATE)
           // 2) if the consent purpose values have changed (!consentEqual)
           // 3) once the server responds confirming that consent has been saved (await this.updateConsent)
-          this.emit(constants.USER_CONSENT_UPDATED_EVENT, consent)
+          this.emit(constants.USER_CONSENT_UPDATED_EVENT, c)
         }
       }
     } catch (error) {
