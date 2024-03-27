@@ -788,7 +788,7 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    if (!this._config.deployment?.isOrchestrationOnly) return {} as Consent
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
 
     l.debug('shouldCreatePermits', shouldCreatePermits)
 
