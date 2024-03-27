@@ -504,6 +504,7 @@ export class Ketch extends EventEmitter {
    * Shows the consent manager.
    */
   async showConsentExperience(): Promise<Consent> {
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
     log.debug('showConsentExperience')
 
     const consent = await this.retrieveConsent()
@@ -522,6 +523,8 @@ export class Ketch extends EventEmitter {
    * @param params Preferences Manager preferences
    */
   async showPreferenceExperience(params?: ShowPreferenceOptions): Promise<Consent> {
+    if (this._config.deployment?.isOrchestrationOnly) return {} as Consent
+
     const l = wrapLogger(log, 'showPreferenceExperience')
     l.debug(params)
 
@@ -785,15 +788,17 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    l.debug('shouldCreatePermits', shouldCreatePermits)
+    if (!this._config.deployment?.isOrchestrationOnly) {
+      l.debug('shouldCreatePermits', shouldCreatePermits)
 
-    // first set consent value then proceed to show experience and/or create permits
-    if (shouldCreatePermits) {
-      await this.setConsent(c, SetConsentReason.DEFAULT_STATE)
-    } else {
-      this._consent.value = c
-      if (consent.protocols !== undefined) {
-        this._protocols.value = consent.protocols
+      // first set consent value then proceed to show experience and/or create permits
+      if (shouldCreatePermits) {
+        await this.setConsent(c, SetConsentReason.DEFAULT_STATE)
+      } else {
+        this._consent.value = c
+        if (consent.protocols !== undefined) {
+          this._protocols.value = consent.protocols
+        }
       }
     }
 
