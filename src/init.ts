@@ -39,7 +39,7 @@ export default async function init(): Promise<void> {
   // Note that the tag has loaded
   window.semaphore.loaded = true
 
-  const shouldOverrideConsent = window?.localStorage.getItem('overrideConsent')
+  const shouldOverrideConsent = window?.localStorage?.getItem('overrideConsent')
 
   if (shouldOverrideConsent) {
     const ketchFullConfig = await ketch.getConfig()
