@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@ketch-com/future": "^1.2.7",
-    "@ketch-com/ketch-cache": "^1.0.2",
+    "@ketch-com/ketch-cache": "^1.0.3",
     "@ketch-com/ketch-cookie": "^1.0.6",
     "@ketch-sdk/ketch-data-layer": "^1.3.1",
     "@ketch-sdk/ketch-logging": "^1.2.1",
