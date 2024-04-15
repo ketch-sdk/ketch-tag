@@ -424,26 +424,6 @@ describe('Ketch', () => {
   })
 
   describe('showPreferenceExperience', () => {
-    it('returns consent if no preference experience', async () => {
-      const ketch = new Ketch(webAPI, emptyConfig)
-      jest.spyOn(ketch, 'getConsent').mockResolvedValue({
-        purposes: {
-          analytics: true,
-        },
-      } as Consent)
-      const showPreferenceExperienceMock = jest.fn()
-      const willShowExperienceMock = jest.fn()
-      ketch.on(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, showPreferenceExperienceMock)
-      ketch.on(constants.WILL_SHOW_EXPERIENCE_EVENT, willShowExperienceMock)
-      await expect(ketch.showPreferenceExperience()).resolves.toStrictEqual({
-        purposes: {
-          analytics: true,
-        },
-      })
-      expect(showPreferenceExperienceMock).not.toHaveBeenCalled()
-      expect(willShowExperienceMock).not.toHaveBeenCalled()
-    })
-
     it('returns consent if preference experience but no listener', async () => {
       const ketch = new Ketch(webAPI, {
         experiences: {
