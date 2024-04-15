@@ -3,7 +3,6 @@ import {
   Consent,
   ConsentExperienceType,
   ExperienceClosedReason,
-  ExperienceDefault,
   ExperienceType,
   InvokeRightEvent,
   IPInfo,
