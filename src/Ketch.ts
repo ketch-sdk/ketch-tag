@@ -417,6 +417,7 @@ export class Ketch extends EventEmitter {
     if (
       this._config.purposes &&
       this._config.purposes.length &&
+      this._config.experiences?.consent &&
       this._config.experiences?.consent?.experienceDefault === ExperienceDefault.MODAL
     ) {
       for (const pa of this._config.purposes) {
@@ -543,12 +544,6 @@ export class Ketch extends EventEmitter {
       } else {
         throw e
       }
-    }
-
-    // if no preference experience configured do not show
-    if (!this._config.experiences?.preference) {
-      l.info('no preference experience')
-      return consent
     }
 
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
