@@ -409,29 +409,6 @@ export class Ketch extends EventEmitter {
   }
 
   /**
-   * Selects the correct experience. If the default experience is modal, but there are no purposes requiring opt in
-   * then the experience is changed to banner.
-   */
-  selectConsentExperience(): ConsentExperienceType {
-    const l = wrapLogger(log, 'selectConsentExperience')
-    if (
-      this._config.purposes &&
-      this._config.purposes.length &&
-      this._config.experiences?.consent?.experienceDefault === ExperienceDefault.MODAL
-    ) {
-      for (const pa of this._config.purposes) {
-        if (pa.requiresOptIn) {
-          l.debug(ConsentExperienceType.Modal)
-          return ConsentExperienceType.Modal
-        }
-      }
-    }
-
-    l.debug(ConsentExperienceType.Banner)
-    return ConsentExperienceType.Banner
-  }
-
-  /**
    * Signals that an experience will be shown
    *
    * @param type The type of experience to be shown
@@ -511,7 +488,7 @@ export class Ketch extends EventEmitter {
 
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
       this.willShowExperience(ExperienceType.Consent)
-      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
+      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, {})
     }
 
     return consent
@@ -543,12 +520,6 @@ export class Ketch extends EventEmitter {
       } else {
         throw e
       }
-    }
-
-    // if no preference experience configured do not show
-    if (!this._config.experiences?.preference) {
-      l.info('no preference experience')
-      return consent
     }
 
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
