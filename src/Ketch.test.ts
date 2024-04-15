@@ -242,71 +242,6 @@ describe('Ketch', () => {
     })
   })
 
-  describe('selectConsentExperience', () => {
-    it('defaults to banner', () => {
-      const ketch = new Ketch(webAPI, emptyConfig)
-      expect(ketch.selectConsentExperience()).toBe(ConsentExperienceType.Banner)
-    })
-
-    it('returns banner if no purposes', () => {
-      const ketch = new Ketch(webAPI, {
-        purposes: [],
-      } as any as Configuration)
-      expect(ketch.selectConsentExperience()).toBe(ConsentExperienceType.Banner)
-    })
-
-    it('returns banner if purposes but default === banner', () => {
-      const ketch = new Ketch(webAPI, {
-        purposes: [
-          {
-            code: 'analytics',
-            requiresOptIn: true,
-          },
-        ],
-        experiences: {
-          consent: {
-            experienceDefault: ExperienceDefault.BANNER,
-          },
-        },
-      } as Configuration)
-      expect(ketch.selectConsentExperience()).toBe(ConsentExperienceType.Banner)
-    })
-
-    it('returns banner if purposes and default === modal and no purposes require opt in', () => {
-      const ketch = new Ketch(webAPI, {
-        purposes: [
-          {
-            code: 'analytics',
-            requiresOptIn: false,
-          },
-        ],
-        experiences: {
-          consent: {
-            experienceDefault: ExperienceDefault.BANNER,
-          },
-        },
-      } as Configuration)
-      expect(ketch.selectConsentExperience()).toBe(ConsentExperienceType.Banner)
-    })
-
-    it('returns modal if purposes and default === modal and purposes require opt in', () => {
-      const ketch = new Ketch(webAPI, {
-        purposes: [
-          {
-            code: 'analytics',
-            requiresOptIn: true,
-          },
-        ],
-        experiences: {
-          consent: {
-            experienceDefault: ExperienceDefault.MODAL,
-          },
-        },
-      } as Configuration)
-      expect(ketch.selectConsentExperience()).toBe(ConsentExperienceType.Modal)
-    })
-  })
-
   describe('willShowExperience', () => {
     it('emits willShowExperience event', () => {
       const ketch = new Ketch(webAPI, emptyConfig)
@@ -417,7 +352,7 @@ describe('Ketch', () => {
             analytics: true,
           },
         },
-        { displayHint: ketch.selectConsentExperience() },
+        {},
       )
       expect(onWillShowExperienceMock).toHaveBeenCalled()
     })

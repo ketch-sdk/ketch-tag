@@ -389,67 +389,6 @@ describe('consent', () => {
     })
   })
 
-  describe('selectExperience', () => {
-    it('returns modal if any purposes requires opt in and defaultExperience is modal', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), {
-        purposes: [
-          {
-            code: '',
-            name: '',
-            description: '',
-            legalBasisCode: '',
-            requiresOptIn: true,
-          },
-        ],
-        experiences: {
-          consent: {
-            experienceDefault: 2,
-          },
-        },
-      } as any as Configuration)
-
-      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Modal)
-    })
-
-    it('returns banner if any purposes requires opt in and defaultExperience is not modal', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), {
-        purposes: [
-          {
-            code: '',
-            name: '',
-            description: '',
-            legalBasisCode: '',
-            requiresOptIn: false,
-          },
-        ],
-      } as any as Configuration)
-
-      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Banner)
-    })
-
-    it('returns banner if none of the purposes requires opt in', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), {
-        purposes: [
-          {
-            code: '',
-            name: '',
-            description: '',
-            legalBasisCode: '',
-            requiresOptIn: false,
-          },
-        ],
-      } as any as Configuration)
-
-      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Banner)
-    })
-
-    it('returns banner no purposes', () => {
-      const ketch = new Ketch(new KetchWebAPI(''), config2)
-
-      expect(ketch.selectConsentExperience()).toEqual(ConsentExperienceType.Modal)
-    })
-  })
-
   describe('shouldShowConsent', () => {
     it('shows when missing options', () => {
       const ketch = new Ketch(new KetchWebAPI(''), config2)
