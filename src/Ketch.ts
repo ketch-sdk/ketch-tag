@@ -1012,7 +1012,6 @@ export class Ketch extends EventEmitter {
       jurisdictionCode: this._config.jurisdiction.code ?? '',
       purposes: {},
       vendors: consent.vendors,
-      collectedAt: Math.floor(Date.now() / 1000),
     }
 
     if (this._config.purposes && consent) {
