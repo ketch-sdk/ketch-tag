@@ -624,10 +624,7 @@ export class Ketch extends EventEmitter {
     return consent
   }
 
-  async showPreferenceExperienceTrigger(
-    params?: ShowPreferenceOptions,
-    consent?: Consent
-  ): Promise<void> {
+  async showPreferenceExperienceTrigger(params?: ShowPreferenceOptions, consent?: Consent): Promise<void> {
     const l = wrapLogger(log, 'showPreferenceExperienceTrigger')
     l.debug(params)
 
