@@ -1190,7 +1190,7 @@ export class Ketch extends EventEmitter {
   /**
    * Get Subscription configuration
    */
-  async  getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
+  async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
     const l = wrapLogger(log, 'getSubscriptionConfiguration')
     l.trace('config', this._config)
 
