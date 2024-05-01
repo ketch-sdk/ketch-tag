@@ -1722,7 +1722,6 @@ export class Ketch extends EventEmitter {
       super.removeAllListeners(eventName)
     }
 
-
     super.once(eventName, listener)
 
     // Emit an event after the listener is added
