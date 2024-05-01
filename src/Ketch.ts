@@ -546,76 +546,93 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
-      params = params ?? {}
+    params = params ?? {}
 
-      // check if experience show parameter override set
-      const tab = parameters.get(constants.PREFERENCES_TAB)
+    // check if experience show parameter override set
+    const tab = parameters.get(constants.PREFERENCES_TAB)
 
-      // override with url param
-      if (tab && isTab(tab)) {
-        params.tab = tab
-        l.info('tab', tab)
+    // override with url param
+    if (tab && isTab(tab)) {
+      params.tab = tab
+      l.info('tab', tab)
+    }
+
+    const selectedTabs = parameters
+      .get(constants.PREFERENCES_TABS)
+      ?.split(',')
+      ?.filter(tab => tab && isTab(tab)) as Tab[]
+
+    if (selectedTabs?.length) {
+      params.showOverviewTab = selectedTabs.includes(Tab.Overview)
+      params.showConsentsTab = showConsentsTab && selectedTabs.includes(Tab.Consents)
+      params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
+      params.showRightsTab = selectedTabs.includes(Tab.Rights)
+      params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
+    }
+
+    const subConfig = await this.getSubscriptionConfiguration()
+    if (subConfig !== undefined) {
+      if (params.showSubscriptionsTab === undefined) {
+        params.showSubscriptionsTab = true
       }
 
-      const selectedTabs = parameters
-        .get(constants.PREFERENCES_TABS)
-        ?.split(',')
-        ?.filter(tab => tab && isTab(tab)) as Tab[]
-
-      if (selectedTabs?.length) {
-        params.showOverviewTab = selectedTabs.includes(Tab.Overview)
-        params.showConsentsTab = showConsentsTab && selectedTabs.includes(Tab.Consents)
-        params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
-        params.showRightsTab = selectedTabs.includes(Tab.Rights)
-        params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
-      }
-
-      const subConfig = await this.getSubscriptionConfiguration()
-      if (subConfig !== undefined) {
-        if (params.showSubscriptionsTab === undefined) {
-          params.showSubscriptionsTab = true
-        }
-
-        if (
-          subConfig.topics === undefined ||
-          subConfig.topics.length === 0 ||
-          Object.keys(subConfig.identities).length === 0
-        ) {
-          params.showSubscriptionsTab = false
-          l.trace('not showing subscriptions because invalid subscription config')
-        }
-
-        if (params.showSubscriptionsTab) {
-          let haveAuthIdentities = false
-
-          const identities = await this.getIdentities()
-          for (const key of Object.keys(subConfig.identities)) {
-            if (identities[key]) {
-              haveAuthIdentities = true
-              break
-            }
-          }
-
-          if (!haveAuthIdentities) {
-            l.trace('not showing subscriptions because no auth identities')
-            params.showSubscriptionsTab = false
-          }
-        }
-      } else {
-        l.trace('invalid subscription config')
+      if (
+        subConfig.topics === undefined ||
+        subConfig.topics.length === 0 ||
+        Object.keys(subConfig.identities).length === 0
+      ) {
         params.showSubscriptionsTab = false
+        l.trace('not showing subscriptions because invalid subscription config')
       }
 
-      if (!params.showSubscriptionsTab && params.tab === Tab.Subscriptions) {
-        params.tab = undefined
-      }
+      if (params.showSubscriptionsTab) {
+        let haveAuthIdentities = false
 
-      this.willShowExperience(ExperienceType.Preference)
-      this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
+        const identities = await this.getIdentities()
+        for (const key of Object.keys(subConfig.identities)) {
+          if (identities[key]) {
+            haveAuthIdentities = true
+            break
+          }
+        }
+
+        if (!haveAuthIdentities) {
+          l.trace('not showing subscriptions because no auth identities')
+          params.showSubscriptionsTab = false
+        }
+      }
+    } else {
+      l.trace('invalid subscription config')
+      params.showSubscriptionsTab = false
+    }
+
+    if (!params.showSubscriptionsTab && params.tab === Tab.Subscriptions) {
+      params.tab = undefined
+    }
+
+    // if listener subscribed, trigger event, else wait for listener
+    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
+      await this.showPreferenceExperienceTrigger(params, consent)
+    } else {
+      this.on('newListener', event => {
+        if (event === constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) {
+          this.showPreferenceExperienceTrigger(params, consent)
+        }
+      })
     }
 
     return consent
+  }
+
+  async showPreferenceExperienceTrigger(
+    params?: ShowPreferenceOptions,
+    consent?: Consent
+  ): Promise<void> {
+    const l = wrapLogger(log, 'showPreferenceExperienceTrigger')
+    l.debug(params)
+
+    this.willShowExperience(ExperienceType.Preference)
+    this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
   }
 
   /**
