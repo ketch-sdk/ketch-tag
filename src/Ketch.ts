@@ -570,38 +570,43 @@ export class Ketch extends EventEmitter {
       params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
     }
 
-    const subConfig = await this.getSubscriptionConfiguration()
-    if (subConfig !== undefined) {
-      if (params.showSubscriptionsTab === undefined) {
-        params.showSubscriptionsTab = true
-      }
+    try {
+      const subConfig = await this.getSubscriptionConfiguration()
+      if (subConfig !== undefined) {
+        if (params.showSubscriptionsTab === undefined) {
+          params.showSubscriptionsTab = true
+        }
 
-      if (
-        subConfig.topics === undefined ||
-        subConfig.topics.length === 0 ||
-        Object.keys(subConfig.identities).length === 0
-      ) {
-        params.showSubscriptionsTab = false
-        l.trace('not showing subscriptions because invalid subscription config')
-      }
+        if (
+          subConfig.topics === undefined ||
+          subConfig.topics.length === 0 ||
+          Object.keys(subConfig.identities).length === 0
+        ) {
+          params.showSubscriptionsTab = false
+          l.trace('not showing subscriptions because invalid subscription config')
+        }
 
-      if (params.showSubscriptionsTab) {
-        let haveAuthIdentities = false
+        if (params.showSubscriptionsTab) {
+          let haveAuthIdentities = false
 
-        const identities = await this.getIdentities()
-        for (const key of Object.keys(subConfig.identities)) {
-          if (identities[key]) {
-            haveAuthIdentities = true
-            break
+          const identities = await this.getIdentities()
+          for (const key of Object.keys(subConfig.identities)) {
+            if (identities[key]) {
+              haveAuthIdentities = true
+              break
+            }
+          }
+
+          if (!haveAuthIdentities) {
+            l.trace('not showing subscriptions because no auth identities')
+            params.showSubscriptionsTab = false
           }
         }
-
-        if (!haveAuthIdentities) {
-          l.trace('not showing subscriptions because no auth identities')
-          params.showSubscriptionsTab = false
-        }
+      } else {
+        l.trace('invalid subscription config')
+        params.showSubscriptionsTab = false
       }
-    } else {
+    } catch (e: any) {
       l.trace('invalid subscription config')
       params.showSubscriptionsTab = false
     }
@@ -1185,7 +1190,7 @@ export class Ketch extends EventEmitter {
   /**
    * Get Subscription configuration
    */
-  async getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
+  async  getSubscriptionConfiguration(): Promise<SubscriptionConfiguration> {
     const l = wrapLogger(log, 'getSubscriptionConfiguration')
     l.trace('config', this._config)
 
