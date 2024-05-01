@@ -546,31 +546,31 @@ export class Ketch extends EventEmitter {
       }
     }
 
-    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
-      params = params ?? {}
+    params = params ?? {}
 
-      // check if experience show parameter override set
-      const tab = parameters.get(constants.PREFERENCES_TAB)
+    // check if experience show parameter override set
+    const tab = parameters.get(constants.PREFERENCES_TAB)
 
-      // override with url param
-      if (tab && isTab(tab)) {
-        params.tab = tab
-        l.info('tab', tab)
-      }
+    // override with url param
+    if (tab && isTab(tab)) {
+      params.tab = tab
+      l.info('tab', tab)
+    }
 
-      const selectedTabs = parameters
-        .get(constants.PREFERENCES_TABS)
-        ?.split(',')
-        ?.filter(tab => tab && isTab(tab)) as Tab[]
+    const selectedTabs = parameters
+      .get(constants.PREFERENCES_TABS)
+      ?.split(',')
+      ?.filter(tab => tab && isTab(tab)) as Tab[]
 
-      if (selectedTabs?.length) {
-        params.showOverviewTab = selectedTabs.includes(Tab.Overview)
-        params.showConsentsTab = showConsentsTab && selectedTabs.includes(Tab.Consents)
-        params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
-        params.showRightsTab = selectedTabs.includes(Tab.Rights)
-        params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
-      }
+    if (selectedTabs?.length) {
+      params.showOverviewTab = selectedTabs.includes(Tab.Overview)
+      params.showConsentsTab = showConsentsTab && selectedTabs.includes(Tab.Consents)
+      params.showSubscriptionsTab = selectedTabs.includes(Tab.Subscriptions)
+      params.showRightsTab = selectedTabs.includes(Tab.Rights)
+      params.tab = selectedTabs.includes(params.tab || ('' as Tab)) ? params.tab : selectedTabs[0]
+    }
 
+    try {
       const subConfig = await this.getSubscriptionConfiguration()
       if (subConfig !== undefined) {
         if (params.showSubscriptionsTab === undefined) {
@@ -606,16 +606,35 @@ export class Ketch extends EventEmitter {
         l.trace('invalid subscription config')
         params.showSubscriptionsTab = false
       }
+    } catch (e: any) {
+      l.trace('invalid subscription config')
+      params.showSubscriptionsTab = false
+    }
 
-      if (!params.showSubscriptionsTab && params.tab === Tab.Subscriptions) {
-        params.tab = undefined
-      }
+    if (!params.showSubscriptionsTab && params.tab === Tab.Subscriptions) {
+      params.tab = undefined
+    }
 
-      this.willShowExperience(ExperienceType.Preference)
-      this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
+    // if listener subscribed, trigger event, else wait for listener
+    if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
+      await this.showPreferenceExperienceTrigger(params, consent)
+    } else {
+      this.on('newListener', event => {
+        if (event === constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) {
+          this.showPreferenceExperienceTrigger(params, consent)
+        }
+      })
     }
 
     return consent
+  }
+
+  async showPreferenceExperienceTrigger(params?: ShowPreferenceOptions, consent?: Consent): Promise<void> {
+    const l = wrapLogger(log, 'showPreferenceExperienceTrigger')
+    l.debug(params)
+
+    this.willShowExperience(ExperienceType.Preference)
+    this.emit(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT, consent, params)
   }
 
   /**
