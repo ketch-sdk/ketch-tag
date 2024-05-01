@@ -1691,12 +1691,7 @@ export class Ketch extends EventEmitter {
   }
 
   addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    this.on(eventName, listener)
-
-    // Emit an event after the listener is added
-    this.emit('addedListener', eventName, listener)
-
-    return this
+    return this.on(eventName, listener)
   }
 
   on(eventName: string | symbol, listener: (...args: any[]) => void): this {
@@ -1709,7 +1704,12 @@ export class Ketch extends EventEmitter {
       super.removeAllListeners(eventName)
     }
 
-    return super.on(eventName, listener)
+    super.on(eventName, listener)
+
+    // Emit an event after the listener is added
+    this.emit('addedListener', eventName, listener)
+
+    return this
   }
 
   once(eventName: string | symbol, listener: (...args: any[]) => void): this {
@@ -1722,7 +1722,12 @@ export class Ketch extends EventEmitter {
       super.removeAllListeners(eventName)
     }
 
-    return super.once(eventName, listener)
+    super.once(eventName, listener)
+
+    // Emit an event after the listener is added
+    this.emit('addedListener', eventName, listener)
+
+    return this
   }
 
   removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
