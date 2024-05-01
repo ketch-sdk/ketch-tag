@@ -1722,7 +1722,13 @@ export class Ketch extends EventEmitter {
       super.removeAllListeners(eventName)
     }
 
-    return super.once(eventName, listener)
+
+    super.once(eventName, listener)
+
+    // Emit an event after the listener is added
+    this.emit('addedListener', eventName, listener)
+
+    return this
   }
 
   removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
