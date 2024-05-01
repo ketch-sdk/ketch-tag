@@ -619,7 +619,7 @@ export class Ketch extends EventEmitter {
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
       await this.showPreferenceExperienceTrigger(params, consent)
     } else {
-      this.on('newListener', event => {
+      this.on('addedListener', event => {
         if (event === constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) {
           this.showPreferenceExperienceTrigger(params, consent)
         }
@@ -1691,7 +1691,12 @@ export class Ketch extends EventEmitter {
   }
 
   addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
-    return this.on(eventName, listener)
+    this.on(eventName, listener)
+
+    // Emit an event after the listener is added
+    this.emit('addedListener', eventName, listener)
+
+    return this
   }
 
   on(eventName: string | symbol, listener: (...args: any[]) => void): this {
