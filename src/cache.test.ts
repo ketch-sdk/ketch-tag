@@ -95,18 +95,41 @@ describe('cache', () => {
     ],
   } as Configuration
 
+  const configNoCache: Configuration = {
+    organization: {
+      code: 'foo',
+    },
+    purposes: [
+      {
+        code: 'foo',
+        canonicalPurposeCodes: ['analytics', 'personalization'],
+        legalBasisCode: 'consent_optin',
+      },
+      {
+        code: 'bar',
+      },
+      {
+        code: 'baz',
+      },
+    ],
+    options: {
+      'Cache-Control': 'no-cache',
+    },
+    formTemplates: [],
+  } as Configuration
+
   const cacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
 
   it('returns synthetic response for missing item', async () => {
     await cacher.removeItem(CACHED_CONSENT_KEY)
     await setCachedConsent({} as SetConsentRequest)
-    expect(await getCachedConsent(request)).toEqual(request)
+    expect(await getCachedConsent(request, config)).toEqual(request)
   })
 
   it('returns synthetic response for empty item', async () => {
     await cacher.setItem(CACHED_CONSENT_KEY, {} as SetConsentRequest)
 
-    expect(await getCachedConsent(request)).toEqual(request)
+    expect(await getCachedConsent(request, config)).toEqual(request)
   })
 
   it('returns synthetic response for collectedAt === 0', async () => {
@@ -114,7 +137,15 @@ describe('cache', () => {
       collectedAt: 0,
     } as SetConsentRequest)
 
-    expect(await getCachedConsent(request)).toEqual(request)
+    expect(await getCachedConsent(request, config)).toEqual(request)
+  })
+
+  it('returns synthetic response for no cache option', async () => {
+    await cacher.setItem(CACHED_CONSENT_KEY, {
+      collectedAt: Date.now() / 1000,
+    } as SetConsentRequest)
+
+    expect(await getCachedConsent(request, configNoCache)).toEqual(request)
   })
 
   it('returns cached response when set', async () => {
@@ -126,7 +157,7 @@ describe('cache', () => {
     }
 
     await setCachedConsent(input)
-    const response = await getCachedConsent(request)
+    const response = await getCachedConsent(request, config)
     expect(response).toEqual(input)
   })
 

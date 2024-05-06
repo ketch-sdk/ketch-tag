@@ -164,7 +164,7 @@ export default class Builder {
       identities: {},
     }
 
-    const consent = await getCachedConsent(request)
+    const consent = await getCachedConsent(request, this._config)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
 
     document.addEventListener('visibilitychange', () => {
