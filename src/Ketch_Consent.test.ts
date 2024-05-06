@@ -532,6 +532,25 @@ describe('experience consent', () => {
 })
 
 describe('cached consent', () => {
+  const config = {
+    organization: {
+      code: 'org',
+    },
+    property: {
+      code: 'property',
+    },
+    environment: {
+      code: 'env',
+    },
+    jurisdiction: {
+      code: 'default',
+    },
+    purposes: [],
+    options: {
+      migration: '3',
+    },
+  } as any as Configuration
+
   const request: GetConsentRequest = {
     organizationCode: 'org',
     propertyCode: 'prop',
@@ -545,7 +564,7 @@ describe('cached consent', () => {
     setCookie(window, CACHED_CONSENT_KEY, '', -1)
     window.localStorage.removeItem(CACHED_CONSENT_KEY)
     window.sessionStorage.removeItem(CACHED_CONSENT_KEY)
-    const consent = await getCachedConsent(request)
+    const consent = await getCachedConsent(request, config)
     expect(consent).toEqual(expect.objectContaining({ purposes: {} }))
   })
 
@@ -589,7 +608,7 @@ describe('cached consent', () => {
       CACHED_CONSENT_KEY,
       btoa(JSON.stringify({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt })),
     )
-    const consent = await getCachedConsent(request)
+    const consent = await getCachedConsent(request, config)
     setCookie(window, CACHED_CONSENT_KEY, '', -1)
     expect(consent).toEqual(
       expect.objectContaining({ purposes: { analytics: { allowed: true } }, collectedAt: collectedAt }),
