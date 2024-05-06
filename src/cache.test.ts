@@ -95,7 +95,7 @@ describe('cache', () => {
     ],
   } as Configuration
 
-  const configNoCache :Configuration = {
+  const configNoCache: Configuration = {
     organization: {
       code: 'foo',
     },
@@ -103,7 +103,7 @@ describe('cache', () => {
       {
         code: 'foo',
         canonicalPurposeCodes: ['analytics', 'personalization'],
-        legalBasisCode: 'consent_optin'
+        legalBasisCode: 'consent_optin',
       },
       {
         code: 'bar',
@@ -115,7 +115,7 @@ describe('cache', () => {
     options: {
       'Cache-Control': 'no-cache',
     },
-    formTemplates: []
+    formTemplates: [],
   } as Configuration
 
   const cacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
@@ -142,7 +142,7 @@ describe('cache', () => {
 
   it('returns synthetic response for no cache option', async () => {
     await cacher.setItem(CACHED_CONSENT_KEY, {
-      collectedAt: Date.now()/1000,
+      collectedAt: Date.now() / 1000,
     } as SetConsentRequest)
 
     expect(await getCachedConsent(request, configNoCache)).toEqual(request)
