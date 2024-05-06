@@ -28,7 +28,7 @@ export async function getCachedConsent(request: GetConsentRequest, config: Confi
     collectedAt: 0,
   }
 
-  if (config.options && config.options["Cache-Control"] === "no-cache") {
+  if (config.options && config.options['Cache-Control'] === 'no-cache') {
     return syntheticResponse
   }
 
