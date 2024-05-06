@@ -886,7 +886,7 @@ export class Ketch extends EventEmitter {
 
     l.debug('request', request)
 
-    let consent = await getCachedConsent(request)
+    let consent = await getCachedConsent(request, this._config)
 
     const earliestCollectedAt = Math.floor(Date.now() / 1000 - CACHED_CONSENT_TTL)
 

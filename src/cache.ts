@@ -17,7 +17,7 @@ export const PUBLIC_CONSENT_TTL = 34560000 // 4OO days in s
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
 const consentWebCacher = new WebStorageCacher<GetConsentResponse>(window.localStorage, 86400)
 
-export async function getCachedConsent(request: GetConsentRequest): Promise<GetConsentResponse> {
+export async function getCachedConsent(request: GetConsentRequest, config: Configuration): Promise<GetConsentResponse> {
   const syntheticResponse: GetConsentResponse = {
     organizationCode: request.organizationCode,
     propertyCode: request.propertyCode,
@@ -26,6 +26,10 @@ export async function getCachedConsent(request: GetConsentRequest): Promise<GetC
     identities: request.identities,
     purposes: {},
     collectedAt: 0,
+  }
+
+  if (config.options && config.options["Cache-Control"] === "no-cache") {
+    return syntheticResponse
   }
 
   const cachedConsent = await consentCacher.getItem(CACHED_CONSENT_KEY)
