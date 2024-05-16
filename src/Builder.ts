@@ -198,7 +198,7 @@ export default class Builder {
     data.append('jurisdiction', cfg.jurisdiction?.code || '')
     data.append('tenant', cfg.organization.code)
     data.append('dver', `${cfg.deployment?.version}`)
-    data.append('ids', `${identities}`)
+    data.append('ids', window.btoa(JSON.stringify(identities)))
     for (const [k, v] of Object.entries(params)) {
       data.append(k, v)
     }
