@@ -571,9 +571,9 @@ describe('builder', () => {
         environments: [devShort, dev],
         formTemplates: [],
       }
-      const ketch = new Builder(config)
+      const builder = new Builder(config)
 
-      const env = ketch.buildEnvironment()
+      const env = builder.buildEnvironment()
       return expect(env).resolves.toBe(dev)
     })
 
@@ -591,8 +591,8 @@ describe('builder', () => {
         return ''
       })
 
-      const ketch = new Builder(config)
-      const env = ketch.buildEnvironment()
+      const builder = new Builder(config)
+      const env = builder.buildEnvironment()
       return expect(env).resolves.toBe(test)
     })
 
@@ -610,8 +610,8 @@ describe('builder', () => {
         return ''
       })
 
-      const ketch = new Builder(config)
-      const env = ketch.buildEnvironment()
+      const builder = new Builder(config)
+      const env = builder.buildEnvironment()
       return expect(env).rejects.toBe(errors.noEnvironmentError)
     })
 
@@ -624,8 +624,8 @@ describe('builder', () => {
         formTemplates: [],
       }
 
-      const ketch = new Builder(config)
-      const env = ketch.buildEnvironment()
+      const builder = new Builder(config)
+      const env = builder.buildEnvironment()
       return expect(env).resolves.toBe(prod)
     })
 
@@ -638,8 +638,8 @@ describe('builder', () => {
         formTemplates: [],
       }
 
-      const ketch = new Builder(config)
-      const env = ketch.buildEnvironment()
+      const builder = new Builder(config)
+      const env = builder.buildEnvironment()
       return expect(env).rejects.toBe(errors.noEnvironmentError)
     })
   })
@@ -651,6 +651,9 @@ describe('builder', () => {
         organization: {
           code: 'blah',
         },
+        environment: {
+          code: 'production'
+        },
         services: {
           shoreline: 'https://shoreline.ketch.com',
         },
@@ -658,9 +661,10 @@ describe('builder', () => {
           beaconPercentage: '1',
         },
       }
-      const k = new Builder(config)
+      const builder = new Builder(config)
+      const ketch = await builder.build()
 
-      const resp = await k.setupTelemetry(config, { region: 'US' })
+      const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeFalsy()
     })
     it('skips telemetry setup if service is empty', async () => {
@@ -677,9 +681,10 @@ describe('builder', () => {
           beaconPercentage: '1',
         },
       }
-      const k = new Builder(config)
+      const builder = new Builder(config)
+      const ketch = await builder.build()
 
-      const resp = await k.setupTelemetry(config, { region: 'US' })
+      const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeFalsy()
     })
     it('sets up telemetry if service is present', async () => {
@@ -696,9 +701,9 @@ describe('builder', () => {
           beaconPercentage: '1',
         },
       }
-      const k = new Builder(config)
-
-      const resp = await k.setupTelemetry(config, { region: 'US' })
+      const builder = new Builder(config)
+      const ketch = await builder.build()
+      const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeTruthy()
     })
     it('collects config data as formData', async () => {
@@ -728,9 +733,9 @@ describe('builder', () => {
           beaconPercentage: '1',
         },
       }
-      const k = new Builder(config)
+      const builder = new Builder(config)
 
-      const resp = k.collectTelemetry(true, config, { region: 'US' })
+      const resp = builder.collectTelemetry(true, config, { region: 'US' }, {'idcode': 'idvalue'})
       expect(resp).toBeTruthy()
       expect(resp.get('hasConsent')).toBeTruthy()
       expect(resp.get('url')).toBeDefined()
