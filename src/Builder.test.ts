@@ -4,6 +4,9 @@ import parameters from './parameters'
 import constants from './constants'
 import Builder from './Builder'
 import fetchMock from 'jest-fetch-mock'
+import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
+import getApiUrl from './getApiUrl'
+import { Ketch } from './Ketch'
 
 jest.mock('./parameters')
 
@@ -652,7 +655,7 @@ describe('builder', () => {
           code: 'blah',
         },
         environment: {
-          code: 'production'
+          code: 'production',
         },
         services: {
           shoreline: 'https://shoreline.ketch.com',
@@ -662,7 +665,8 @@ describe('builder', () => {
         },
       }
       const builder = new Builder(config)
-      const ketch = await builder.build()
+      const api = new KetchWebAPI(getApiUrl(config))
+      const ketch = new Ketch(api, config)
 
       const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeFalsy()
@@ -673,6 +677,9 @@ describe('builder', () => {
         organization: {
           code: 'blah',
         },
+        environment: {
+          code: 'production',
+        },
         services: {
           shoreline: 'https://shoreline.ketch.com',
           telemetry: '',
@@ -682,7 +689,8 @@ describe('builder', () => {
         },
       }
       const builder = new Builder(config)
-      const ketch = await builder.build()
+      const api = new KetchWebAPI(getApiUrl(config))
+      const ketch = new Ketch(api, config)
 
       const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeFalsy()
@@ -693,6 +701,9 @@ describe('builder', () => {
         organization: {
           code: 'blah',
         },
+        environment: {
+          code: 'production',
+        },
         services: {
           shoreline: 'https://shoreline.ketch.com',
           telemetry: 'https://shoreline.ketch.com',
@@ -702,7 +713,9 @@ describe('builder', () => {
         },
       }
       const builder = new Builder(config)
-      const ketch = await builder.build()
+      const api = new KetchWebAPI(getApiUrl(config))
+      const ketch = new Ketch(api, config)
+
       const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeTruthy()
     })
@@ -735,7 +748,7 @@ describe('builder', () => {
       }
       const builder = new Builder(config)
 
-      const resp = builder.collectTelemetry(true, config, { region: 'US' }, {'idcode': 'idvalue'})
+      const resp = builder.collectTelemetry(true, config, { region: 'US' }, { idcode: 'idvalue' })
       expect(resp).toBeTruthy()
       expect(resp.get('hasConsent')).toBeTruthy()
       expect(resp.get('url')).toBeDefined()

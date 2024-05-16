@@ -2,7 +2,8 @@ import {
   Configuration,
   Environment,
   GetConsentRequest,
-  GetFullConfigurationRequest, Identities,
+  GetFullConfigurationRequest,
+  Identities,
   IPInfo,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
