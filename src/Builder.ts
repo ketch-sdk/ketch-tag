@@ -176,7 +176,7 @@ export default class Builder {
         // https://developer.fastly.com/solutions/tutorials/beacon-termination/
         // Use url params as recommended
         try {
-          navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`, `{}`)
+          navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
         } catch (error) {
           // continue if error
           log.debug('telemetry error', error)
