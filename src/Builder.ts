@@ -3,6 +3,7 @@ import {
   Environment,
   GetConsentRequest,
   GetFullConfigurationRequest,
+  Identities,
   IPInfo,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
@@ -139,17 +140,17 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
-    await this.setupTelemetry(cfg, { region: region })
+    await this.setupTelemetry(k, cfg, { region: region })
 
     return k
   }
 
-  async setupTelemetry(cfg: Configuration, params: object): Promise<boolean> {
+  async setupTelemetry(k: Ketch, cfg: Configuration, params: object): Promise<boolean> {
     if (!cfg.services || !cfg.services.telemetry || cfg.services.telemetry === '') {
       return false
     }
 
-    const percentage = parseFloat(cfg.options?.beaconPercentage || '0.1')
+    const percentage = parseFloat(cfg.options?.beaconPercentage || '1')
     let shouldSendBeacon = Math.random() < percentage
     if (!shouldSendBeacon) {
       return false
@@ -167,10 +168,11 @@ export default class Builder {
     const consent = await getCachedConsent(request, this._config)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
 
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
-        const data = this.collectTelemetry(hasConsent, cfg, params)
+        const identities = await k.getIdentities()
+        const data = this.collectTelemetry(hasConsent, cfg, params, identities)
         // https://developer.fastly.com/solutions/tutorials/beacon-termination/
         // Use url params as recommended
         try {
@@ -184,7 +186,7 @@ export default class Builder {
     return true
   }
 
-  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object): URLSearchParams {
+  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object, identities: Identities): URLSearchParams {
     const data = new URLSearchParams()
 
     const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
@@ -196,6 +198,7 @@ export default class Builder {
     data.append('jurisdiction', cfg.jurisdiction?.code || '')
     data.append('tenant', cfg.organization.code)
     data.append('dver', `${cfg.deployment?.version}`)
+    data.append('ids', window.btoa(JSON.stringify(identities)))
     for (const [k, v] of Object.entries(params)) {
       data.append(k, v)
     }
