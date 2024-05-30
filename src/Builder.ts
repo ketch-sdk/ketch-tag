@@ -76,14 +76,15 @@ export default class Builder {
       }
     }
 
-    const language =
+    const language = this.formatLanguage(
       new URLSearchParams(window.location.search).get(constants.LANGUAGE) || // ?lang
-      parameters.get(constants.LANGUAGE) || // ? ketch_lang
-      document.documentElement.lang || // <html lang
-      document.documentElement.getAttribute('xml:lang') || // <html xml:lang
-      window.navigator.language || // browser setting
-      this._config.language || // language set in this._boot
-      'en' // default language
+        parameters.get(constants.LANGUAGE) || // ? ketch_lang
+        document.documentElement.lang || // <html lang
+        document.documentElement.getAttribute('xml:lang') || // <html xml:lang
+        window.navigator.language || // browser setting
+        this._config.language || // language set in this._boot
+        'en', // default language
+    )
 
     // Check if we have been given an already resolved Configuration
     if (
@@ -273,6 +274,16 @@ export default class Builder {
     }
 
     throw errors.noEnvironmentError
+  }
+
+  /**
+   * Convert case-insensitive browser languages to ISO Standard Language Codes i.e. "fr-CA"
+   */
+  formatLanguage(lang: string): string {
+    const rootLanguage = lang.split('-')[0]
+    const languageDialect = lang.split('-')[1]?.toUpperCase()
+
+    return `${rootLanguage}${languageDialect ? `-${languageDialect}` : ''}`
   }
 
   /**

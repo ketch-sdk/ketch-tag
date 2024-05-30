@@ -523,6 +523,28 @@ describe('builder', () => {
     })
   })
 
+  describe('formatLanguage', () => {
+    const config: Configuration = {
+      organization: {
+        code: '',
+      },
+      environment: test,
+      formTemplates: [],
+    }
+
+    it('formats fr-CA to fr-CA', () => {
+      expect(new Builder(config).formatLanguage('fr-CA')).toEqual('fr-CA')
+    })
+
+    it('formats fr-ca to fr-CA', () => {
+      expect(new Builder(config).formatLanguage('fr-ca')).toEqual('fr-CA')
+    })
+
+    it('formats fr to fr', () => {
+      expect(new Builder(config).formatLanguage('fr')).toEqual('fr')
+    })
+  })
+
   describe('buildEnvironment', () => {
     it('resolves environment', () => {
       const config: Configuration = {
