@@ -34,6 +34,7 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "devDependencies": {
+    "@ketch-sdk/ketch-types": "^1.37.4",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.5.0",
     "@types/nano-equal": "^2.0.0",
@@ -64,7 +65,6 @@
     "@ketch-com/ketch-cookie": "^1.0.5",
     "@ketch-sdk/ketch-data-layer": "^1.3.2",
     "@ketch-sdk/ketch-logging": "^1.2.1",
-    "@ketch-sdk/ketch-types": "^1.37.0",
     "@ketch-sdk/ketch-web-api": "^1.6.6",
     "buffer": "^6.0.3",
     "events": "^3.3.0",

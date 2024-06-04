@@ -461,7 +461,11 @@ export class Ketch extends EventEmitter {
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = true
 
-    if (reason !== ExperienceClosedReason.SET_CONSENT) {
+    if (
+      // Send consent on close, unless we just did, or preference center is closing and doesn't want to set consent
+      reason !== ExperienceClosedReason.SET_CONSENT &&
+      reason !== ExperienceClosedReason.CLOSE_WITHOUT_SETTING_CONSENT
+    ) {
       const consent = await this.retrieveConsent()
 
       if (this._config.purposes) {
