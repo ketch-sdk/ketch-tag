@@ -451,9 +451,10 @@ export class Ketch extends EventEmitter {
    * Signals that an experience has been hidden
    *
    * @param reason is a string representing the reason the experience was closed
-   * Values: setConsent, invokeRight, close
+   * Values: setConsent, invokeRight, willNotShow, close, closeWithoutSettingConsent
+   * @param consent is a optional object containing the consent state to set IF reason is setConsent
    */
-  async experienceClosed(reason: ExperienceClosedReason): Promise<Consent> {
+  async experienceClosed(reason: ExperienceClosedReason, consent?: Consent): Promise<Consent> {
     log.debug('experienceClosed', reason)
 
     // update isExperienceDisplayed flag when experience no longer displayed
@@ -462,21 +463,24 @@ export class Ketch extends EventEmitter {
     this._hasExperienceBeenDisplayed = true
 
     if (
-      // Send consent on close, unless we just did, or preference center is closing and doesn't want to set consent
-      reason !== ExperienceClosedReason.SET_CONSENT &&
+      // Send consent on close, unless the preference center is closing and doesn't want to set consent
       reason !== ExperienceClosedReason.CLOSE_WITHOUT_SETTING_CONSENT
     ) {
-      const consent = await this.retrieveConsent()
-
-      if (this._config.purposes) {
-        for (const p of this._config.purposes) {
-          if (consent.purposes[p.code] === undefined && p.requiresOptIn) {
-            consent.purposes[p.code] = false
+      if (consent && reason === ExperienceClosedReason.SET_CONSENT) {
+        // Set consent to the value provided in the arguement
+        await this.setConsent(consent, SetConsentReason.USER_UPDATE)
+      } else if (reason !== ExperienceClosedReason.SET_CONSENT) {
+        // Set consent to the stored value, unless reason was setConsent with no consent provided
+        const storedConsent = await this.retrieveConsent()
+        if (this._config.purposes) {
+          for (const p of this._config.purposes) {
+            if (storedConsent.purposes[p.code] === undefined && p.requiresOptIn) {
+              storedConsent.purposes[p.code] = false
+            }
           }
         }
+        await this.setConsent(storedConsent, SetConsentReason.USER_EXPERIENCE_DISMISSAL)
       }
-
-      await this.setConsent(consent, SetConsentReason.USER_EXPERIENCE_DISMISSAL)
     }
 
     // Call functions registered using onHideExperience

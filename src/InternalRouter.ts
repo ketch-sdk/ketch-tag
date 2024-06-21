@@ -16,8 +16,8 @@ export default class InternalRouter extends Router implements KetchAPI {
     super(ketch)
   }
 
-  experienceClosed(reason: ExperienceClosedReason): Promise<void> {
-    return this._ketch.experienceClosed(reason).then(() => {})
+  experienceClosed(reason: ExperienceClosedReason, consent?: Consent): Promise<void> {
+    return this._ketch.experienceClosed(reason, consent).then(() => {})
   }
 
   invokeRight(eventData: InvokeRightEvent): Promise<void> {
