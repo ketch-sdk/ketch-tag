@@ -468,7 +468,7 @@ export class Ketch extends EventEmitter {
     ) {
       if (consent && reason === ExperienceClosedReason.SET_CONSENT) {
         // Set consent to the value provided in the arguement
-        await this.setConsent(consent, SetConsentReason.USER_EXPERIENCE_DISMISSAL)
+        await this.setConsent(consent, SetConsentReason.USER_UPDATE)
       } else {
         // Set consent to the stored value
         const storedConsent = await this.retrieveConsent()
