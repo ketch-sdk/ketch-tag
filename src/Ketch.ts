@@ -518,13 +518,26 @@ export class Ketch extends EventEmitter {
 
     const consent = await this.retrieveConsent()
 
+    // if listener subscribed, trigger event, else wait for listener
+    // this addresses the situation where lanyard loads late on the page
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
-      log.debug('showConsentExperience - listener > 0')
-      this.willShowExperience(ExperienceType.Consent)
-      this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
+      await this.showConsentExperienceTrigger(consent)
+    } else {
+      this.on('addedListener', event => {
+        if (event === constants.SHOW_CONSENT_EXPERIENCE_EVENT) {
+          this.showConsentExperienceTrigger(consent)
+        }
+      })
     }
 
     return consent
+  }
+
+  async showConsentExperienceTrigger(consent?: Consent): Promise<void> {
+    log.debug('showConsentExperienceTrigger')
+
+    this.willShowExperience(ExperienceType.Consent)
+    this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
   }
 
   /**
