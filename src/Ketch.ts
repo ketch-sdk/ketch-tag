@@ -519,6 +519,7 @@ export class Ketch extends EventEmitter {
     const consent = await this.retrieveConsent()
 
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
+      log.debug('showConsentExperience - listener > 0')
       this.willShowExperience(ExperienceType.Consent)
       this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
     }
