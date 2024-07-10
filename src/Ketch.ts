@@ -521,7 +521,7 @@ export class Ketch extends EventEmitter {
     // if listener subscribed, trigger event, else wait for listener
     // this addresses the situation where lanyard loads late on the page
     if (this.listenerCount(constants.SHOW_CONSENT_EXPERIENCE_EVENT) > 0) {
-      await this.showConsentExperienceTrigger(consent)
+      this.showConsentExperienceTrigger(consent)
     } else {
       this.on('addedListener', event => {
         if (event === constants.SHOW_CONSENT_EXPERIENCE_EVENT) {
@@ -533,7 +533,7 @@ export class Ketch extends EventEmitter {
     return consent
   }
 
-  async showConsentExperienceTrigger(consent?: Consent): Promise<void> {
+  showConsentExperienceTrigger(consent?: Consent) {
     log.debug('showConsentExperienceTrigger')
 
     this.willShowExperience(ExperienceType.Consent)
@@ -639,7 +639,7 @@ export class Ketch extends EventEmitter {
 
     // if listener subscribed, trigger event, else wait for listener
     if (this.listenerCount(constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) > 0) {
-      await this.showPreferenceExperienceTrigger(params, consent)
+      this.showPreferenceExperienceTrigger(params, consent)
     } else {
       this.on('addedListener', event => {
         if (event === constants.SHOW_PREFERENCE_EXPERIENCE_EVENT) {
@@ -651,7 +651,7 @@ export class Ketch extends EventEmitter {
     return consent
   }
 
-  async showPreferenceExperienceTrigger(params?: ShowPreferenceOptions, consent?: Consent): Promise<void> {
+  showPreferenceExperienceTrigger(params?: ShowPreferenceOptions, consent?: Consent) {
     const l = wrapLogger(log, 'showPreferenceExperienceTrigger')
     l.debug(params)
 
