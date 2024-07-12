@@ -60,7 +60,7 @@
     "webpack-dev-server": "^4.13.3"
   },
   "dependencies": {
-    "@ketch-com/future": "^1.2.7",
+    "@ketch-com/future": "^1.2.8",
     "@ketch-com/ketch-cache": "^1.0.2",
     "@ketch-com/ketch-cookie": "^1.0.5",
     "@ketch-sdk/ketch-data-layer": "^1.4.0",
