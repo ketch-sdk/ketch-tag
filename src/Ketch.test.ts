@@ -738,6 +738,13 @@ describe('Ketch', () => {
     })
   })
 
+  describe('getIsExperienceDisplayed', () => {
+    it('gets _isExperienceDisplayed', async () => {
+      const ketch = new Ketch(webAPI, emptyConfig)
+      return expect(ketch.getIsExperienceDisplayed()).toBe(false)
+    })
+  })
+
   describe('invokeRight', () => {
     it('returns if empty input', async () => {
       const ketch = new Ketch(webAPI, emptyConfig)

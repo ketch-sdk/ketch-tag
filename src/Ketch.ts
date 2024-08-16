@@ -1556,6 +1556,14 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Check if an experience is currently showing
+   */
+  getIsExperienceDisplayed(): boolean {
+    log.debug('getIsExperienceDisplayed')
+    return this._isExperienceDisplayed
+  }
+
+  /**
    * Invoke rights.
    *
    * @param eventData Event data to invoke right with
