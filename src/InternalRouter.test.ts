@@ -75,6 +75,15 @@ describe('InternalRouter', () => {
       return expect(getPreferenceConfiguration).toHaveBeenCalled()
     })
 
+    it('calls getIsExperienceDisplayed', async () => {
+      const getIsExperienceDisplayed = jest.fn().mockResolvedValue(false)
+      const router = new InternalRouter({
+        getIsExperienceDisplayed,
+      } as any as Ketch)
+      await router.route('getIsExperienceDisplayed')
+      return expect(getIsExperienceDisplayed).toHaveBeenCalled()
+    })
+
     it('calls willChangeExperience', async () => {
       // TODO:JA - Review that this is testing the proper thing
       const willChangeExperience = jest.fn().mockResolvedValue(undefined)

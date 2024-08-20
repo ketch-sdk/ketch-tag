@@ -34,7 +34,7 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "devDependencies": {
-    "@ketch-sdk/ketch-types": "^1.37.7",
+    "@ketch-sdk/ketch-types": "^1.38.0",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.5.0",
     "@types/nano-equal": "^2.0.0",
