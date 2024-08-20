@@ -65,6 +65,13 @@ export default class InternalRouter extends Router implements KetchAPI {
     return this._ketch.getPreferenceConfiguration()
   }
 
+  /**
+   * Get boolean indicating if an experience is currently displayed
+   */
+  getIsExperienceDisplayed(): boolean {
+    return this._ketch.getIsExperienceDisplayed()
+  }
+
   willChangeExperience(type: ExperienceDisplayType): Promise<void> {
     return this._ketch.willChangeExperience(type).then(() => {})
   }
