@@ -19,6 +19,8 @@ const UserAgentHandlerMap: Record<SupportedUserAgents, (keyCode: number) => Arro
   [SupportedUserAgents.TIZEN]: TizenKeyBoardHandler,
 }
 
+// const CONTEXT_CACHE_KEY = 'currentKeyboardCtx'
+
 function TizenKeyBoardHandler(keyCode: number): ArrowActions {
   const l = wrapLogger(log, 'TizenKeyboardHandler')
   switch (keyCode) {

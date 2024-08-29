@@ -16,6 +16,7 @@ import { Ketch } from './Ketch'
 import parameters from './parameters'
 import constants from './constants'
 import { emptyConfig, webAPI, webAPIMock } from './__mocks__/webApi'
+import * as onKeyPress from './keyboardHandler'
 
 describe('Ketch', () => {
   describe('registerPlugin', () => {
@@ -757,6 +758,29 @@ describe('Ketch', () => {
         },
       })
       expect(webAPIMock.invokeRight).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleKeyboardEvent', () => {
+    it('should invoke onKeyPress', () => {
+      const dummyEvent = { keyCode: 1 } as KeyboardEvent
+      const ketch = new Ketch(webAPI, emptyConfig)
+      const spy = jest.spyOn(onKeyPress, 'default').mockReturnValue()
+
+      ketch.handleKeyboardEvent(dummyEvent)
+
+      expect(spy).toHaveBeenCalledWith(dummyEvent)
+    })
+  })
+
+  describe('returnKeyboardControl', () => {
+    it('should emit an event', () => {
+      const ketch = new Ketch(webAPI, emptyConfig)
+      const spy = jest.spyOn(ketch, 'emit')
+
+      ketch.returnKeyboardControl()
+
+      expect(spy).toHaveBeenCalled()
     })
   })
 
