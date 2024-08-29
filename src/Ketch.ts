@@ -40,6 +40,7 @@ import {
   Subscriptions,
   Tab,
 } from '@ketch-sdk/ketch-types'
+import onKeyPress from './keyboardHandler'
 import isEmpty from './isEmpty'
 import log from './log'
 import errors from './errors'
@@ -139,6 +140,8 @@ export class Ketch extends EventEmitter {
    */
   private readonly _subscriptions: Future<Subscriptions>
 
+  private readonly _handleKeyboardEvent: Future<KeyboardEvent>
+
   /**
    * @internal
    */
@@ -198,6 +201,9 @@ export class Ketch extends EventEmitter {
       name: constants.SUBSCRIPTION_CONFIG_EVENT,
       emitter: this,
       maxListeners,
+    })
+    this._handleKeyboardEvent = new Future<KeyboardEvent>({
+      name: constants.HANDLE_KEYBOARD_EVENT, emitter: this, maxListeners
     })
     this._consentConfig = new Future<ConfigurationV2>()
     this._preferenceConfig = new Future<ConfigurationV2>()
@@ -952,7 +958,8 @@ export class Ketch extends EventEmitter {
 
     if (!useCachedConsent) {
       /*
-          When identities change and the new identity has no consent, below code populates consent of previous identity to request
+          When identities change and the new identity has no consent,
+           below code populates consent of previous identity to request
           The same request is returned if the response of this._api.getConsent(request) has no purposes
           This request with new identity will eventually be resolved to old consent
           !invalidIdentities check enforces event is not populated with previous identity consent
@@ -1627,6 +1634,15 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Handle keyboard driven interactions on Lanyard
+   */
+  handleKeyboardEvent(e: KeyboardEvent) {
+    const l = wrapLogger(log, 'handleKeyboardEvent')
+    l.debug(e)
+    onKeyPress(e)
+  }
+
+  /**
    * Synchronously calls each of the listeners registered for the event named `eventName`, in the order they
    * were registered, passing the supplied arguments to each.
    */
@@ -1811,6 +1827,9 @@ export class Ketch extends EventEmitter {
 
       case constants.SUBSCRIPTION_CONFIG_EVENT:
         return this._subscriptionConfig
+
+      case constants.HANDLE_KEYBOARD_EVENT:
+        return this._handleKeyboardEvent
     }
 
     return
