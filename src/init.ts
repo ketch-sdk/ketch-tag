@@ -2,6 +2,7 @@ import log from './log'
 import Builder from './Builder'
 import Router from './Router'
 import Trackers from './Trackers'
+import Tags, { TagsConfig } from './Tags'
 
 /**
  * This is the entry point when this package is first loaded.
@@ -39,8 +40,8 @@ export default async function init(): Promise<void> {
   // Note that the tag has loaded
   window.semaphore.loaded = true
 
+  // Initialize trackers if overrideConsent flag is set
   const shouldOverrideConsent = window?.localStorage?.getItem('overrideConsent')
-
   if (shouldOverrideConsent) {
     const ketchFullConfig = await ketch.getConfig()
     const trackers = new Trackers(ketch, ketchFullConfig)
@@ -49,4 +50,8 @@ export default async function init(): Promise<void> {
     // Ensure consent has been loaded
     await ketch.getConsent()
   }
+
+  // Handle tags on the page which are conditioned on consent state
+  const tags = new Tags(ketch, TagsConfig)
+  tags.execute()
 }
