@@ -191,13 +191,17 @@ export class Ketch extends EventEmitter {
     this._environment = new Future<Environment>({ name: constants.ENVIRONMENT_EVENT, emitter: this, maxListeners })
     this._geoip = new Future({ name: constants.GEOIP_EVENT, emitter: this, maxListeners })
     this._handleKeyboardEvent = new Future<KeyboardEvent>({
-      name: constants.HANDLE_KEYBOARD_EVENT, emitter: this, maxListeners
+      name: constants.HANDLE_KEYBOARD_EVENT,
+      emitter: this,
+      maxListeners,
     })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
     this._returnKeyboardControl = new Future<void>({
-      name: constants.RETURN_KEYBOARD_CONTROL, emitter: this, maxListeners
+      name: constants.RETURN_KEYBOARD_CONTROL,
+      emitter: this,
+      maxListeners,
     })
     this._subscriptionConfig = new Future<SubscriptionConfiguration>({
       name: constants.SUBSCRIPTIONS_EVENT,
@@ -462,7 +466,7 @@ export class Ketch extends EventEmitter {
    *
    * @param reason is a string representing the reason the experience was closed
    * Values: setConsent, invokeRight, willNotShow, close, closeWithoutSettingConsent
-   * @param consent is a optional object containing the consent state to set IF reason is setConsent
+   * @param consent is an optional object containing the consent state to set IF reason is setConsent
    */
   async experienceClosed(reason: ExperienceClosedReason, consent?: Consent): Promise<Consent> {
     log.debug('experienceClosed', reason)
