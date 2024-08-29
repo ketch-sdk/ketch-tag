@@ -35,38 +35,19 @@ function TizenKeyBoardHandler(keyCode: number): ArrowActions {
     case 10009:
       return ArrowActions.BACK
     default:
-      l.error(`Unhandled Key code: ${keyCode}`)
+      l.debug(`Unhandled Key code: ${keyCode}`)
       return ArrowActions.UNKNOWN
   }
 }
 
-function getUserAgent(): SupportedUserAgents {
-  const l = wrapLogger(log, 'GetUserAgent')
+function getUserAgent(): SupportedUserAgents | undefined {
+  const l = wrapLogger(log, 'getUserAgent')
   const userAgentStr = navigator.userAgent.toUpperCase()
   if (userAgentStr.search(SupportedUserAgents.TIZEN) === -1) {
-    l.error(`Non Tizen device trying to use remote control: ${userAgentStr}`)
+    l.debug(`Non Tizen device trying to use remote control: ${userAgentStr}`)
+    return
   }
   return SupportedUserAgents.TIZEN
-}
-
-function onKeyPress(event: KeyboardEvent) {
-  const l = wrapLogger(log, 'onKeyPress')
-  const userAgent = getUserAgent()
-  /*
-   * MDN has deprecated keyCode from KeyboardAPI.
-   * 1. However, all the browsers support it.
-   * 2. Tizen (6+) supports only keyCode.
-   * 3. Reevaluate this decision when Tizen upgrades to support KeyboardAPI key
-   */
-  const arrowAction = UserAgentHandlerMap[userAgent](event.keyCode)
-
-  if (arrowAction === ArrowActions.UNKNOWN) {
-    l.error(`Unknown Keycode - ${event.keyCode}`)
-  } else if (arrowAction === ArrowActions.OK) {
-    handleSelection()
-  } else {
-    handleNavigation(arrowAction)
-  }
 }
 
 function handleSelection() {
@@ -83,11 +64,43 @@ function handleNavigation(arrowAction: ArrowActions): void {
   /*
    * Retrieve current context
    * Understand DOM
-   * Navigate to next actionableToken => [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
+   * Navigate to next actionableToken
+   * Mark it as selected/focussed
+   * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
    * Let's call the expansion buttons as name='combo-buttons'
    * Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
    * <done> ...easier way via accessibility? -> culled focusableElements.
    */
+}
+
+function onKeyPress(event: KeyboardEvent) {
+  const l = wrapLogger(log, 'onKeyPress')
+  const userAgent = getUserAgent()
+  if (!userAgent) {
+    l.error(`Unknown userAgent: ${navigator.userAgent}`)
+    return
+  }
+  /*
+   * MDN has deprecated keyCode from KeyboardAPI.
+   * 1. However, all the browsers support it.
+   * 2. Tizen (6+) supports only keyCode.
+   * 3. Reevaluate this decision when Tizen upgrades to support KeyboardAPI key
+   */
+  const userAgentKeyMap = UserAgentHandlerMap[userAgent]
+  if (!userAgentKeyMap) {
+    l.error(`Misconfigured userAgent: ${userAgent}`)
+    return
+  }
+  const arrowAction = userAgentKeyMap(event.keyCode)
+
+  if (arrowAction === ArrowActions.UNKNOWN) {
+    l.error(`Unknown keycode: ${event.keyCode}`)
+    return
+  } else if (arrowAction === ArrowActions.OK) {
+    handleSelection()
+  } else {
+    handleNavigation(arrowAction)
+  }
 }
 
 export default onKeyPress
