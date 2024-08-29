@@ -14,6 +14,7 @@ const events = {
   JURISDICTION_EVENT: 'jurisdiction',
   PROTOCOLS_EVENT: 'protocols',
   REGION_INFO_EVENT: 'regionInfo',
+  RETURN_KEYBOARD_CONTROL: 'returnKeyboardControl',
   RIGHT_INVOKED_EVENT: 'rightInvoked',
   SHOW_CONSENT_EXPERIENCE_EVENT: 'showConsentExperience',
   SHOW_PREFERENCE_EXPERIENCE_EVENT: 'showPreferenceExperience',

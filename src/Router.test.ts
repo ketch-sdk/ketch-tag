@@ -444,5 +444,12 @@ describe('Router', () => {
       await router.route('handleKeyboardEvent')
       return expect(handleKeyboardEvent).toHaveBeenCalled()
     })
+
+    it('calls returnKeyboardControl', async () => {
+      const returnKeyboardControl = jest.fn().mockResolvedValue(undefined)
+      const router = new InternalRouter({ returnKeyboardControl } as any as Ketch)
+      await router.route('returnKeyboardControl')
+      return expect(returnKeyboardControl).toHaveBeenCalled()
+    })
   })
 })
