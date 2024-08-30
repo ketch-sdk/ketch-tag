@@ -222,6 +222,14 @@ export default class Router {
     return this._ketch.showPreferenceExperience(params).then(() => {})
   }
 
+  handleKeyboardEvent(e: KeyboardEvent): void {
+    return this._ketch.handleKeyboardEvent(e)
+  }
+
+  returnKeyboardControl() {
+    return this._ketch.returnKeyboardControl()
+  }
+
   registerPlugin(plugin: Plugin, config?: any): Promise<void> {
     return this._ketch.registerPlugin(plugin, config)
   }

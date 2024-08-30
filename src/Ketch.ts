@@ -40,6 +40,7 @@ import {
   Subscriptions,
   Tab,
 } from '@ketch-sdk/ketch-types'
+import onKeyPress from './keyboardHandler'
 import isEmpty from './isEmpty'
 import log from './log'
 import errors from './errors'
@@ -139,6 +140,9 @@ export class Ketch extends EventEmitter {
    */
   private readonly _subscriptions: Future<Subscriptions>
 
+  private readonly _handleKeyboardEvent: Future<KeyboardEvent>
+
+  private readonly _returnKeyboardControl: Future<void>
   /**
    * @internal
    */
@@ -186,9 +190,19 @@ export class Ketch extends EventEmitter {
     this._protocols = new Future<Protocols>({ name: constants.PROTOCOLS_EVENT, emitter: this, maxListeners })
     this._environment = new Future<Environment>({ name: constants.ENVIRONMENT_EVENT, emitter: this, maxListeners })
     this._geoip = new Future({ name: constants.GEOIP_EVENT, emitter: this, maxListeners })
+    this._handleKeyboardEvent = new Future<KeyboardEvent>({
+      name: constants.HANDLE_KEYBOARD_EVENT,
+      emitter: this,
+      maxListeners,
+    })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
+    this._returnKeyboardControl = new Future<void>({
+      name: constants.RETURN_KEYBOARD_CONTROL,
+      emitter: this,
+      maxListeners,
+    })
     this._subscriptionConfig = new Future<SubscriptionConfiguration>({
       name: constants.SUBSCRIPTIONS_EVENT,
       emitter: this,
@@ -452,7 +466,7 @@ export class Ketch extends EventEmitter {
    *
    * @param reason is a string representing the reason the experience was closed
    * Values: setConsent, invokeRight, willNotShow, close, closeWithoutSettingConsent
-   * @param consent is a optional object containing the consent state to set IF reason is setConsent
+   * @param consent is an optional object containing the consent state to set IF reason is setConsent
    */
   async experienceClosed(reason: ExperienceClosedReason, consent?: Consent): Promise<Consent> {
     log.debug('experienceClosed', reason)
@@ -952,7 +966,8 @@ export class Ketch extends EventEmitter {
 
     if (!useCachedConsent) {
       /*
-          When identities change and the new identity has no consent, below code populates consent of previous identity to request
+          When identities change and the new identity has no consent,
+           below code populates consent of previous identity to request
           The same request is returned if the response of this._api.getConsent(request) has no purposes
           This request with new identity will eventually be resolved to old consent
           !invalidIdentities check enforces event is not populated with previous identity consent
@@ -1627,6 +1642,21 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Handle keyboard driven interactions on Lanyard
+   */
+  handleKeyboardEvent(e: KeyboardEvent) {
+    const l = wrapLogger(log, 'handleKeyboardEvent')
+    l.debug(e)
+    onKeyPress(e)
+  }
+
+  returnKeyboardControl() {
+    const l = wrapLogger(log, 'returnKeyboardControl')
+    l.debug('returnKeyboardControl')
+    this.emit(constants.RETURN_KEYBOARD_CONTROL)
+  }
+
+  /**
    * Synchronously calls each of the listeners registered for the event named `eventName`, in the order they
    * were registered, passing the supplied arguments to each.
    */
@@ -1797,6 +1827,9 @@ export class Ketch extends EventEmitter {
       case constants.GEOIP_EVENT:
         return this._geoip
 
+      case constants.HANDLE_KEYBOARD_EVENT:
+        return this._handleKeyboardEvent
+
       case constants.IDENTITIES_EVENT:
         return this._identities
 
@@ -1805,6 +1838,9 @@ export class Ketch extends EventEmitter {
 
       case constants.REGION_INFO_EVENT:
         return this._regionInfo
+
+      case constants.RETURN_KEYBOARD_CONTROL:
+        return this._returnKeyboardControl
 
       case constants.SUBSCRIPTIONS_EVENT:
         return this._subscriptions
