@@ -84,7 +84,7 @@ export default class Tags {
     this._tagsConfig = tagsConfig
 
     // Add a listener to retry whenever consent is updated
-    this._ketch.addListener(constants.CONSENT_EVENT, () => this.execute())
+    this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
   }
 
   getMappedElements: (
