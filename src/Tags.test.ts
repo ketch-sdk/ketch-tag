@@ -281,4 +281,13 @@ describe('Tags', () => {
     expect(enabledElements[3].textContent?.trim()).toBe("console.log('This is an inline script');")
     expect(enabledElements[4].getAttribute('src')).toBe('www.youtube.com/embed/some-video')
   })
+
+  it('re-executes with updated consent values', async () => {
+    // Spy on the execute method of the Tags instance
+    const executeSpy = jest.spyOn(tags, 'execute')
+    tags.execute()
+    // Set consent to trigger the listener in the Tags constructor
+    ketch.setConsent({ purposes: { purpose1: true } })
+    expect(executeSpy).toHaveBeenCalledTimes(2)
+  })
 })
