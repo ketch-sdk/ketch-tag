@@ -207,7 +207,7 @@ export default class Tags {
       })
 
       // Update results
-      const previousEnabledElements = this._results[elementName].enabledElements || []
+      const previousEnabledElements = this._results[elementName]?.enabledElements || []
       this._results[elementName] = {
         enabledElements: [...previousEnabledElements, ...enabledElements],
         disabledElements,
