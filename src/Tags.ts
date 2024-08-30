@@ -76,6 +76,7 @@ export const TagsConfig: MappedElementConfig[] = [
 export default class Tags {
   private readonly _ketch: Ketch
   private readonly _tagsConfig: MappedElementConfig[]
+  private _results: { [elementName: string]: { enabledElements: Element[]; disabledElements: Element[] } } = {}
 
   constructor(ketch: Ketch, tagsConfig: MappedElementConfig[]) {
     this._ketch = ketch
@@ -160,7 +161,6 @@ export default class Tags {
   // we have consent for
   execute = async () => {
     const l = wrapLogger(log, 'tags: execute')
-    const enabledElements: Element[] = []
 
     // Get set of purposes codes which we have consent for
     const grantedPurposes = await this.getGrantedPurposes()
@@ -184,52 +184,39 @@ export default class Tags {
         requiredAttributeValues,
       )
 
-      mappedElements.forEach(element => {
-        // Get purposes required for this tag
+      // Enable elements for which we have consent
+      const enabledElements = mappedElements.filter(element => {
         const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
         l.debug('required purposes for element', element, requiredPurposes)
-
-        // Enable the element if we have consent for at least one of its required purposes
-        const grantedRequiredPurposes = requiredPurposes.filter(purposeCode => grantedPurposes.has(purposeCode))
-        if (grantedRequiredPurposes.length) {
-          l.debug('granted purposes for element', grantedRequiredPurposes)
-          enabledElements.push(this.enableElement(element, attributeNameSwaps, attributeValueSwaps))
+        // Enable element
+        if (requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))) {
+          this.enableElement(element, attributeNameSwaps, attributeValueSwaps)
+          return true
         }
+        return false
       })
-    })
 
-    l.debug('enabled elements', enabledElements)
+      // Get elements which we don't have consent for and will stay disabled
+      const disabledElements = mappedElements.filter(element => {
+        const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
+        return !requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
+      })
+
+      // Update results
+      this._results[elementName] = { enabledElements, disabledElements }
+      l.debug(`enabled ${elementName} elements`, enabledElements)
+    })
 
     // Once enabling is complete, add utility functions to window object
     if (!(window as any).KetchLog) {
       ;(window as any).KetchLog = {}
     }
-
     if (!(window as any).KetchLog.getWrappedTags) {
       ;(window as any).KetchLog.getWrappedTags = () => {
         this._tagsConfig.forEach(async mappingConfig => {
-          // Configuration for this mapping
-          const { elementName, purposesAttribute, requiredAttributes, requiredAttributeValues } = mappingConfig
-
-          // Get mapped elements
-          const mappedElements = this.getMappedElements(
-            elementName,
-            purposesAttribute,
-            requiredAttributes,
-            requiredAttributeValues,
-          )
-
-          // Get mapped elements which we enabled
-          const configEnabledElements = mappedElements.filter(element => {
-            const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
-            return requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
-          })
-
-          // Get mapped elements which stayed disabled
-          const configDisabledElements = mappedElements.filter(element => {
-            const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
-            return !requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
-          })
+          // Get results for this mapping
+          const { elementName } = mappingConfig
+          const { enabledElements, disabledElements } = this._results[elementName]
 
           // Log results
           console.group(
@@ -238,12 +225,15 @@ export default class Tags {
             'font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; color: #333;', // Styling for '<element>'
             '', // No styling for ' Tags'
           )
-          console.groupCollapsed(`%cBlocked (${configDisabledElements.length})`, 'color: red')
-          configDisabledElements.forEach(element => console.log(element))
+
+          // Blocked tags
+          console.groupCollapsed(`%cBlocked (${disabledElements.length})`, 'color: red')
+          disabledElements.forEach(element => console.log(element))
           console.groupEnd()
 
-          console.groupCollapsed(`%cAllowed (${configEnabledElements.length})`, 'color: green')
-          configEnabledElements.forEach(element => console.log(element))
+          // Allowed tags
+          console.groupCollapsed(`%cAllowed (${enabledElements.length})`, 'color: green')
+          enabledElements.forEach(element => console.log(element))
           console.groupEnd()
 
           console.groupEnd()
@@ -251,6 +241,11 @@ export default class Tags {
       }
     }
 
-    return enabledElements
+    // Combine all enabled elements for each element type (script, iframe, etc.) into a list
+    const allEnabledElements = Object.values(this._results).reduce((acc, current) => {
+      return acc.concat(current.enabledElements)
+    }, [] as Element[])
+
+    return allEnabledElements
   }
 }
