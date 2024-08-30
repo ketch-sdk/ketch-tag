@@ -204,7 +204,12 @@ export default class Tags {
 
       // Update results
       this._results[elementName] = { enabledElements, disabledElements }
-      l.debug(`enabled ${elementName} elements`, enabledElements)
+      l.debug(
+        `enabled ${elementName} elements:`,
+        enabledElements,
+        `disabled ${elementName} elements:`,
+        disabledElements,
+      )
     })
 
     // Once enabling is complete, add utility functions to window object
