@@ -199,6 +199,58 @@ export default class Tags {
     })
 
     l.debug('enabled elements', enabledElements)
+
+    // Once enabling is complete, add utility functions to window object
+    if (!(window as any).KetchLog) {
+      ;(window as any).KetchLog = {}
+    }
+
+    if (!(window as any).KetchLog.getWrappedTags) {
+      ;(window as any).KetchLog.getWrappedTags = () => {
+        this._tagsConfig.forEach(async mappingConfig => {
+          // Configuration for this mapping
+          const { elementName, purposesAttribute, requiredAttributes, requiredAttributeValues } = mappingConfig
+
+          // Get mapped elements
+          const mappedElements = this.getMappedElements(
+            elementName,
+            purposesAttribute,
+            requiredAttributes,
+            requiredAttributeValues,
+          )
+
+          // Get mapped elements which we enabled
+          const configEnabledElements = mappedElements.filter(element => {
+            const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
+            return requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
+          })
+
+          // Get mapped elements which stayed disabled
+          const configDisabledElements = mappedElements.filter(element => {
+            const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
+            return !requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
+          })
+
+          // Log results
+          console.group(
+            `%cWrapped %c<${elementName}>%c Tags`,
+            '', // No styling for 'Wrapped'
+            'font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; color: #333;', // Styling for '<element>'
+            '', // No styling for ' Tags'
+          )
+          console.groupCollapsed(`%cBlocked (${configDisabledElements.length})`, 'color: red')
+          configDisabledElements.forEach(element => console.log(element))
+          console.groupEnd()
+
+          console.groupCollapsed(`%cAllowed (${configEnabledElements.length})`, 'color: green')
+          configEnabledElements.forEach(element => console.log(element))
+          console.groupEnd()
+
+          console.groupEnd()
+        })
+      }
+    }
+
     return enabledElements
   }
 }
