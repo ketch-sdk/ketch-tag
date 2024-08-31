@@ -1,5 +1,7 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import log from './log'
+import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS } from './cache'
+import { LANYARD_ID } from './constants'
 
 enum SupportedUserAgents {
   TIZEN = 'TIZEN',
@@ -18,8 +20,6 @@ enum ArrowActions {
 const UserAgentHandlerMap: Record<SupportedUserAgents, (keyCode: number) => ArrowActions> = {
   [SupportedUserAgents.TIZEN]: TizenKeyBoardHandler,
 }
-
-// const CONTEXT_CACHE_KEY = 'currentKeyboardCtx'
 
 function TizenKeyBoardHandler(keyCode: number): ArrowActions {
   const l = wrapLogger(log, 'TizenKeyboardHandler')
@@ -54,18 +54,29 @@ function getUserAgent(): SupportedUserAgents | undefined {
 
 function handleSelection() {
   /*
-   * Retrieve currentCtx
-   * Invoke Ketch.js API
-   * Update action in currentCtx?
+   * TODO Decide if we need to update action in currentCtx?
    */
+  const node: HTMLElement | null = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
+  if (node && typeof node.click === 'function') {
+    node.click()
+  }
 }
 
 function handleNavigation(arrowAction: ArrowActions): void {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug(arrowAction)
+  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
+  if (!lanyard) {
+    l.error('Cannot find lanyard root')
+    return
+  }
+  const allClickables = getCachedDomNode(
+    KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
+    lanyard.querySelectorAll('button, input'),
+  )
   /*
-   * Retrieve current context
-   * Understand DOM
+   * <done> Retrieve current context
+   * Understand DOM -> build map of experiences
    * Navigate to next actionableToken
    * Mark it as selected/focussed
    * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]

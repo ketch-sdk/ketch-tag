@@ -48,3 +48,5 @@ export const EMPTY_CONSENT: Consent = {
   vendors: [],
   protocols: {},
 }
+
+export const LANYARD_ID = 'lanyard_root'
