@@ -113,6 +113,11 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
+  private _identitiesCurrent: Identities
+
+  /**
+   * @internal
+   */
   private readonly _jurisdiction: Future<string>
 
   /**
@@ -196,6 +201,7 @@ export class Ketch extends EventEmitter {
       maxListeners,
     })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
+    this._identitiesCurrent = {}
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
     this._returnKeyboardControl = new Future<void>({
@@ -1417,6 +1423,7 @@ export class Ketch extends EventEmitter {
       identities[key] = newIdentities[key]
     }
     this._identities.value = identities
+    this._identitiesCurrent = identities
 
     // change in identities found so set new identities found on page and check for consent
     // if experience is currently displayed only update identities, and then return to wait for user input
@@ -1528,6 +1535,15 @@ export class Ketch extends EventEmitter {
     }
 
     return this._identities.fulfilled
+  }
+
+  /**
+   * Get the current identities.
+   */
+  getCurrentIdentities(): Identities {
+    log.debug('getCurrentIdentities')
+
+    return this._identitiesCurrent
   }
 
   /**

@@ -169,11 +169,25 @@ export default class Builder {
     const consent = await getCachedConsent(request, this._config)
     const hasConsent = !!(consent.collectedAt && consent.collectedAt > 0)
 
-    document.addEventListener('visibilitychange', async () => {
+    // fire beacon on first identities event
+    k.once(constants.IDENTITIES_EVENT, identities => {
+      const data = this.collectTelemetry(hasConsent, cfg, params, identities, 'once_identities')
+      // https://developer.fastly.com/solutions/tutorials/beacon-termination/
+      // Use url params as recommended
+      try {
+        navigator.sendBeacon(`${cfg.services?.telemetry}?${data.toString()}`)
+      } catch (error) {
+        // continue if error
+        log.debug('telemetry error', error)
+      }
+    })
+
+    // fire beacon on visibility hidden
+    document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && shouldSendBeacon) {
         shouldSendBeacon = false
-        const identities = await k.getIdentities()
-        const data = this.collectTelemetry(hasConsent, cfg, params, identities)
+        const identities = k.getCurrentIdentities()
+        const data = this.collectTelemetry(hasConsent, cfg, params, identities, 'visibility_hidden')
         // https://developer.fastly.com/solutions/tutorials/beacon-termination/
         // Use url params as recommended
         try {
@@ -187,7 +201,13 @@ export default class Builder {
     return true
   }
 
-  collectTelemetry(hasConsent: boolean, cfg: Configuration, params: object, identities: Identities): URLSearchParams {
+  collectTelemetry(
+    hasConsent: boolean,
+    cfg: Configuration,
+    params: object,
+    identities: Identities,
+    type: string,
+  ): URLSearchParams {
     const data = new URLSearchParams()
 
     const currentURL = `${window.location.protocol}//${window.location.host}${window.location.pathname}`
@@ -199,6 +219,7 @@ export default class Builder {
     data.append('jurisdiction', cfg.jurisdiction?.code || '')
     data.append('tenant', cfg.organization.code)
     data.append('dver', `${cfg.deployment?.version}`)
+    data.append('event_type', type)
     data.append('ids', window.btoa(JSON.stringify(identities)))
     for (const [k, v] of Object.entries(params)) {
       data.append(k, v)
