@@ -1,3 +1,5 @@
+import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
+import { setCookie } from '@ketch-com/ketch-cookie'
 import {
   Configuration,
   GetConsentRequest,
@@ -5,8 +7,6 @@ import {
   SetConsentRequest,
   SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
-import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
-import { setCookie } from '@ketch-com/ketch-cookie'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
@@ -131,7 +131,7 @@ export async function setPublicConsent(
   }
 }
 
-export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | null {
+export function getCachedDomNode(key: string, ifNull?: any): NodeList | null {
   if (window[key]) {
     return window[key]
   } else if (window && ifNull) {
@@ -139,9 +139,19 @@ export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | null 
     return ifNull
   }
   // Check localStorage for querySelector
-  const querySelector = localStorage.getItem(key)
-  if (!querySelector) {
+  const qs = localStorage.getItem(key)
+  if (!qs) {
     return null
   }
-  return document.querySelector(querySelector)
+  else {
+    return document.querySelectorAll(qs)
+  }
+}
+
+export function setCachedDomNode(key: string, node: HTMLElement) {
+  const selector = `[data-nav="${node.dataset.nav}"]`
+  localStorage.setItem(key, selector)
+  if(window) {
+    window[key] = node
+  }
 }

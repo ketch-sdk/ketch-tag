@@ -1,7 +1,14 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
-import log from './log'
-import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS } from './cache'
+import { safeJsonParse } from './utils'
+import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
+import {
+  BannerActionTree,
+  DataNavType,
+  EXPERIENCES,
+  KetchHTMLElement,
+} from './keyboardHandler.types'
+import log from './log'
 
 enum SupportedUserAgents {
   TIZEN = 'TIZEN',
@@ -53,10 +60,8 @@ function getUserAgent(): SupportedUserAgents | undefined {
 }
 
 function handleSelection() {
-  /*
-   * TODO Decide if we need to update action in currentCtx?
-   */
-  const node: HTMLElement | null = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
+  const o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
+  const node: HTMLElement | null = (o?.length) ? o[0] as HTMLElement : null
   if (node && typeof node.click === 'function') {
     node.click()
   }
@@ -65,25 +70,80 @@ function handleSelection() {
 function handleNavigation(arrowAction: ArrowActions): void {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug(arrowAction)
-  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
-  if (!lanyard) {
+  let o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
+  if (!o) {
     l.error('Cannot find lanyard root')
     return
   }
+  const lanyard = o[0] as HTMLElement
   const allClickables = getCachedDomNode(
     KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
     lanyard.querySelectorAll('button, input'),
-  )
-  /*
+  ) as NodeList
+  o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
+  const tree = buildTree(allClickables)
+  if(!tree) {
+    l.error('Cannot find experience root')
+    return
+  }
+  const ctxNode = (!o || o.length === 0) ? tree[0] : o[0] as KetchHTMLElement
+  const nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
+  if(!nextNode) { return }
+  setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
+  nextNode.focus()
+  /* TODO LIST
    * <done> Retrieve current context
    * Understand DOM -> build map of experiences
    * Navigate to next actionableToken
-   * Mark it as selected/focussed
+   * <done> Mark it as selected/focussed
    * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
    * Let's call the expansion buttons as name='combo-buttons'
-   * Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
-   * <done> ...easier way via accessibility? -> culled focusableElements.
+   * <done = x>Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
+   * <done = x>...easier way via accessibility? -> culled focusableElements.
    */
+}
+
+function buildTree(allClickables: NodeList): BannerActionTree | undefined {
+  if(allClickables.length === 0) { return [] }
+  const nodes: KetchHTMLElement[] = [...allClickables]
+    .filter(i => i instanceof HTMLElement)
+    .map(j => {
+      const i = j as KetchHTMLElement
+      // eg. data-nav='{"experience":"ketch-consent-banner","action":"close","navIndex":1}'
+      i.ketch.navParsed = safeJsonParse(i.dataset.nav) as DataNavType
+      return i
+    })
+
+  const currentExperience = JSON.parse(nodes[0].dataset.nav || '{}').experience
+  if(currentExperience === EXPERIENCES.BANNER) {
+    return nodes.sort((a, b) => {
+      if(!a.ketch.navParsed || !b.ketch.navParsed) { return 0 }
+      return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
+    })
+  }
+  else if(currentExperience === EXPERIENCES.MODAL) {
+    return nodes
+  }
+  else if(currentExperience === EXPERIENCES.PREFERENCES) {
+    return nodes
+  }
+  else { return }
+}
+
+function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) {
+  const index = tree.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
+  switch (arrowAction) {
+    case ArrowActions.UP:
+    case ArrowActions.LEFT:
+      if(index === 0) { return }
+      return tree[index-1]
+    case ArrowActions.RIGHT:
+    case ArrowActions.DOWN:
+      if(index === tree.length - 1) { return }
+      return tree[index+1]
+    default:
+      return
+  }
 }
 
 function onKeyPress(event: KeyboardEvent) {
@@ -117,9 +177,3 @@ function onKeyPress(event: KeyboardEvent) {
 }
 
 export default onKeyPress
-
-/*
- *TODO
- * Test event propagation into iframe
- * Why is github testing site not an iframe?
- */
