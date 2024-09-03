@@ -14,13 +14,13 @@ enum SupportedUserAgents {
   TIZEN = 'TIZEN',
 }
 
-enum ArrowActions {
-  BACK = 'BACK',
-  DOWN = 'DOWN',
+export enum ArrowActions {
   LEFT = 'LEFT',
-  OK = 'OK',
   RIGHT = 'RIGHT',
   UP = 'UP',
+  DOWN = 'DOWN',
+  BACK = 'BACK',
+  OK = 'OK',
   UNKNOWN = 'UNKNOWN',
 }
 
@@ -146,12 +146,12 @@ function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, c
   }
 }
 
-function onKeyPress(event: KeyboardEvent) {
-  const l = wrapLogger(log, 'onKeyPress')
+function getArrowActionFromUserAgent(event: KeyboardEvent) {
+  const l = wrapLogger(log, 'getArrowActionFromUserAgent')
   const userAgent = getUserAgent()
   if (!userAgent) {
     l.error(`Unknown userAgent: ${navigator.userAgent}`)
-    return
+    return ArrowActions.UNKNOWN
   }
   /*
    * MDN has deprecated keyCode from KeyboardAPI.
@@ -162,12 +162,18 @@ function onKeyPress(event: KeyboardEvent) {
   const userAgentKeyMap = UserAgentHandlerMap[userAgent]
   if (!userAgentKeyMap) {
     l.error(`Misconfigured userAgent: ${userAgent}`)
-    return
+    return ArrowActions.UNKNOWN
   }
-  const arrowAction = userAgentKeyMap(event.keyCode)
+  return userAgentKeyMap(event.keyCode)
+
+}
+function onKeyPress(input: KeyboardEvent | ArrowActions) {
+  const l = wrapLogger(log, 'onKeyPress')
+  const arrowAction = (typeof input === 'string') ? input : getArrowActionFromUserAgent(input)
 
   if (arrowAction === ArrowActions.UNKNOWN) {
-    l.error(`Unknown keycode: ${event.keyCode}`)
+    const badInput = (typeof  input === 'string') ? input : input.keyCode
+    l.error(`Unknown input: ${badInput}`)
     return
   } else if (arrowAction === ArrowActions.OK) {
     handleSelection()

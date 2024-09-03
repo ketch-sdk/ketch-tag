@@ -40,7 +40,7 @@ import {
   Subscriptions,
   Tab,
 } from '@ketch-sdk/ketch-types'
-import onKeyPress from './keyboardHandler'
+import onKeyPress, { ArrowActions } from './keyboardHandler'
 import isEmpty from './isEmpty'
 import log from './log'
 import errors from './errors'
@@ -1644,7 +1644,7 @@ export class Ketch extends EventEmitter {
   /**
    * Handle keyboard driven interactions on Lanyard
    */
-  handleKeyboardEvent(e: KeyboardEvent) {
+  handleKeyboardEvent(e: KeyboardEvent | ArrowActions) {
     const l = wrapLogger(log, 'handleKeyboardEvent')
     l.debug(e)
     onKeyPress(e)
