@@ -12,7 +12,8 @@ import {
   StorageOriginPolicy,
   StorageProvider,
   ConfigurationV2,
-  SetConsentReason, ShowConsentOptions,
+  SetConsentReason,
+  ShowConsentOptions,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'

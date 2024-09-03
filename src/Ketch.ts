@@ -551,7 +551,7 @@ export class Ketch extends EventEmitter {
   showConsentExperienceTrigger(consent?: Consent, params?: ShowConsentOptions) {
     log.debug('showConsentExperienceTrigger')
 
-    const options = { displayHint: this.selectConsentExperience(), ...params };
+    const options = { displayHint: this.selectConsentExperience(), ...params }
 
     this.willShowExperience(ExperienceType.Consent)
     this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, options)
