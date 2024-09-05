@@ -10,7 +10,7 @@
     "build": "npm run build:lib && npm run build:web",
     "build:lib": "tsc -p .",
     "build:web": "webpack --config webpack.config.js --mode production",
-    "start": "npx webpack serve --devtool eval-source-map --mode development",
+    "start": "npx webpack serve --devtool source-map --mode development",
     "lint": "eslint src/**/*.ts",
     "test": "jest --runInBand --passWithNoTests",
     "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",

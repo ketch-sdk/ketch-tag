@@ -9,7 +9,14 @@ export function safeJsonParse(str?: string) {
     return JSON.parse(str);
   }
   catch(e) {
-    l.error(`Could not parse JSON: ${e}`)
+    l.error(`Could not parse JSON for ${str} - ${e}`)
     return null
   }
+}
+
+export function decodeDataNav(str: string) {
+  // @ts-ignore
+  const s = str.replaceAll('&quot;', '').replaceAll('"', '')
+  const s1 = decodeURI(s)
+  return safeJsonParse(s1)
 }

@@ -1,10 +1,10 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
-import { safeJsonParse } from './utils'
+import { decodeDataNav } from './utils'
 import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
 import {
   BannerActionTree,
-  DataNavType,
+  DataNav,
   EXPERIENCES,
   KetchHTMLElement,
 } from './keyboardHandler.types'
@@ -60,8 +60,7 @@ function getUserAgent(): SupportedUserAgents | undefined {
 }
 
 function handleSelection() {
-  const o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
-  const node: HTMLElement | null = (o?.length) ? o[0] as HTMLElement : null
+  const node = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
   if (node && typeof node.click === 'function') {
     node.click()
   }
@@ -69,28 +68,30 @@ function handleSelection() {
 
 function handleNavigation(arrowAction: ArrowActions): void {
   const l = wrapLogger(log, 'handleNavigation')
-  l.debug(arrowAction)
-  let o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
-  if (!o) {
+  l.debug('Navigating ', arrowAction)
+  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
+  if (lanyard === null) {
     l.error('Cannot find lanyard root')
     return
   }
-  const lanyard = o[0] as HTMLElement
+  else if(!(lanyard instanceof HTMLElement)) {
+    l.error('Storage inconsistent')
+    return
+  }
   const allClickables = getCachedDomNode(
     KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
     lanyard.querySelectorAll('button, input'),
   ) as NodeList
-  o = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
   const tree = buildTree(allClickables)
   if(!tree) {
-    l.error('Cannot find experience root')
+    l.debug('Cannot find experience root')
     return
   }
-  const ctxNode = (!o || o.length === 0) ? tree[0] : o[0] as KetchHTMLElement
+  const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, tree[0]) as KetchHTMLElement
   const nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
   if(!nextNode) { return }
   setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
-  nextNode.focus()
+  nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
   /* TODO LIST
    * <done> Retrieve current context
    * Understand DOM -> build map of experiences
@@ -109,12 +110,15 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
     .filter(i => i instanceof HTMLElement)
     .map(j => {
       const i = j as KetchHTMLElement
+      if(!i.ketch) {
+        i.ketch = {}
+      }
       // eg. data-nav='{"experience":"ketch-consent-banner","action":"close","navIndex":1}'
-      i.ketch.navParsed = safeJsonParse(i.dataset.nav) as DataNavType
+      i.ketch.navParsed = decodeDataNav(i.dataset.nav || '') as DataNav
       return i
     })
 
-  const currentExperience = JSON.parse(nodes[0].dataset.nav || '{}').experience
+  const currentExperience = decodeDataNav(nodes[0].dataset.nav || '').experience
   if(currentExperience === EXPERIENCES.BANNER) {
     return nodes.sort((a, b) => {
       if(!a.ketch.navParsed || !b.ketch.navParsed) { return 0 }
@@ -150,7 +154,7 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
   const l = wrapLogger(log, 'getArrowActionFromUserAgent')
   const userAgent = getUserAgent()
   if (!userAgent) {
-    l.error(`Unknown userAgent: ${navigator.userAgent}`)
+    l.debug(`Unknown userAgent: ${navigator.userAgent}`)
     return ArrowActions.UNKNOWN
   }
   /*
@@ -161,14 +165,16 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
    */
   const userAgentKeyMap = UserAgentHandlerMap[userAgent]
   if (!userAgentKeyMap) {
-    l.error(`Misconfigured userAgent: ${userAgent}`)
+    l.debug(`Misconfigured userAgent: ${userAgent}`)
     return ArrowActions.UNKNOWN
   }
   return userAgentKeyMap(event.keyCode)
 
 }
+
 function onKeyPress(input: KeyboardEvent | ArrowActions) {
   const l = wrapLogger(log, 'onKeyPress')
+  l.debug(input, typeof input === 'string')
   const arrowAction = (typeof input === 'string') ? input : getArrowActionFromUserAgent(input)
 
   if (arrowAction === ArrowActions.UNKNOWN) {

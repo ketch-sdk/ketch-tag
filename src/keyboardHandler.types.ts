@@ -10,7 +10,7 @@ export type ModalActionTree = Record<string, Array<KetchHTMLElement>>
 
 export type ActionTree = BannerActionTree | ModalActionTree
 
-export type DataNavType = {
+export type DataNav = {
   experience: string,
   'nav-index': number,
   action?: string,

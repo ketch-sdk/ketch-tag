@@ -1,5 +1,6 @@
 import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
 import { setCookie } from '@ketch-com/ketch-cookie'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import {
   Configuration,
   GetConsentRequest,
@@ -7,6 +8,7 @@ import {
   SetConsentRequest,
   SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
+import log from './log'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
@@ -131,10 +133,15 @@ export async function setPublicConsent(
   }
 }
 
-export function getCachedDomNode(key: string, ifNull?: any): NodeList | null {
+export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeList | null {
+  const l = wrapLogger(log, 'getCachedDomNode')
+  if(!window && !localStorage) {
+    l.error('missing storage options')
+    return null
+  }
   if (window[key]) {
     return window[key]
-  } else if (window && ifNull) {
+  } else if (ifNull) {
     window[key] = ifNull
     return ifNull
   }
@@ -144,7 +151,7 @@ export function getCachedDomNode(key: string, ifNull?: any): NodeList | null {
     return null
   }
   else {
-    return document.querySelectorAll(qs)
+    return document.querySelector(qs) as HTMLElement
   }
 }
 
