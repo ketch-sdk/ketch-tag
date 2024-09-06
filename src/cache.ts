@@ -139,25 +139,32 @@ export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeL
     l.error('missing storage options')
     return null
   }
-  if (window[key]) {
-    return window[key]
-  } else if (ifNull) {
-    window[key] = ifNull
-    return ifNull
+
+  if(window) {
+    if (window[key]) {
+      return window[key]
+    } else if (window && ifNull) {
+      window[key] = ifNull
+      return ifNull
+    }
   }
-  // Check localStorage for querySelector
-  const qs = localStorage.getItem(key)
-  if (!qs) {
-    return null
+  if(localStorage) {
+    const qs = localStorage.getItem(key)
+    if (!qs) {
+      l.debug('Missing key in ls: ', key)
+      return null
+    } else {
+      return document.querySelector(qs) as HTMLElement
+    }
   }
-  else {
-    return document.querySelector(qs) as HTMLElement
-  }
+  return null
 }
 
 export function setCachedDomNode(key: string, node: HTMLElement) {
-  const selector = `[data-nav="${node.dataset.nav}"]`
-  localStorage.setItem(key, selector)
+  if (node.dataset.nav && localStorage) {
+    const selector = `[data-nav="${node.dataset.nav}"]`
+    localStorage.setItem(key, selector)
+  }
   if(window) {
     window[key] = node
   }

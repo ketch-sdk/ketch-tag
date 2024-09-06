@@ -1,14 +1,17 @@
 import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import {
   CACHED_CONSENT_KEY,
-  getCachedConsent,
+  getCachedConsent, getCachedDomNode,
   PUBLIC_CONSENT_KEY_V1,
-  setCachedConsent,
+  setCachedConsent, setCachedDomNode,
   setPublicConsent,
 } from './cache'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
 import constants from './constants'
 import { getCookie } from '@ketch-sdk/ketch-data-layer'
+import log from './log'
+
+jest.mock('./log')
 
 describe('cache', () => {
   const request = {
@@ -211,5 +214,97 @@ describe('cache', () => {
       foo: { status: 'granted', canonicalPurposes: ['analytics', 'personalization'] },
       bar: { status: 'denied' },
     })
+  })
+})
+
+describe('getCachedDomNode', () => {
+  const loggerName = '[getCachedDomNode]'
+  it('should log error and return null if window AND localstorage are missing', () => {
+    const dummyKey = 'dummy'
+    const { window, localStorage } = global
+    Object.defineProperty(global, 'window', { value: undefined })
+    Object.defineProperty(global, 'localStorage', { value: undefined })
+
+    getCachedDomNode(dummyKey)
+    expect(log.error).toHaveBeenCalledWith(loggerName, 'missing storage options')
+
+    Object.defineProperty(global, 'window', { value: window })
+    Object.defineProperty(global, 'localStorage', { value: localStorage })
+  })
+
+  it('should return cached node from window', () => {
+    const dummyKey = 'dummy'
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(
+      '<span aria-label="Sample Node">Sample Node</span>', 'text/html');
+    // @ts-ignore
+    window[dummyKey] = dom.body.children[0]
+
+    const result = getCachedDomNode(dummyKey) as HTMLElement
+    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
+  })
+
+  it('should return cached node from localStorage+DOM when absent on window', () => {
+    const dummyKey = 'dummy'
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(
+      '<span aria-label="Sample Node">Sample Node</span>', 'text/html');
+    jest.spyOn(document, 'querySelector')
+      .mockImplementation(selector => dom.querySelector(selector));
+    localStorage.setItem(dummyKey,  '[aria-label="Sample Node"]')
+
+    const result = getCachedDomNode(dummyKey) as HTMLElement
+    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
+  })
+
+  it('should populate the window when ifNull is passed', () => {
+    const dummyKey = 'dummy'
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(
+      '<span aria-label="Sample Node">Sample Node</span>', 'text/html');
+
+    const result = getCachedDomNode(dummyKey, dom.children[0]) as HTMLElement
+    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
+    // @ts-ignore
+    expect(dom.body.children[0].innerHTML).toEqual(window[dummyKey].innerHTML)
+  })
+})
+
+describe('setCachedDomNode', () => {
+  it('should set localStorage to query selector based on data-nav', () => {
+    const dummyKey = 'dummy'
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(
+      `
+        <span aria-label="Sample Node" data-nav="test-val">Sample Node</span>
+        <span aria-label="Bad Node">Bad Node</span>
+      `, 'text/html');
+    expect(localStorage.getItem(dummyKey)).toBeNull()
+
+    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
+    expect(localStorage.getItem(dummyKey)).toBeNull()
+
+    const elementHasNav = dom.body.children[0] as HTMLElement
+    setCachedDomNode(dummyKey, elementHasNav)
+    expect(localStorage.getItem(dummyKey)).toBe('[data-nav="test-val"]')
+  })
+  it('should always cache node on window', () => {
+    const dummyKey = 'dummy'
+    const parser = new DOMParser();
+    const dom = parser.parseFromString(
+      `
+        <span aria-label="Sample Node" data-nav="test-val">Sample Node</span>
+        <span aria-label="Bad Node">Bad Node</span>
+      `, 'text/html');
+    // @ts-ignore
+    expect(window[dummyKey]).toBeUndefined()
+
+    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
+    // @ts-ignore
+    expect(window[dummyKey]).toBe(dom.body.children[1])
+
+    setCachedDomNode(dummyKey, dom.body.children[0] as HTMLElement)
+    // @ts-ignore
+    expect(window[dummyKey]).toBe(dom.body.children[0])
   })
 })

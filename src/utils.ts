@@ -4,7 +4,7 @@ import log from './log'
 
 export function safeJsonParse(str?: string) {
   const l = wrapLogger(log, 'safeJsonParse');
-  if(!str || str === '') { return null }
+  if(!str || str.trim() === '') { return {} }
   try {
     return JSON.parse(str);
   }
@@ -15,8 +15,5 @@ export function safeJsonParse(str?: string) {
 }
 
 export function decodeDataNav(str: string) {
-  // @ts-ignore
-  const s = str.replaceAll('&quot;', '').replaceAll('"', '')
-  const s1 = decodeURI(s)
-  return safeJsonParse(s1)
+  return safeJsonParse(window.atob(str))
 }

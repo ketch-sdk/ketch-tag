@@ -66,17 +66,17 @@ function handleSelection() {
   }
 }
 
-function handleNavigation(arrowAction: ArrowActions): void {
+function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug('Navigating ', arrowAction)
   const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
   if (lanyard === null) {
     l.error('Cannot find lanyard root')
-    return
+    return null
   }
   else if(!(lanyard instanceof HTMLElement)) {
     l.error('Storage inconsistent')
-    return
+    return null
   }
   const allClickables = getCachedDomNode(
     KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
@@ -85,13 +85,18 @@ function handleNavigation(arrowAction: ArrowActions): void {
   const tree = buildTree(allClickables)
   if(!tree) {
     l.debug('Cannot find experience root')
-    return
+    return null
   }
-  const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, tree[0]) as KetchHTMLElement
-  const nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
-  if(!nextNode) { return }
-  setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
-  nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
+  const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
+  const nextNode = (!ctxNode) ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
+  if(!nextNode) {
+    return null
+  }
+  else {
+    l.debug('Updating cached context node: ', nextNode)
+    setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
+    return [ctxNode, nextNode]
+  }
   /* TODO LIST
    * <done> Retrieve current context
    * Understand DOM -> build map of experiences
@@ -105,6 +110,7 @@ function handleNavigation(arrowAction: ArrowActions): void {
 }
 
 function buildTree(allClickables: NodeList): BannerActionTree | undefined {
+  const l = wrapLogger(log, 'buildTree')
   if(allClickables.length === 0) { return [] }
   const nodes: KetchHTMLElement[] = [...allClickables]
     .filter(i => i instanceof HTMLElement)
@@ -113,17 +119,19 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
       if(!i.ketch) {
         i.ketch = {}
       }
-      // eg. data-nav='{"experience":"ketch-consent-banner","action":"close","navIndex":1}'
+      // eg. data-nav="&quot;%7B%22experience%22:%22ketch-consent-banner%22,%22nav-index%22:4%7D&quot;"
       i.ketch.navParsed = decodeDataNav(i.dataset.nav || '') as DataNav
       return i
     })
 
   const currentExperience = decodeDataNav(nodes[0].dataset.nav || '').experience
   if(currentExperience === EXPERIENCES.BANNER) {
-    return nodes.sort((a, b) => {
+    const sortedNodes =  nodes.sort((a, b) => {
       if(!a.ketch.navParsed || !b.ketch.navParsed) { return 0 }
       return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
     })
+    l.debug(sortedNodes)
+    return sortedNodes
   }
   else if(currentExperience === EXPERIENCES.MODAL) {
     return nodes
@@ -135,15 +143,23 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
 }
 
 function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) {
+  const l = wrapLogger(log, 'navigateBannerTree')
   const index = tree.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
+  l.debug('Starting at: ', index)
   switch (arrowAction) {
     case ArrowActions.UP:
     case ArrowActions.LEFT:
-      if(index === 0) { return }
+      if(index === tree.length - 1) {
+        l.debug('Cannot move past last node')
+        return
+      }
       return tree[index-1]
     case ArrowActions.RIGHT:
     case ArrowActions.DOWN:
-      if(index === tree.length - 1) { return }
+      if(index === 0) {
+        l.debug('Cannot move beyond first node')
+        return
+      }
       return tree[index+1]
     default:
       return
@@ -172,19 +188,40 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
 
 }
 
-function onKeyPress(input: KeyboardEvent | ArrowActions) {
+function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: () => void) {
   const l = wrapLogger(log, 'onKeyPress')
-  l.debug(input, typeof input === 'string')
-  const arrowAction = (typeof input === 'string') ? input : getArrowActionFromUserAgent(input)
+  const arrowAction = typeof input === 'string' ? input : getArrowActionFromUserAgent(input)
+
+  l.debug('Processing movement: ', arrowAction)
 
   if (arrowAction === ArrowActions.UNKNOWN) {
-    const badInput = (typeof  input === 'string') ? input : input.keyCode
+    const badInput = typeof input === 'string' ? input : input.keyCode
     l.error(`Unknown input: ${badInput}`)
-    return
-  } else if (arrowAction === ArrowActions.OK) {
+    l.debug('returning keyboard control')
+    returnKeyboardControl()
+  }
+  else if(arrowAction === ArrowActions.BACK) {
+    l.debug('returning keyboard control')
+    returnKeyboardControl()
+  }
+  else if (arrowAction === ArrowActions.OK) {
     handleSelection()
-  } else {
-    handleNavigation(arrowAction)
+  }
+  else {
+    const nodes = handleNavigation(arrowAction)
+    if(!nodes) {
+      // Error or no next node
+      /* Improvements: Add errorCodes and beam it to rollbar */
+      l.debug('returning keyboard control')
+      returnKeyboardControl()
+    }
+    else {
+      const [prevNode, nextNode] = nodes
+      if(prevNode) {
+        prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
+      }
+      nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
+    }
   }
 }
 
