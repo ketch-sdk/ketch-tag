@@ -15,6 +15,12 @@ export function safeJsonParse(str?: string) {
 }
 
 export function decodeDataNav(str: string) {
-  const decodedStr = window.atob(str)
+  const l = wrapLogger(log, 'decodeDataNav')
+  let decodedStr = ''
+  try {
+    decodedStr = window.atob(str)
+  } catch (e) {
+    l.debug(`Invalid encoding: ${str}`, e)
+  }
   return safeJsonParse(decodedStr)
 }

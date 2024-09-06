@@ -37,4 +37,22 @@ describe('decodeDataNav', () => {
   it('should decode base 64 and parse JSON', () => {
     expect(utils.decodeDataNav(encodedStr)).toEqual(decodedObj)
   })
+
+  it('should decode Base64 string and handle invalid JSON', () => {
+    const base64String = window.btoa('{"name": "John", "age":}')
+    const expected = {}
+
+    jest.spyOn(window, 'atob').mockReturnValue('{"name": "John", "age":}')
+    jest.spyOn(utils, 'safeJsonParse').mockReturnValue(expected)
+
+    expect(utils.decodeDataNav(base64String)).toBeNull()
+  })
+
+  it('should handle invalid Base64 string', () => {
+    const invalidStr = '!!!invalid!!!'
+    const loggerName = '[decodeDataNav]'
+    const error = `Invalid encoding: ${invalidStr}`
+    expect(utils.decodeDataNav(invalidStr)).toMatchObject({})
+    expect(log.debug).toHaveBeenCalledWith(loggerName, error, expect.anything())
+  })
 })
