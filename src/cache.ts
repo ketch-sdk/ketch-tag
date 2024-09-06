@@ -135,12 +135,12 @@ export async function setPublicConsent(
 
 export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeList | null {
   const l = wrapLogger(log, 'getCachedDomNode')
-  if(!window && !localStorage) {
+  if (!window && !localStorage) {
     l.error('missing storage options')
     return null
   }
 
-  if(window) {
+  if (window) {
     if (window[key]) {
       return window[key]
     } else if (window && ifNull) {
@@ -148,7 +148,7 @@ export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeL
       return ifNull
     }
   }
-  if(localStorage) {
+  if (localStorage) {
     const qs = localStorage.getItem(key)
     if (!qs) {
       l.debug('Missing key in ls: ', key)
@@ -165,7 +165,7 @@ export function setCachedDomNode(key: string, node: HTMLElement) {
     const selector = `[data-nav="${node.dataset.nav}"]`
     localStorage.setItem(key, selector)
   }
-  if(window) {
+  if (window) {
     window[key] = node
   }
 }

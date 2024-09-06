@@ -2,12 +2,7 @@ import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { decodeDataNav } from './utils'
 import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
-import {
-  BannerActionTree,
-  DataNav,
-  EXPERIENCES,
-  KetchHTMLElement,
-} from './keyboardHandler.types'
+import { BannerActionTree, DataNav, EXPERIENCES, KetchHTMLElement } from './keyboardHandler.types'
 import log from './log'
 
 enum SupportedUserAgents {
@@ -73,8 +68,7 @@ function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null 
   if (lanyard === null) {
     l.error('Cannot find lanyard root')
     return null
-  }
-  else if(!(lanyard instanceof HTMLElement)) {
+  } else if (!(lanyard instanceof HTMLElement)) {
     l.error('Storage inconsistent')
     return null
   }
@@ -83,16 +77,15 @@ function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null 
     lanyard.querySelectorAll('button, input'),
   ) as NodeList
   const tree = buildTree(allClickables)
-  if(!tree) {
+  if (!tree) {
     l.debug('Cannot find experience root')
     return null
   }
   const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
-  const nextNode = (!ctxNode) ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
-  if(!nextNode) {
+  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
+  if (!nextNode) {
     return null
-  }
-  else {
+  } else {
     l.debug('Updating cached context node: ', nextNode)
     setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
     return [ctxNode, nextNode]
@@ -111,12 +104,14 @@ function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null 
 
 function buildTree(allClickables: NodeList): BannerActionTree | undefined {
   const l = wrapLogger(log, 'buildTree')
-  if(allClickables.length === 0) { return [] }
+  if (allClickables.length === 0) {
+    return []
+  }
   const nodes: KetchHTMLElement[] = [...allClickables]
     .filter(i => i instanceof HTMLElement)
     .map(j => {
       const i = j as KetchHTMLElement
-      if(!i.ketch) {
+      if (!i.ketch) {
         i.ketch = {}
       }
       // eg. data-nav="&quot;%7B%22experience%22:%22ketch-consent-banner%22,%22nav-index%22:4%7D&quot;"
@@ -125,21 +120,22 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
     })
 
   const currentExperience = decodeDataNav(nodes[0].dataset.nav || '').experience
-  if(currentExperience === EXPERIENCES.BANNER) {
-    const sortedNodes =  nodes.sort((a, b) => {
-      if(!a.ketch.navParsed || !b.ketch.navParsed) { return 0 }
+  if (currentExperience === EXPERIENCES.BANNER) {
+    const sortedNodes = nodes.sort((a, b) => {
+      if (!a.ketch.navParsed || !b.ketch.navParsed) {
+        return 0
+      }
       return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
     })
     l.debug(sortedNodes)
     return sortedNodes
-  }
-  else if(currentExperience === EXPERIENCES.MODAL) {
+  } else if (currentExperience === EXPERIENCES.MODAL) {
     return nodes
-  }
-  else if(currentExperience === EXPERIENCES.PREFERENCES) {
+  } else if (currentExperience === EXPERIENCES.PREFERENCES) {
     return nodes
+  } else {
+    return
   }
-  else { return }
 }
 
 function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) {
@@ -149,18 +145,18 @@ function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, c
   switch (arrowAction) {
     case ArrowActions.UP:
     case ArrowActions.LEFT:
-      if(index === tree.length - 1) {
+      if (index === tree.length - 1) {
         l.debug('Cannot move past last node')
         return
       }
-      return tree[index-1]
+      return tree[index - 1]
     case ArrowActions.RIGHT:
     case ArrowActions.DOWN:
-      if(index === 0) {
+      if (index === 0) {
         l.debug('Cannot move beyond first node')
         return
       }
-      return tree[index+1]
+      return tree[index + 1]
     default:
       return
   }
@@ -185,7 +181,6 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
     return ArrowActions.UNKNOWN
   }
   return userAgentKeyMap(event.keyCode)
-
 }
 
 function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: () => void) {
@@ -199,25 +194,21 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
     l.error(`Unknown input: ${badInput}`)
     l.debug('returning keyboard control')
     returnKeyboardControl()
-  }
-  else if(arrowAction === ArrowActions.BACK) {
+  } else if (arrowAction === ArrowActions.BACK) {
     l.debug('returning keyboard control')
     returnKeyboardControl()
-  }
-  else if (arrowAction === ArrowActions.OK) {
+  } else if (arrowAction === ArrowActions.OK) {
     handleSelection()
-  }
-  else {
+  } else {
     const nodes = handleNavigation(arrowAction)
-    if(!nodes) {
+    if (!nodes) {
       // Error or no next node
       /* Improvements: Add errorCodes and beam it to rollbar */
       l.debug('returning keyboard control')
       returnKeyboardControl()
-    }
-    else {
+    } else {
       const [prevNode, nextNode] = nodes
-      if(prevNode) {
+      if (prevNode) {
         prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
       }
       nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
