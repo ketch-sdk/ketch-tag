@@ -12,7 +12,7 @@
     "build:web": "webpack --config webpack.config.js --mode production",
     "start": "npx webpack serve --devtool source-map --mode development",
     "lint": "eslint src/**/*.ts",
-    "test": "jest --runInBand --passWithNoTests",
+    "test": "jest --runInBand",
     "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
     "format-check": "prettier --check '**/*.ts'",
     "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts"

@@ -15,5 +15,6 @@ export function safeJsonParse(str?: string) {
 }
 
 export function decodeDataNav(str: string) {
-  return safeJsonParse(window.atob(str))
+  const decodedStr = window.atob(str)
+  return safeJsonParse(decodedStr)
 }

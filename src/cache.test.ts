@@ -1,4 +1,5 @@
 import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
+import LocalStorageMock from './__mocks__/localStorage'
 import {
   CACHED_CONSENT_KEY,
   getCachedConsent,
@@ -221,11 +222,17 @@ describe('cache', () => {
 
 describe('getCachedDomNode', () => {
   const loggerName = '[getCachedDomNode]'
+
+  beforeEach(() => {
+    Object.defineProperty(global, 'localStorage', { value: new LocalStorageMock(), writable: true })
+    Object.defineProperty(global, 'window', { value: {}, writable: true })
+  })
+
   it('should log error and return null if window AND localstorage are missing', () => {
     const dummyKey = 'dummy'
-    const { window, localStorage } = global
     Object.defineProperty(global, 'window', { value: undefined })
     Object.defineProperty(global, 'localStorage', { value: undefined })
+    expect(localStorage).toBeUndefined()
 
     getCachedDomNode(dummyKey)
     expect(log.error).toHaveBeenCalledWith(loggerName, 'missing storage options')
@@ -238,8 +245,9 @@ describe('getCachedDomNode', () => {
     const dummyKey = 'dummy'
     const parser = new DOMParser()
     const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
-    // @ts-ignore
-    window[dummyKey] = dom.body.children[0]
+    Object.defineProperty(global, 'window', {
+      value: { [dummyKey]: dom.body.children[0] },
+    })
 
     const result = getCachedDomNode(dummyKey) as HTMLElement
     expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
@@ -250,6 +258,7 @@ describe('getCachedDomNode', () => {
     const parser = new DOMParser()
     const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
     jest.spyOn(document, 'querySelector').mockImplementation(selector => dom.querySelector(selector))
+    Object.defineProperty(global, 'localStorage', { value: new LocalStorageMock() })
     localStorage.setItem(dummyKey, '[aria-label="Sample Node"]')
 
     const result = getCachedDomNode(dummyKey) as HTMLElement
@@ -262,9 +271,9 @@ describe('getCachedDomNode', () => {
     const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
 
     const result = getCachedDomNode(dummyKey, dom.children[0]) as HTMLElement
-    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
+    expect(dom.children[0].innerHTML).toEqual(result.innerHTML)
     // @ts-ignore
-    expect(dom.body.children[0].innerHTML).toEqual(window[dummyKey].innerHTML)
+    expect(dom.children[0].innerHTML).toEqual(global.window[dummyKey].innerHTML)
   })
 })
 
@@ -299,7 +308,7 @@ describe('setCachedDomNode', () => {
       'text/html',
     )
     // @ts-ignore
-    expect(window[dummyKey]).toBeUndefined()
+    window[dummyKey] = undefined
 
     setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
     // @ts-ignore

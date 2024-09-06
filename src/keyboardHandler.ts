@@ -114,7 +114,7 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
       if (!i.ketch) {
         i.ketch = {}
       }
-      // eg. data-nav="&quot;%7B%22experience%22:%22ketch-consent-banner%22,%22nav-index%22:4%7D&quot;"
+      // eg. data-nav="eyJleHBlcmllbmNlIjoia2V0Y2gtY29uc2VudC1iYW5uZXIiLCJuYXYtaW5kZXgiOjJ9"
       i.ketch.navParsed = decodeDataNav(i.dataset.nav || '') as DataNav
       return i
     })
