@@ -526,9 +526,10 @@ export class Ketch extends EventEmitter {
   /**
    * Shows the consent manager.
    */
-  async showConsentExperience(): Promise<Consent> {
+  async showConsentExperience(params?: ShowConsentOptions): Promise<Consent> {
     if (this._config.deployment?.isOrchestrationOnly || this._config?.isConfigPaused) return {} as Consent
-    log.debug('showConsentExperience')
+    const l = wrapLogger(log, 'showConsentExperience')
+    l.debug(params)
 
     const consent = await this.retrieveConsent()
 
@@ -539,7 +540,7 @@ export class Ketch extends EventEmitter {
     } else {
       this.on('addedListener', event => {
         if (event === constants.SHOW_CONSENT_EXPERIENCE_EVENT) {
-          this.showConsentExperienceTrigger(consent)
+          this.showConsentExperienceTrigger(consent, params)
         }
       })
     }
@@ -547,11 +548,13 @@ export class Ketch extends EventEmitter {
     return consent
   }
 
-  showConsentExperienceTrigger(consent?: Consent) {
+  showConsentExperienceTrigger(consent?: Consent, params?: ShowConsentOptions) {
     log.debug('showConsentExperienceTrigger')
 
+    const options = { displayHint: this.selectConsentExperience(), ...params }
+
     this.willShowExperience(ExperienceType.Consent)
-    this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, { displayHint: this.selectConsentExperience() })
+    this.emit(constants.SHOW_CONSENT_EXPERIENCE_EVENT, consent, options)
   }
 
   /**

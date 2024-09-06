@@ -1,3 +1,4 @@
+import constants from './constants'
 import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
@@ -81,6 +82,9 @@ export default class Tags {
   constructor(ketch: Ketch, tagsConfig: MappedElementConfig[]) {
     this._ketch = ketch
     this._tagsConfig = tagsConfig
+
+    // Add a listener to retry whenever consent is updated
+    this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
   }
 
   getMappedElements: (
@@ -203,7 +207,11 @@ export default class Tags {
       })
 
       // Update results
-      this._results[elementName] = { enabledElements, disabledElements }
+      const previousEnabledElements = this._results[elementName]?.enabledElements || []
+      this._results[elementName] = {
+        enabledElements: [...previousEnabledElements, ...enabledElements],
+        disabledElements,
+      }
       l.debug(
         `enabled ${elementName} elements:`,
         enabledElements,
