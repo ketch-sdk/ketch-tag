@@ -52,7 +52,7 @@ describe('decodeDataNav', () => {
     const invalidStr = '!!!invalid!!!'
     const loggerName = '[decodeDataNav]'
     const error = `Invalid encoding: ${invalidStr}`
-    expect(utils.decodeDataNav(invalidStr)).toMatchObject({})
+    expect(utils.decodeDataNav(invalidStr)).toEqual({})
     expect(log.debug).toHaveBeenCalledWith(loggerName, error, expect.anything())
   })
 })
