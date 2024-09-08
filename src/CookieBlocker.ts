@@ -3,6 +3,7 @@ import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
+// TODO:JB - Delete once we have updated config type
 type TempConfigType = ConfigurationV2 & {
   blockedCookies?: {
     [cookieKey: string]: {
