@@ -41,9 +41,9 @@ export default async function init(): Promise<void> {
   window.semaphore.loaded = true
 
   // Initialize trackers if overrideConsent flag is set
+  const ketchFullConfig = await ketch.getConfig()
   const shouldOverrideConsent = window?.localStorage?.getItem('overrideConsent')
   if (shouldOverrideConsent) {
-    const ketchFullConfig = await ketch.getConfig()
     const trackers = new Trackers(ketch, ketchFullConfig)
     await trackers.enableAllConsent()
   } else {
@@ -52,6 +52,6 @@ export default async function init(): Promise<void> {
   }
 
   // Handle tags on the page which are conditioned on consent state
-  const tags = new Tags(ketch, TagsConfig)
+  const tags = new Tags(ketch, TagsConfig, ketchFullConfig)
   tags.execute()
 }
