@@ -89,7 +89,7 @@ module.exports = {
   ],
 
   // Automatically reset mock state between every test
-  resetMocks: false,
+  resetMocks: true,
 
   // Reset the module registry before running each individual test
   // resetModules: false,
