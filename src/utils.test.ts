@@ -46,6 +46,7 @@ describe('decodeDataNav', () => {
     jest.spyOn(utils, 'safeJsonParse').mockReturnValue(expected)
 
     expect(utils.decodeDataNav(base64String)).toBeNull()
+    jest.restoreAllMocks()
   })
 
   it('should handle invalid Base64 string', () => {
