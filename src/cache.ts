@@ -169,3 +169,12 @@ export function setCachedDomNode(key: string, node: HTMLElement) {
     window[key] = node
   }
 }
+
+export function clearCachedDomNode(key: string) {
+  if (window) {
+    window[key] = undefined
+  }
+  if (localStorage) {
+    localStorage.removeItem(key)
+  }
+}

@@ -54,52 +54,36 @@ function getUserAgent(): SupportedUserAgents | undefined {
   return SupportedUserAgents.TIZEN
 }
 
+function getArrowActionFromUserAgent(event: KeyboardEvent) {
+  const l = wrapLogger(log, 'getArrowActionFromUserAgent')
+  const userAgent = getUserAgent()
+  if (!userAgent) {
+    l.debug(`Unknown userAgent: ${navigator.userAgent}`)
+    return ArrowActions.UNKNOWN
+  }
+  /*
+   * MDN has deprecated keyCode from KeyboardAPI.
+   * 1. However, all the browsers support it.
+   * 2. Tizen (6+) supports only keyCode.
+   * 3. Reevaluate this decision when Tizen upgrades to support KeyboardAPI key
+   */
+  const userAgentKeyMap = UserAgentHandlerMap[userAgent]
+  if (!userAgentKeyMap) {
+    l.debug(`Misconfigured userAgent: ${userAgent}`)
+    return ArrowActions.UNKNOWN
+  }
+  return userAgentKeyMap(event.keyCode)
+}
+
+function clearCachedNodes() {
+  Object.keys(KEYBOARD_HANDLER_CACHE_KEYS).forEach(clearCachedNodes)
+}
+
 function handleSelection() {
   const node = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
   if (node && typeof node.click === 'function') {
     node.click()
   }
-}
-
-function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null {
-  const l = wrapLogger(log, 'handleNavigation')
-  l.debug('Navigating ', arrowAction)
-  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
-  if (lanyard === null) {
-    l.error('Cannot find lanyard root')
-    return null
-  } else if (!(lanyard instanceof HTMLElement)) {
-    l.error('Storage inconsistent')
-    return null
-  }
-  const allClickables = getCachedDomNode(
-    KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
-    lanyard.querySelectorAll('button, input'),
-  ) as NodeList
-  const tree = buildTree(allClickables)
-  if (!tree) {
-    l.debug('Cannot find experience root')
-    return null
-  }
-  const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
-  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
-  if (!nextNode) {
-    return null
-  } else {
-    l.debug('Updating cached context node: ', nextNode)
-    setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
-    return [ctxNode, nextNode]
-  }
-  /* TODO LIST
-   * <done> Retrieve current context
-   * Understand DOM -> build map of experiences
-   * Navigate to next actionableToken
-   * <done> Mark it as selected/focussed
-   * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
-   * Let's call the expansion buttons as name='combo-buttons'
-   * <done = x>Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
-   * <done = x>...easier way via accessibility? -> culled focusableElements.
-   */
 }
 
 function buildTree(allClickables: NodeList): BannerActionTree | undefined {
@@ -162,25 +146,48 @@ function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, c
   }
 }
 
-function getArrowActionFromUserAgent(event: KeyboardEvent) {
-  const l = wrapLogger(log, 'getArrowActionFromUserAgent')
-  const userAgent = getUserAgent()
-  if (!userAgent) {
-    l.debug(`Unknown userAgent: ${navigator.userAgent}`)
-    return ArrowActions.UNKNOWN
+function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null {
+  const l = wrapLogger(log, 'handleNavigation')
+  l.debug('Navigating ', arrowAction)
+  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
+
+  if (lanyard === null) {
+    l.error('Cannot find lanyard root')
+    return null
+  } else if (!(lanyard instanceof HTMLElement)) {
+    l.error('Storage inconsistent')
+    return null
   }
-  /*
-   * MDN has deprecated keyCode from KeyboardAPI.
-   * 1. However, all the browsers support it.
-   * 2. Tizen (6+) supports only keyCode.
-   * 3. Reevaluate this decision when Tizen upgrades to support KeyboardAPI key
+
+  const allClickables = getCachedDomNode(
+    KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
+    lanyard.querySelectorAll('button, input'),
+  ) as NodeList
+  const tree = buildTree(allClickables)
+  if (!tree) {
+    l.debug('Cannot find experience root')
+    return null
+  }
+
+  const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
+  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
+  if (!nextNode) {
+    return null
+  } else {
+    l.debug('Updating cached context node: ', nextNode)
+    setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
+    return [ctxNode, nextNode]
+  }
+  /* TODO LIST
+   * <done> Retrieve current context
+   * Understand DOM -> build map of experiences
+   * Navigate to next actionableToken
+   * <done> Mark it as selected/focussed
+   * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
+   * Let's call the expansion buttons as name='combo-buttons'
+   * <done = x>Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
+   * <done = x>...easier way via accessibility? -> culled focusableElements.
    */
-  const userAgentKeyMap = UserAgentHandlerMap[userAgent]
-  if (!userAgentKeyMap) {
-    l.debug(`Misconfigured userAgent: ${userAgent}`)
-    return ArrowActions.UNKNOWN
-  }
-  return userAgentKeyMap(event.keyCode)
 }
 
 function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: () => void) {
@@ -193,9 +200,11 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
     const badInput = typeof input === 'string' ? input : input.keyCode
     l.error(`Unknown input: ${badInput}`)
     l.debug('returning keyboard control')
+    clearCachedNodes()
     returnKeyboardControl()
   } else if (arrowAction === ArrowActions.BACK) {
     l.debug('returning keyboard control')
+    clearCachedNodes()
     returnKeyboardControl()
   } else if (arrowAction === ArrowActions.OK) {
     handleSelection()
@@ -205,6 +214,7 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
       // Error or no next node
       /* Improvements: Add errorCodes and beam it to rollbar */
       l.debug('returning keyboard control')
+      clearCachedNodes()
       returnKeyboardControl()
     } else {
       const [prevNode, nextNode] = nodes

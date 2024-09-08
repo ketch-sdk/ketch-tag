@@ -2,6 +2,7 @@ import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest
 import LocalStorageMock from './__mocks__/localStorage'
 import {
   CACHED_CONSENT_KEY,
+  clearCachedDomNode,
   getCachedConsent,
   getCachedDomNode,
   PUBLIC_CONSENT_KEY_V1,
@@ -317,5 +318,59 @@ describe('setCachedDomNode', () => {
     setCachedDomNode(dummyKey, dom.body.children[0] as HTMLElement)
     // @ts-ignore
     expect(window[dummyKey]).toBe(dom.body.children[0])
+  })
+})
+
+describe('clearCachedDomNode', () => {
+  beforeEach(() => {
+    Object.defineProperty(global, 'localStorage', { value: new LocalStorageMock(), writable: true })
+    Object.defineProperty(global, 'window', { value: {}, writable: true })
+  })
+
+  it('should set window[key] to undefined', () => {
+    const key = 'testKey'
+    // @ts-ignore
+    window[key] = 'someValue'
+
+    clearCachedDomNode(key)
+
+    // @ts-ignore
+    expect(window[key]).toBeUndefined()
+  })
+
+  it('should call localStorage.removeItem with the correct key', () => {
+    const key = 'testKey'
+    localStorage.setItem(key, 'someValue')
+    const spy = jest.spyOn(localStorage, 'removeItem')
+
+    clearCachedDomNode(key)
+
+    expect(spy).toHaveBeenCalledWith(key)
+  })
+
+  it('should not modify window[key] when window is undefined', () => {
+    const key = 'testKey'
+
+    const og = global.window
+
+    Object.defineProperty(global, 'window', { value: undefined })
+
+    clearCachedDomNode(key)
+
+    global.window = og
+    // @ts-ignore
+    expect(window[key]).toBeUndefined()
+  })
+
+  it('should not call localStorage.removeItem when localStorage is undefined', () => {
+    const key = 'testKey'
+    const originalLocalStorage = global.localStorage
+    const spy = jest.spyOn(localStorage, 'removeItem')
+    Object.defineProperty(global, 'localStorage', { value: undefined })
+
+    clearCachedDomNode(key)
+
+    global.localStorage = originalLocalStorage
+    expect(spy).not.toHaveBeenCalled()
   })
 })
