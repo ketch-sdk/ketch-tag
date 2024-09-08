@@ -1,3 +1,4 @@
+import { Configuration, ConfigurationV2 } from '@ketch-sdk/ketch-types'
 import constants from './constants'
 import { Ketch } from './Ketch'
 import log from './log'
@@ -13,7 +14,7 @@ type MappedElementConfig = {
    * The name of the attribute which contains purpose codes required for the element to be
    * switched on
    */
-  purposesAttribute: string
+  purposesAttribute?: string
 
   /**
    * Attributes which must be present on the element (value does not matter)
@@ -44,6 +45,12 @@ type MappedElementConfig = {
      */
     attributeValueSwaps?: { [attributeName: string]: string }
   }
+
+  /**
+   * If this flag is set, then the purpose mappings for this element are done in the Ketch platform
+   * and can be found in the ConfigurationV2.mappings field.
+   */
+  isPlatformMapped?: boolean
 }
 
 export const TagsConfig: MappedElementConfig[] = [
@@ -72,16 +79,33 @@ export const TagsConfig: MappedElementConfig[] = [
       },
     },
   },
+
+  // Script elements mapped within the Ketch platform
+  {
+    elementName: 'script',
+    requiredAttributes: ['data-ketch-id'],
+    requiredAttributeValues: {
+      type: 'text/plain',
+    },
+    enableActions: {
+      attributeValueSwaps: {
+        type: 'text/javascript',
+      },
+    },
+    isPlatformMapped: true,
+  },
 ]
 
 export default class Tags {
   private readonly _ketch: Ketch
   private readonly _tagsConfig: MappedElementConfig[]
+  private readonly _config: ConfigurationV2
   private _results: { [elementName: string]: { enabledElements: Element[]; disabledElements: Element[] } } = {}
 
-  constructor(ketch: Ketch, tagsConfig: MappedElementConfig[]) {
+  constructor(ketch: Ketch, tagsConfig: MappedElementConfig[], config: Configuration | ConfigurationV2) {
     this._ketch = ketch
     this._tagsConfig = tagsConfig
+    this._config = config as ConfigurationV2
 
     // Add a listener to retry whenever consent is updated
     this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
@@ -89,10 +113,17 @@ export default class Tags {
 
   getMappedElements: (
     elementName: string,
-    purposesAttribute: string,
+    purposesAttribute?: string,
     requiredAttributes?: string[],
     requiredAttributeValues?: { [attributeName: string]: string },
-  ) => Element[] = (elementName, purposesAttribute, requiredAttributes, requiredAttributeValues) => {
+    isPlatformMapped?: boolean,
+  ) => Element[] = (
+    elementName,
+    purposesAttribute,
+    requiredAttributes,
+    requiredAttributeValues,
+    isPlatformMapped = false,
+  ) => {
     const l = wrapLogger(log, 'tags: getMappedElements')
 
     // Get all elements with this elementName, e.g. all script elements
@@ -101,7 +132,11 @@ export default class Tags {
     // Filter for only those elements having all required attributes and attribute:value pairs
     const filteredElements = Array.from(elements).filter(element => {
       // Check if element has the attribute storing ketch purposes, , e.g. data-purposes="..."
-      const hasPurposesAttribute = element.hasAttribute(purposesAttribute)
+      const hasPurposesAttribute = purposesAttribute ? element.hasAttribute(purposesAttribute) : false
+
+      // For elements with purposes mapped inside the Ketch platform (Consent > Tags screen), verify
+      // that the element has the data-ketch-id attribute
+      const hasKetchIdAttribute = isPlatformMapped && element.hasAttribute('data-ketch-id')
 
       // Check if element has all required attributes, e.g. data-src="..."
       const hasRequiredAttributes =
@@ -111,7 +146,7 @@ export default class Tags {
       const hasRequiredAttributeValues =
         !requiredAttributeValues ||
         Object.entries(requiredAttributeValues).every(([attribute, value]) => element.getAttribute(attribute) === value)
-      return hasPurposesAttribute && hasRequiredAttributes && hasRequiredAttributeValues
+      return (hasPurposesAttribute || hasKetchIdAttribute) && hasRequiredAttributes && hasRequiredAttributeValues
     })
 
     l.debug(`found ${filteredElements.length} '${elementName}' elements mapped to ketch purposes`)
@@ -161,6 +196,29 @@ export default class Tags {
     return grantedPurposes
   }
 
+  // Return a list of required purpose codes for this element, either from the purposesAttribute on
+  // the element or from the mapping within the config
+  getRequiredPurposes: (element: Element, purposesAttribute?: string, isPlatformMapped?: boolean) => string[] = (
+    element,
+    purposesAttribute,
+    isPlatformMapped = false,
+  ) => {
+    const l = wrapLogger(log, 'tags: getRequiredPurposes')
+    if (isPlatformMapped) {
+      // Get purpose mappings from config - TODO:JB - Finish once config type is updated
+      const id = element.getAttribute('data-ketch-id') || ''
+      console.log(id)
+      return this._config.tags?.[id]?.purposeCodes || []
+    } else {
+      // Handle case where no purpose attribute defined in MappingConfig
+      if (!purposesAttribute) {
+        l.error('No purposes attribute for element: ', element)
+        return []
+      }
+      return element.getAttribute(purposesAttribute)?.split(' ') || []
+    }
+  }
+
   // Get elements on the page which are mapped to purposes, and enable those which
   // we have consent for
   execute = async () => {
@@ -178,6 +236,7 @@ export default class Tags {
         requiredAttributes,
         requiredAttributeValues,
         enableActions: { attributeNameSwaps, attributeValueSwaps },
+        isPlatformMapped,
       } = mappingConfig
 
       // Get mapped elements
@@ -186,14 +245,18 @@ export default class Tags {
         purposesAttribute,
         requiredAttributes,
         requiredAttributeValues,
+        isPlatformMapped,
       )
 
       // Enable elements for which we have consent
       const enabledElements = mappedElements.filter(element => {
-        const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
+        const requiredPurposes = this.getRequiredPurposes(element, purposesAttribute, isPlatformMapped)
+        // If a tag is mapped as though it should be configured in the Ketch platform but there is no required
+        // purposes for it in the config, enable the tag
+        const isKetchIdNotInConfig = isPlatformMapped && !requiredPurposes.length
         l.debug('required purposes for element', element, requiredPurposes)
         // Enable element
-        if (requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))) {
+        if (isKetchIdNotInConfig || requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))) {
           this.enableElement(element, attributeNameSwaps, attributeValueSwaps)
           return true
         }
@@ -202,7 +265,7 @@ export default class Tags {
 
       // Get elements which we don't have consent for and will stay disabled
       const disabledElements = mappedElements.filter(element => {
-        const requiredPurposes = element.getAttribute(purposesAttribute)?.split(' ') || []
+        const requiredPurposes = this.getRequiredPurposes(element, purposesAttribute, isPlatformMapped)
         return !requiredPurposes.some(purposeCode => grantedPurposes.has(purposeCode))
       })
 
