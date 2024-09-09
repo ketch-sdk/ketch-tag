@@ -17,9 +17,9 @@ export const CACHED_CONSENT_TTL = 300 // 5 min in s
 export const PUBLIC_CONSENT_TTL = 34560000 // 4OO days in s
 
 export const KEYBOARD_HANDLER_CACHE_KEYS = {
-  CTX_KEY: 'currentKeyboardCtx',
-  LANYARD_DOM: 'lanyardRootDom',
-  FOCUSABLE_ELEMS: 'focusableElems',
+  CTX_KEY: '_ketch_currentKeyboardCtx',
+  LANYARD_DOM: '_ketch_lanyardRootDom',
+  FOCUSABLE_ELEMS: '_ketch_focusableElems',
 }
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()

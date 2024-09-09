@@ -23,3 +23,8 @@ export type DataNav = {
 export interface KetchHTMLElement extends HTMLElement {
   ketch: any
 }
+
+export type SelectionObject = {
+  prevNode: KetchHTMLElement | null
+  nextNode: KetchHTMLElement | null
+}

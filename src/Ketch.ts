@@ -1650,7 +1650,9 @@ export class Ketch extends EventEmitter {
   handleKeyboardEvent(e: KeyboardEvent | ArrowActions) {
     const l = wrapLogger(log, 'handleKeyboardEvent')
     l.debug(e)
-    onKeyPress(e, this.returnKeyboardControl)
+    onKeyPress(e, () => {
+      this.returnKeyboardControl()
+    })
   }
 
   returnKeyboardControl() {

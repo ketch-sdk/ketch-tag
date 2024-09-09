@@ -2,7 +2,7 @@ import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { decodeDataNav } from './utils'
 import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode, clearCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
-import { BannerActionTree, DataNav, EXPERIENCES, KetchHTMLElement } from './keyboardHandler.types'
+import { BannerActionTree, DataNav, EXPERIENCES, KetchHTMLElement, SelectionObject } from './keyboardHandler.types'
 import log from './log'
 
 enum SupportedUserAgents {
@@ -133,29 +133,30 @@ function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, c
         l.debug('Cannot move past last node')
         return
       }
-      return tree[index - 1]
+      return tree[index + 1]
     case ArrowActions.RIGHT:
     case ArrowActions.DOWN:
       if (index === 0) {
         l.debug('Cannot move beyond first node')
         return
       }
-      return tree[index + 1]
+      return tree[index - 1]
     default:
+      l.error('Unknown arrowAction: ', arrowAction)
       return
   }
 }
 
-function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null {
+function handleNavigation(arrowAction: ArrowActions): SelectionObject | null {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug('Navigating ', arrowAction)
   const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
 
   if (lanyard === null) {
-    l.error('Cannot find lanyard root')
+    l.debug('Cannot find lanyard root')
     return null
   } else if (!(lanyard instanceof HTMLElement)) {
-    l.error('Storage inconsistent')
+    l.debug('Storage inconsistent')
     return null
   }
 
@@ -165,29 +166,18 @@ function handleNavigation(arrowAction: ArrowActions): KetchHTMLElement[] | null 
   ) as NodeList
   const tree = buildTree(allClickables)
   if (!tree) {
-    l.debug('Cannot find experience root')
+    l.debug('Cannot find experience(banner|modal|pref) root')
     return null
   }
 
   const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
-  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode)
-  if (!nextNode) {
-    return null
-  } else {
+  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode) || null
+
+  if (nextNode) {
     l.debug('Updating cached context node: ', nextNode)
     setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
-    return [ctxNode, nextNode]
   }
-  /* TODO LIST
-   * <done> Retrieve current context
-   * Understand DOM -> build map of experiences
-   * Navigate to next actionableToken
-   * <done> Mark it as selected/focussed
-   * actionableToken = [button, inputs, filter(i.role === 'link') for Cookies Link in pref manager]
-   * Let's call the expansion buttons as name='combo-buttons'
-   * <done = x>Let's leverage tabIndex. document.querySelectorAll('[tabindex]')
-   * <done = x>...easier way via accessibility? -> culled focusableElements.
-   */
+  return { prevNode: ctxNode, nextNode }
 }
 
 function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: () => void) {
@@ -217,11 +207,13 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
       clearCachedNodes()
       returnKeyboardControl()
     } else {
-      const [prevNode, nextNode] = nodes
+      const { prevNode, nextNode } = nodes
       if (prevNode) {
         prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
       }
-      nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
+      if (nextNode) {
+        nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
+      }
     }
   }
 }
