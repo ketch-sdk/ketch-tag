@@ -276,6 +276,23 @@ describe('getCachedDomNode', () => {
     // @ts-ignore
     expect(dom.children[0].innerHTML).toEqual(global.window[dummyKey].innerHTML)
   })
+
+  it('should return null if value is missing in window and localStorage', () => {
+    const dummyKey = 'dummy'
+
+    const result = getCachedDomNode(dummyKey)
+
+    expect(result).toBeNull()
+  })
+  it('should return null if key is missing and localStorage is undefined', () => {
+    const dummyKey = 'dummy'
+    const ls = global.localStorage
+    Object.defineProperty(global, 'localStorage', { value: undefined, writable: true })
+
+    const result = getCachedDomNode(dummyKey)
+    expect(result).toBeNull()
+    Object.defineProperty(global, 'localStorage', { value: ls, writable: true })
+  })
 })
 
 describe('setCachedDomNode', () => {

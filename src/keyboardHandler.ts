@@ -1,6 +1,6 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { decodeDataNav } from './utils'
-import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
+import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode, clearCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
 import { BannerActionTree, DataNav, EXPERIENCES, KetchHTMLElement } from './keyboardHandler.types'
 import log from './log'
@@ -76,7 +76,7 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
 }
 
 function clearCachedNodes() {
-  Object.keys(KEYBOARD_HANDLER_CACHE_KEYS).forEach(clearCachedNodes)
+  Object.keys(KEYBOARD_HANDLER_CACHE_KEYS).forEach(clearCachedDomNode)
 }
 
 function handleSelection() {
@@ -227,3 +227,11 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
 }
 
 export default onKeyPress
+
+if (process.env['NODE_DEV'] == 'TEST') {
+  module.exports.testExports = {
+    buildTree,
+    navigateBannerTree,
+    handleNavigation,
+  }
+}
