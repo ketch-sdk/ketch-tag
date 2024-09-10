@@ -3,23 +3,13 @@ import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
-// TODO:JB - Delete once we have updated config type
-export type TempConfigType = ConfigurationV2 & {
-  blockedCookies?: {
-    [cookieKey: string]: {
-      pattern: string
-      purposes: string[]
-    }
-  }
-}
-
 export default class CookieBlocker {
   private readonly _ketch: Ketch
-  private readonly _config: TempConfigType
+  private readonly _config: ConfigurationV2
 
-  constructor(ketch: Ketch, config: Configuration | TempConfigType) {
+  constructor(ketch: Ketch, config: Configuration | ConfigurationV2) {
     this._ketch = ketch
-    this._config = config as TempConfigType
+    this._config = config as ConfigurationV2
   }
 
   // Return a promise containing the set of purposes codes for which we have consent

@@ -1,7 +1,7 @@
 import Builder from './Builder'
 import { Ketch } from './Ketch'
-import CookieBlocker, { TempConfigType } from './CookieBlocker'
-import { Configuration, IdentityType } from '@ketch-sdk/ketch-types'
+import CookieBlocker from './CookieBlocker'
+import { Configuration, ConfigurationV2, IdentityType } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
 describe('CookieBlocker', () => {
@@ -62,7 +62,7 @@ describe('CookieBlocker', () => {
   }
 
   // @ts-ignore
-  const configV2: TempConfigType = {
+  const configV2: ConfigurationV2 = {
     organization: {
       code: 'org',
     },
