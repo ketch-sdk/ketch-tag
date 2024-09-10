@@ -13,7 +13,8 @@ import {
   Tab,
 } from '@ketch-sdk/ketch-types'
 import { Ketch } from './Ketch'
-import { ArrowActions } from './keyboardHandler'
+
+import { ArrowActions } from './keyboardHandler.types'
 import parameters from './parameters'
 import constants from './constants'
 import { emptyConfig, webAPI, webAPIMock } from './__mocks__/webApi'

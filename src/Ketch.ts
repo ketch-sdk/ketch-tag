@@ -40,8 +40,9 @@ import {
   Subscriptions,
   Tab,
 } from '@ketch-sdk/ketch-types'
-import onKeyPress, { ArrowActions } from './keyboardHandler'
+import onKeyPress from './keyboardHandler'
 import isEmpty from './isEmpty'
+import { ArrowActions } from './keyboardHandler.types'
 import log from './log'
 import errors from './errors'
 import parameters from './parameters'

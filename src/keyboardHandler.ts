@@ -1,60 +1,32 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
-import { decodeDataNav } from './utils'
-import { getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode, clearCachedDomNode } from './cache'
+import { clearCachedDomNode, getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
 import { LANYARD_ID } from './constants'
-import { BannerActionTree, DataNav, EXPERIENCES, KetchHTMLElement, SelectionObject } from './keyboardHandler.types'
+import {
+  ArrowActions,
+  BannerActionTree,
+  DataNav,
+  EXPERIENCES,
+  KetchHTMLElement,
+  SelectionObject,
+  SupportedUserAgents,
+  UserAgentHandlerMap,
+} from './keyboardHandler.types'
 import log from './log'
+import { decodeDataNav } from './utils'
 
-enum SupportedUserAgents {
-  TIZEN = 'TIZEN',
-}
-
-export enum ArrowActions {
-  LEFT = 'LEFT',
-  RIGHT = 'RIGHT',
-  UP = 'UP',
-  DOWN = 'DOWN',
-  BACK = 'BACK',
-  OK = 'OK',
-  UNKNOWN = 'UNKNOWN',
-}
-
-const UserAgentHandlerMap: Record<SupportedUserAgents, (keyCode: number) => ArrowActions> = {
-  [SupportedUserAgents.TIZEN]: TizenKeyBoardHandler,
-}
-
-function TizenKeyBoardHandler(keyCode: number): ArrowActions {
-  const l = wrapLogger(log, 'TizenKeyboardHandler')
-  switch (keyCode) {
-    case 37:
-      return ArrowActions.LEFT
-    case 38:
-      return ArrowActions.UP
-    case 39:
-      return ArrowActions.RIGHT
-    case 40:
-      return ArrowActions.DOWN
-    case 13:
-      return ArrowActions.OK
-    case 10009:
-      return ArrowActions.BACK
-    default:
-      l.debug(`Unhandled Key code: ${keyCode}`)
-      return ArrowActions.UNKNOWN
-  }
-}
-
-function getUserAgent(): SupportedUserAgents | undefined {
+export const getUserAgent = (): SupportedUserAgents | undefined => {
   const l = wrapLogger(log, 'getUserAgent')
   const userAgentStr = navigator.userAgent.toUpperCase()
-  if (userAgentStr.search(SupportedUserAgents.TIZEN) === -1) {
-    l.debug(`Non Tizen device trying to use remote control: ${userAgentStr}`)
+  const agent = Object.values(SupportedUserAgents).find(i => userAgentStr.search(i) !== -1)
+  if (!agent) {
+    l.debug(`Unsupported userAgent: ${userAgentStr}`)
     return
+  } else {
+    return agent
   }
-  return SupportedUserAgents.TIZEN
 }
 
-function getArrowActionFromUserAgent(event: KeyboardEvent) {
+export const getArrowActionFromUserAgent = (event: KeyboardEvent) => {
   const l = wrapLogger(log, 'getArrowActionFromUserAgent')
   const userAgent = getUserAgent()
   if (!userAgent) {
@@ -72,21 +44,28 @@ function getArrowActionFromUserAgent(event: KeyboardEvent) {
     l.debug(`Misconfigured userAgent: ${userAgent}`)
     return ArrowActions.UNKNOWN
   }
-  return userAgentKeyMap(event.keyCode)
+  if (userAgentKeyMap[event.keyCode]) {
+    return userAgentKeyMap[event.keyCode]
+  } else {
+    l.debug(`Unknown key: ${event.keyCode}`)
+    return ArrowActions.UNKNOWN
+  }
 }
 
-function clearCachedNodes() {
-  Object.keys(KEYBOARD_HANDLER_CACHE_KEYS).forEach(clearCachedDomNode)
+export const clearCachedNodes = () => {
+  Object.values(KEYBOARD_HANDLER_CACHE_KEYS).forEach(i => {
+    clearCachedDomNode(i)
+  })
 }
 
-function handleSelection() {
+export const handleSelection = () => {
   const node = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
   if (node && typeof node.click === 'function') {
     node.click()
   }
 }
 
-function buildTree(allClickables: NodeList): BannerActionTree | undefined {
+export const buildTree = (allClickables: NodeList): BannerActionTree | undefined => {
   const l = wrapLogger(log, 'buildTree')
   if (allClickables.length === 0) {
     return []
@@ -122,7 +101,7 @@ function buildTree(allClickables: NodeList): BannerActionTree | undefined {
   }
 }
 
-function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) {
+export const navigateBannerTree = (tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) => {
   const l = wrapLogger(log, 'navigateBannerTree')
   const index = tree.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
   l.debug('Starting at: ', index)
@@ -147,7 +126,7 @@ function navigateBannerTree(tree: BannerActionTree, arrowAction: ArrowActions, c
   }
 }
 
-function handleNavigation(arrowAction: ArrowActions): SelectionObject | null {
+export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | null => {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug('Navigating ', arrowAction)
   const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
@@ -208,10 +187,14 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
       returnKeyboardControl()
     } else {
       const { prevNode, nextNode } = nodes
-      if (prevNode) {
+      if (prevNode && nextNode) {
         prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
+        prevNode.classList.remove('active')
+        prevNode.classList.remove('selected')
       }
       if (nextNode) {
+        nextNode.classList.add('active')
+        nextNode.classList.add('selected')
         nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
       }
     }
@@ -219,11 +202,3 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
 }
 
 export default onKeyPress
-
-if (process.env['NODE_DEV'] == 'TEST') {
-  module.exports.testExports = {
-    buildTree,
-    navigateBannerTree,
-    handleNavigation,
-  }
-}

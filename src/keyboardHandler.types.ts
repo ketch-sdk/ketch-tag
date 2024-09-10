@@ -28,3 +28,30 @@ export type SelectionObject = {
   prevNode: KetchHTMLElement | null
   nextNode: KetchHTMLElement | null
 }
+
+export enum SupportedUserAgents {
+  TIZEN = 'TIZEN',
+}
+
+export enum ArrowActions {
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+  UP = 'UP',
+  DOWN = 'DOWN',
+  BACK = 'BACK',
+  OK = 'OK',
+  UNKNOWN = 'UNKNOWN',
+}
+
+const TizenKeys: Record<number, ArrowActions> = {
+  37: ArrowActions.LEFT,
+  38: ArrowActions.UP,
+  39: ArrowActions.RIGHT,
+  40: ArrowActions.DOWN,
+  13: ArrowActions.OK,
+  10009: ArrowActions.BACK,
+} as const
+
+export const UserAgentHandlerMap = {
+  [SupportedUserAgents.TIZEN]: TizenKeys,
+}
