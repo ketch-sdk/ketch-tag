@@ -1,7 +1,7 @@
 import Builder from './Builder'
 import { Ketch } from './Ketch'
-import CookieBlocker from './CookieBlocker'
-import { Configuration, ConfigurationV2, IdentityType } from '@ketch-sdk/ketch-types'
+import CookieBlocker, { TempConfigType } from './CookieBlocker'
+import { Configuration, IdentityType } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
 describe('CookieBlocker', () => {
@@ -62,7 +62,7 @@ describe('CookieBlocker', () => {
   }
 
   // @ts-ignore
-  const configV2: ConfigurationV2 = {
+  const configV2: TempConfigType = {
     organization: {
       code: 'org',
     },
@@ -133,6 +133,16 @@ describe('CookieBlocker', () => {
         purposeCodes: ['analytics'],
       },
     },
+    blockedCookies: {
+      'cookie-1': {
+        pattern: 'cookie-1_a',
+        purposes: ['purpose-1'],
+      },
+      'cookie-2': {
+        pattern: 'cookie-2_.+',
+        purposes: ['purpose-2', 'purpose-3'],
+      },
+    },
   }
 
   let ketch: Ketch
@@ -145,10 +155,74 @@ describe('CookieBlocker', () => {
     config.language = 'en'
     fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
     ketch = await builder.build()
-    cookieBlocker = new CookieBlocker(ketch, config)
+    cookieBlocker = new CookieBlocker(ketch, configV2)
+  })
 
-    jest.spyOn(document, 'cookie', 'get').mockReturnValue('cookie1_a=val;cookie1_b=val;cookie1_c=val;')
+  it('gets granted purposes', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': true,
+        'purpose-2': false,
+        'purpose-3': false,
+      },
+    })
 
+    // Mock cookies
+    jest.spyOn(document, 'cookie', 'get').mockReturnValue('cookie-1_a=val;cookie-1_b=val;cookie-1_c=val;')
+
+    const grantedPurposes = await cookieBlocker.getGrantedPurposes()
+    expect(grantedPurposes.size).toBe(1)
+    expect(grantedPurposes.has('purpose-1')).toBe(true)
+    expect(grantedPurposes.has('purpose-2')).toBe(false)
+    expect(grantedPurposes.has('purpose-3')).toBe(false)
+  })
+
+  it('deletes one cookie', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': false,
+        'purpose-2': true,
+        'purpose-3': true,
+      },
+    })
+
+    // Mock cookies
+    jest.spyOn(document, 'cookie', 'get').mockReturnValue('cookie-1_a=val;cookie-1_b=val;cookie-1_c=val;')
+
+    const blockedCookies = await cookieBlocker.execute()
+    expect(blockedCookies.length).toBe(1)
+    expect(blockedCookies[0]).toBe('cookie-1_a')
+  })
+
+  it('deletes multiple cookies', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': true,
+        'purpose-2': false,
+        'purpose-3': false,
+      },
+    })
+
+    // Mock cookies
+    jest
+      .spyOn(document, 'cookie', 'get')
+      .mockReturnValue(
+        'cookie-1;cookie-1_a;cookie-2_a=val;cookie-2_b=val;cookie-2_c=val;cookie-2_;cookie-2;anothercookie',
+      )
+
+    const blockedCookies = await cookieBlocker.execute()
+
+    // Should match all 3 cookies
+    expect(blockedCookies.length).toBe(3)
+    expect(blockedCookies[0]).toBe('cookie-2_a')
+    expect(blockedCookies[1]).toBe('cookie-2_b')
+    expect(blockedCookies[2]).toBe('cookie-2_c')
+  })
+
+  it("doesn't delete cookies when we have consent for one of its purposes", async () => {
     // Mock consents
     jest.spyOn(ketch, 'getConsent').mockResolvedValue({
       purposes: {
@@ -157,21 +231,36 @@ describe('CookieBlocker', () => {
         'purpose-3': false,
       },
     })
+
+    // Mock cookies
+    jest
+      .spyOn(document, 'cookie', 'get')
+      .mockReturnValue('cookie-1_a=val;cookie-1_b=val;cookie-1_c=val;cookie-2_a=val;cookie-2_b=val;cookie-2_c=val;')
+
+    const blockedCookies = await cookieBlocker.execute()
+
+    // No cookies should be blocked because we have consent
+    expect(blockedCookies.length).toBe(0)
   })
 
-  it('gets granted purposes', async () => {
-    const grantedPurposes = await cookieBlocker.getGrantedPurposes()
-    expect(grantedPurposes.size).toBe(2)
-    expect(grantedPurposes.has('purpose-1')).toBe(true)
-    expect(grantedPurposes.has('purpose-2')).toBe(true)
-    expect(grantedPurposes.has('purpose-3')).toBe(false)
+  it("doesn't delete cookies when we have consent for multiple of its purposes", async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': true,
+        'purpose-2': true,
+        'purpose-3': true,
+      },
+    })
+
+    // Mock cookies
+    jest
+      .spyOn(document, 'cookie', 'get')
+      .mockReturnValue('cookie-1_a=val;cookie-1_b=val;cookie-1_c=val;cookie-2_a=val;cookie-2_b=val;cookie-2_c=val;')
+
+    const blockedCookies = await cookieBlocker.execute()
+
+    // No cookies should be blocked because we have consent
+    expect(blockedCookies.length).toBe(0)
   })
-
-  it('deletes one cookie', async () => {})
-
-  it('deletes multiple cookies', async () => {})
-
-  it("doesn't delete cookies when we have consent for one of its purposes", async () => {})
-
-  it("doesn't delete cookies when we have consent for multiple of its purposes", async () => {})
 })

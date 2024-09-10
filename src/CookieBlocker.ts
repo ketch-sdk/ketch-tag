@@ -4,7 +4,7 @@ import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 
 // TODO:JB - Delete once we have updated config type
-type TempConfigType = ConfigurationV2 & {
+export type TempConfigType = ConfigurationV2 & {
   blockedCookies?: {
     [cookieKey: string]: {
       pattern: string
@@ -31,7 +31,7 @@ export default class CookieBlocker {
     return grantedPurposes
   }
 
-  execute = async () => {
+  execute: () => Promise<string[]> = async () => {
     const l = wrapLogger(log, 'CookieBlocker: execute')
     const blockedCookies: string[] = []
 
@@ -39,7 +39,7 @@ export default class CookieBlocker {
     const cookies = document.cookie.split(';')
     if (!cookies.length) {
       l.debug('no browser cookies')
-      return
+      return blockedCookies
     }
 
     // Get set of purposes codes which we have consent for
@@ -54,10 +54,12 @@ export default class CookieBlocker {
         return
       }
 
+      // Get RegExp from string
+      const regexPattern = new RegExp(pattern) // Convert pattern to a regular expression
+
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
         const [name, _] = cookie.split('=')
-        const regexPattern = new RegExp(pattern) // Convert pattern to a regular expression
         if (regexPattern.test(name)) {
           // Delete the cookie by setting its expiration date to the past, 01 Jan 1970 is convention for deleting cookies
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
@@ -79,5 +81,7 @@ export default class CookieBlocker {
         console.groupEnd()
       }
     }
+
+    return blockedCookies
   }
 }
