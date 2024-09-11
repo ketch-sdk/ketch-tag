@@ -1,7 +1,7 @@
 import Builder from './Builder'
 import { Ketch } from './Ketch'
 import Tags, { TagsConfig } from './Tags'
-import { Configuration, ConfigurationV2, IdentityType } from '@ketch-sdk/ketch-types'
+import { Configuration, ConfigurationV2, Consent, IdentityType } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
 describe('Tags', () => {
@@ -443,5 +443,11 @@ describe('Tags', () => {
     // Set consent to trigger the listener in the Tags constructor
     ketch.setConsent({ purposes: { purpose1: true } })
     expect(executeSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('verifies no errors when consent is undefined', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)
+    tags.execute()
   })
 })
