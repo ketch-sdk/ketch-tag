@@ -192,7 +192,7 @@ export default class Tags {
     const l = wrapLogger(log, 'tags: getGrantedPurposes')
     const { purposes } = await this._ketch.getConsent()
     l.debug('got consent purposes', purposes)
-    const grantedPurposes = new Set(Object.keys(purposes).filter(key => purposes[key] === true))
+    const grantedPurposes = new Set(Object.keys(purposes || {}).filter(key => purposes[key] === true))
     return grantedPurposes
   }
 
