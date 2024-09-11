@@ -1,8 +1,15 @@
 import { KEYBOARD_HANDLER_CACHE_KEYS } from './cache'
 import onKeyPress from './keyboardHandler'
 import * as testExports from './keyboardHandler'
+import * as utils from './utils'
 
-import { ArrowActions, KetchHTMLElement, SupportedUserAgents, UserAgentHandlerMap } from './keyboardHandler.types'
+import {
+  ArrowActions,
+  BannerActionTree,
+  KetchHTMLElement,
+  SupportedUserAgents,
+  UserAgentHandlerMap,
+} from './keyboardHandler.types'
 import log from './log'
 import * as cache from './cache'
 
@@ -204,5 +211,66 @@ describe('keyboardHandler: handleSelection', () => {
 
     jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as unknown as KetchHTMLElement)
     expect(testExports.handleSelection).not.toThrow()
+  })
+})
+
+describe('keyboardHandler: buildTree', () => {
+  it('should return an empty list if no clickable items are passed', () => {
+    const a = [] as unknown as NodeList
+    expect(testExports.buildTree(a)).toEqual([])
+  })
+
+  it('should parse data-nav and build KetchHTMLElement', () => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(
+      `
+        <button data-nav="1">btn 1</button>
+        <button data-nav="2">btn 2</button>
+      `,
+      'text/html',
+    )
+    const spy = jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
+      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
+    })
+
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+
+    expect(results).toBeDefined()
+    expect(spy).toHaveBeenNthCalledWith(1, '1')
+    expect(spy).toHaveBeenNthCalledWith(2, '2')
+    results.forEach(i => {
+      expect(i.ketch).toBeDefined()
+    })
+  })
+
+  it('should sort nodes by nav-index for Banner Experience', () => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(
+      `
+        <button data-nav="1">btn 1</button>
+        <button data-nav="2">btn 2</button>
+      `,
+      'text/html',
+    )
+    jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
+      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
+    })
+
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+
+    expect(Array.isArray(results)).toBeTruthy()
+    expect(results.length === 2).toBeTruthy()
+    expect(results[0].ketch.navParsed['nav-index']).toBeLessThan(results[1].ketch.navParsed['nav-index'])
+  })
+
+  it('should return undefined if the experience is not handled', () => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString('<button data-nav="1">btn 1</button>', 'text/html')
+    jest.spyOn(utils, 'decodeDataNav').mockImplementation(() => {
+      return { experience: 'fresh-new-experience' }
+    })
+
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+    expect(results).toBeUndefined()
   })
 })
