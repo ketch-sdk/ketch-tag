@@ -274,3 +274,70 @@ describe('keyboardHandler: buildTree', () => {
     expect(results).toBeUndefined()
   })
 })
+
+describe('keyboardHandler: navigateBannerTree', () => {
+  const loggerName = '[navigateBannerTree]'
+  const tree: BannerActionTree = []
+  beforeAll(() => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(
+      `
+          <button data-nav="1">btn 1</button>
+          <button data-nav="2">btn 2</button>
+          <button data-nav="3">btn 3</button>
+        `,
+      'text/html',
+    )
+    doc.querySelectorAll('button').forEach(i => {
+      const n = i as unknown as KetchHTMLElement
+      n.ketch = {
+        navParsed: {
+          experience: 'ketch-consent-banner',
+          ['nav-index']: parseInt(n.dataset.nav as string),
+        },
+      }
+      tree.push(n)
+    })
+  })
+
+  it('should init correctly', () => {
+    expect(tree).toHaveLength(3)
+    expect(tree[0].ketch.navParsed['nav-index']).toBeLessThan(tree[1].ketch.navParsed['nav-index'])
+    expect(tree[1].ketch.navParsed['nav-index']).toBeLessThan(tree[2].ketch.navParsed['nav-index'])
+  })
+
+  it('should navigate left-to-right low-nav-index to high-nav-index', () => {
+    const ctx = tree[1]
+
+    let result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx) as KetchHTMLElement
+    expect(result.innerHTML).toEqual(tree[2].innerHTML)
+
+    result = testExports.navigateBannerTree(tree, ArrowActions.RIGHT, ctx) as KetchHTMLElement
+    expect(result.innerHTML).toEqual(tree[0].innerHTML)
+  })
+
+  it('should navigate up-to-down low-nav-index to high-nav-index', () => {
+    const ctx = tree[1]
+
+    let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx) as KetchHTMLElement
+    expect(result.innerHTML).toEqual(tree[2].innerHTML)
+
+    result = testExports.navigateBannerTree(tree, ArrowActions.DOWN, ctx) as KetchHTMLElement
+    expect(result.innerHTML).toEqual(tree[0].innerHTML)
+  })
+
+  it('should return undefined if there are no nodes to navigate', () => {
+    const ctx = tree[2]
+
+    const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
+    expect(result).toBeUndefined()
+  })
+
+  it('should return undefined for other arrowActions and log', () => {
+    const ctx = tree[2]
+
+    const result = testExports.navigateBannerTree(tree, ArrowActions.OK, ctx)
+    expect(result).toBeUndefined()
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', ArrowActions.OK)
+  })
+})

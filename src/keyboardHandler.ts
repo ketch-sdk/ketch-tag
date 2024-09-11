@@ -121,7 +121,7 @@ export const navigateBannerTree = (tree: BannerActionTree, arrowAction: ArrowAct
       }
       return tree[index - 1]
     default:
-      l.error('Unknown arrowAction: ', arrowAction)
+      l.debug('Unknown arrowAction: ', arrowAction)
       return
   }
 }
