@@ -326,10 +326,17 @@ describe('keyboardHandler: navigateBannerTree', () => {
     expect(result.innerHTML).toEqual(tree[0].innerHTML)
   })
 
-  it('should return undefined if there are no nodes to navigate', () => {
+  it('should return undefined (LTR) if there are no nodes to navigate', () => {
     const ctx = tree[2]
 
     const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
+    expect(result).toBeUndefined()
+  })
+
+  it('should return undefined (UTD) if there are no nodes to navigate', () => {
+    const ctx = tree[2]
+
+    const result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
     expect(result).toBeUndefined()
   })
 
