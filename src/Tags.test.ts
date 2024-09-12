@@ -450,4 +450,10 @@ describe('Tags', () => {
     jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)
     tags.execute()
   })
+
+  it('verifies no errors when consent is has no consent field', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({} as Consent)
+    tags.execute()
+  })
 })
