@@ -13,6 +13,8 @@ import {
   Tab,
 } from '@ketch-sdk/ketch-types'
 import { Ketch } from './Ketch'
+
+import { ArrowActions } from './keyboardHandler.types'
 import parameters from './parameters'
 import constants from './constants'
 import { emptyConfig, webAPI, webAPIMock } from './__mocks__/webApi'
@@ -762,14 +764,24 @@ describe('Ketch', () => {
   })
 
   describe('handleKeyboardEvent', () => {
-    it('should invoke onKeyPress', () => {
+    it('should invoke onKeyPress with keyboard event', () => {
       const dummyEvent = { keyCode: 1 } as KeyboardEvent
       const ketch = new Ketch(webAPI, emptyConfig)
       const spy = jest.spyOn(onKeyPress, 'default').mockReturnValue()
 
       ketch.handleKeyboardEvent(dummyEvent)
 
-      expect(spy).toHaveBeenCalledWith(dummyEvent)
+      expect(spy).toHaveBeenCalledWith(dummyEvent, expect.anything())
+    })
+
+    it('should invoke onKeyPress with arrow action', () => {
+      const dummyAction = ArrowActions.UP
+      const ketch = new Ketch(webAPI, emptyConfig)
+      const spy = jest.spyOn(onKeyPress, 'default').mockReturnValue()
+
+      ketch.handleKeyboardEvent(dummyAction)
+
+      expect(spy).toHaveBeenCalledWith(dummyAction, expect.anything())
     })
   })
 
