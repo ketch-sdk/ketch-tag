@@ -1,7 +1,7 @@
 import Builder from './Builder'
 import { Ketch } from './Ketch'
 import CookieBlocker from './CookieBlocker'
-import { Configuration, ConfigurationV2, IdentityType } from '@ketch-sdk/ketch-types'
+import { Configuration, ConfigurationV2, Consent, IdentityType } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
 describe('CookieBlocker', () => {
@@ -262,5 +262,17 @@ describe('CookieBlocker', () => {
 
     // No cookies should be blocked because we have consent
     expect(blockedCookies.length).toBe(0)
+  })
+
+  it('verifies no errors when consent is undefined', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)
+    cookieBlocker.execute()
+  })
+
+  it('verifies no errors when consent is has no consent field', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({} as Consent)
+    cookieBlocker.execute()
   })
 })

@@ -190,7 +190,8 @@ export default class Tags {
   // Return a promise containing the set of purposes codes for which we have consent
   getGrantedPurposes: () => Promise<Set<string>> = async () => {
     const l = wrapLogger(log, 'tags: getGrantedPurposes')
-    const { purposes } = await this._ketch.getConsent()
+    const consent = await this._ketch.getConsent()
+    const purposes = consent?.purposes || {}
     l.debug('got consent purposes', purposes)
     const grantedPurposes = new Set(Object.keys(purposes).filter(key => purposes[key] === true))
     return grantedPurposes
