@@ -42,6 +42,7 @@ import {
 } from '@ketch-sdk/ketch-types'
 import onKeyPress from './keyboardHandler'
 import isEmpty from './isEmpty'
+import { ArrowActions } from './keyboardHandler.types'
 import log from './log'
 import errors from './errors'
 import parameters from './parameters'
@@ -1647,10 +1648,12 @@ export class Ketch extends EventEmitter {
   /**
    * Handle keyboard driven interactions on Lanyard
    */
-  handleKeyboardEvent(e: KeyboardEvent) {
+  handleKeyboardEvent(e: KeyboardEvent | ArrowActions) {
     const l = wrapLogger(log, 'handleKeyboardEvent')
     l.debug(e)
-    onKeyPress(e)
+    onKeyPress(e, () => {
+      this.returnKeyboardControl()
+    })
   }
 
   returnKeyboardControl() {
