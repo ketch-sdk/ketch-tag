@@ -20,7 +20,6 @@ import {
   Identities,
   Identity,
   IdentityProvider,
-  IdentityType,
   InvokeRightEvent,
   InvokeRightRequest,
   IPInfo,
@@ -52,6 +51,7 @@ import deepEqual from 'nano-equal'
 import constants, { EMPTY_CONSENT } from './constants'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import InternalRouter from './InternalRouter'
+import { proxy } from '@ketch-com/ketch-proxy'
 
 declare global {
   type AndroidListener = {
@@ -114,6 +114,11 @@ export class Ketch extends EventEmitter {
   /**
    * @internal
    */
+  private _identitiesCurrent: Identities
+
+  /**
+   * @internal
+   */
   private readonly _jurisdiction: Future<string>
 
   /**
@@ -164,6 +169,13 @@ export class Ketch extends EventEmitter {
   private _hasExperienceBeenDisplayed: boolean
 
   /**
+   * hasProxyLoaded is a bool representing whether a proxy has loaded
+   *
+   * @internal
+   */
+  private _hasProxyLoaded: boolean
+
+  /**
    * @internal
    */
   private readonly _api: KetchWebAPI
@@ -197,6 +209,7 @@ export class Ketch extends EventEmitter {
       maxListeners,
     })
     this._identities = new Future<Identities>({ name: constants.IDENTITIES_EVENT, emitter: this, maxListeners })
+    this._identitiesCurrent = {}
     this._jurisdiction = new Future<string>({ name: constants.JURISDICTION_EVENT, emitter: this, maxListeners })
     this._regionInfo = new Future<string>({ name: constants.REGION_INFO_EVENT, emitter: this, maxListeners })
     this._returnKeyboardControl = new Future<void>({
@@ -218,6 +231,7 @@ export class Ketch extends EventEmitter {
     this._preferenceConfig = new Future<ConfigurationV2>()
     this._isExperienceDisplayed = false
     this._hasExperienceBeenDisplayed = false
+    this._hasProxyLoaded = false
     this._provisionalConsent = undefined
     this._watcher = new Watcher(window, {
       interval: parseInt(config.options?.watcherInterval ?? '2000'),
@@ -1421,6 +1435,7 @@ export class Ketch extends EventEmitter {
       identities[key] = newIdentities[key]
     }
     this._identities.value = identities
+    this._identitiesCurrent = identities
 
     // change in identities found so set new identities found on page and check for consent
     // if experience is currently displayed only update identities, and then return to wait for user input
@@ -1492,7 +1507,7 @@ export class Ketch extends EventEmitter {
 
     const watcher = this._watcher
 
-    let adder = (name: string, identity: Identity) => {
+    const adder = (name: string, identity: Identity) => {
       watcher.add(name, identity)
     }
 
@@ -1502,10 +1517,24 @@ export class Ketch extends EventEmitter {
         const currentPage = new URL(window.location.href)
 
         if (proxyPage.origin !== currentPage.origin) {
-          adder = (name: string, identity: Identity) => {
-            if (configIDs[name].type !== IdentityType.IDENTITY_TYPE_LOCAL_STORAGE) {
-              watcher.add(name, identity)
-            }
+          if (!this._hasProxyLoaded) {
+            await proxy.open(proxyPage.toString())
+
+            await this.registerStorageProvider(StorageOriginPolicy.CrossOrigin, {
+              async getItem(key: string): Promise<string | null> {
+                return proxy.invoke('getItem', key)
+              },
+
+              async setItem(key: string, value: string): Promise<void> {
+                return proxy.invoke('setItem', key, value)
+              },
+
+              async removeItem(key: string): Promise<void> {
+                return proxy.invoke('removeItem', key)
+              },
+            })
+
+            this._hasProxyLoaded = true
           }
         }
       } catch (e) {
@@ -1532,6 +1561,15 @@ export class Ketch extends EventEmitter {
     }
 
     return this._identities.fulfilled
+  }
+
+  /**
+   * Get the current identities.
+   */
+  getCurrentIdentities(): Identities {
+    log.debug('getCurrentIdentities')
+
+    return this._identitiesCurrent
   }
 
   /**
