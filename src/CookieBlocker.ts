@@ -2,6 +2,7 @@ import { Configuration, ConfigurationV2 } from '@ketch-sdk/ketch-types'
 import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import { addToKetchLog } from './Console'
 
 export default class CookieBlocker {
   private readonly _ketch: Ketch
@@ -38,15 +39,15 @@ export default class CookieBlocker {
     l.debug('granted purposes', grantedPurposes)
 
     // Loop over each blocked cookie from the config
-    Object.entries(this._config.blockedCookies || {}).forEach(([cookiekey, { pattern, purposes }]) => {
+    Object.entries(this._config.blockedCookies || {}).forEach(([cookiekey, { purposeCodes, regex }]) => {
       // Skip cookies which we have consent for
-      if (purposes.some(purposeCode => grantedPurposes.has(purposeCode))) {
+      if (purposeCodes.some(purposeCode => grantedPurposes.has(purposeCode))) {
         l.debug(`not blocking ${cookiekey} as consent is granted for one of its purposes`)
         return
       }
 
       // Get RegExp from string
-      const regexPattern = new RegExp(pattern) // Convert pattern to a regular expression
+      const regexPattern = new RegExp(regex) // Convert regex to regular expression type
 
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
@@ -60,18 +61,13 @@ export default class CookieBlocker {
       })
     })
 
-    // Add utility function for getting blocked cookies
-    if (!(window as any).KetchLog) {
-      ;(window as any).KetchLog = {}
-    }
-    if (!(window as any).KetchLog.getBlockedCookies) {
-      ;(window as any).KetchLog.getBlockedCookies = () => {
-        // Log results
-        console.group(`Blocked Cookies (${blockedCookies.length})`)
-        blockedCookies.forEach(cookie => console.log(cookie))
-        console.groupEnd()
-      }
-    }
+    // Add window.KetchLog.getBlockedCookies utility function
+    addToKetchLog('getBlockedCookies', () => {
+      // Log results
+      console.group(`Blocked Cookies (${blockedCookies.length})`)
+      blockedCookies.forEach(cookie => console.log(cookie))
+      console.groupEnd()
+    })
 
     return blockedCookies
   }

@@ -135,12 +135,14 @@ describe('CookieBlocker', () => {
     },
     blockedCookies: {
       'cookie-1': {
-        pattern: 'cookie-1_a',
-        purposes: ['purpose-1'],
+        regex: 'cookie-1_a',
+        pattern: 'pattern',
+        purposeCodes: ['purpose-1'],
       },
       'cookie-2': {
-        pattern: 'cookie-2_.+',
-        purposes: ['purpose-2', 'purpose-3'],
+        regex: 'cookie-2_.+',
+        pattern: 'pattern',
+        purposeCodes: ['purpose-2', 'purpose-3'],
       },
     },
   }
