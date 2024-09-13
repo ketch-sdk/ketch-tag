@@ -167,7 +167,6 @@ export class Ketch extends EventEmitter {
    */
   private _hasExperienceBeenDisplayed: boolean
 
-
   /**
    * hasProxyLoaded is a bool representing whether a proxy has loaded
    *
