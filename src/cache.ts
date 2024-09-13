@@ -1,3 +1,6 @@
+import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
+import { setCookie } from '@ketch-com/ketch-cookie'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import {
   Configuration,
   GetConsentRequest,
@@ -5,14 +8,19 @@ import {
   SetConsentRequest,
   SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
-import { getDefaultCacher, WebStorageCacher } from '@ketch-com/ketch-cache'
-import { setCookie } from '@ketch-com/ketch-cookie'
+import log from './log'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
 export const CACHED_PROTOCOLS_KEY = '_swb_consent_'
 export const CACHED_CONSENT_TTL = 300 // 5 min in s
 export const PUBLIC_CONSENT_TTL = 34560000 // 4OO days in s
+
+export const KEYBOARD_HANDLER_CACHE_KEYS = {
+  CTX_KEY: '_ketch_currentKeyboardCtx',
+  LANYARD_DOM: '_ketch_lanyardRootDom',
+  FOCUSABLE_ELEMS: '_ketch_focusableElems',
+}
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
 const consentWebCacher = new WebStorageCacher<GetConsentResponse>(window.localStorage, 86400)
@@ -122,5 +130,51 @@ export async function setPublicConsent(
     const consentString = btoa(JSON.stringify(consent))
     localStorage?.setItem(PUBLIC_CONSENT_KEY_V1, consentString)
     setCookie(window, PUBLIC_CONSENT_KEY_V1, consentString, PUBLIC_CONSENT_TTL)
+  }
+}
+
+export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeList | null {
+  const l = wrapLogger(log, 'getCachedDomNode')
+  if (!window && !localStorage) {
+    l.error('missing storage options')
+    return null
+  }
+
+  if (window) {
+    if (window[key]) {
+      return window[key]
+    } else if (window && ifNull) {
+      window[key] = ifNull
+      return ifNull
+    }
+  }
+  if (localStorage) {
+    const qs = localStorage.getItem(key)
+    if (!qs) {
+      l.debug('Missing key in ls: ', key)
+      return null
+    } else {
+      return document.querySelector(qs) as HTMLElement
+    }
+  }
+  return null
+}
+
+export function setCachedDomNode(key: string, node: HTMLElement) {
+  if (node.dataset.nav && localStorage) {
+    const selector = `[data-nav="${node.dataset.nav}"]`
+    localStorage.setItem(key, selector)
+  }
+  if (window) {
+    window[key] = node
+  }
+}
+
+export function clearCachedDomNode(key: string) {
+  if (window) {
+    window[key] = undefined
+  }
+  if (localStorage) {
+    localStorage.removeItem(key)
   }
 }

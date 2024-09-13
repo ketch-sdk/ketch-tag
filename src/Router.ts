@@ -13,6 +13,7 @@ import {
   StorageProvider,
   ConfigurationV2,
   SetConsentReason,
+  ShowConsentOptions,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
 import errors from './errors'
@@ -214,8 +215,8 @@ export default class Router {
     return this._ketch.setRegionInfo(info).then(() => {})
   }
 
-  showConsent(): Promise<void> {
-    return this._ketch.showConsentExperience().then(() => {})
+  showConsent(params: ShowConsentOptions): Promise<void> {
+    return this._ketch.showConsentExperience(params).then(() => {})
   }
 
   showPreferences(params: ShowPreferenceOptions): Promise<void> {

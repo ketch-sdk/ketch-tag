@@ -3,6 +3,7 @@ import Builder from './Builder'
 import Router from './Router'
 import Trackers from './Trackers'
 import Tags, { TagsConfig } from './Tags'
+import CookieBlocker from './CookieBlocker'
 
 /**
  * This is the entry point when this package is first loaded.
@@ -41,9 +42,9 @@ export default async function init(): Promise<void> {
   window.semaphore.loaded = true
 
   // Initialize trackers if overrideConsent flag is set
+  const ketchFullConfig = await ketch.getConfig()
   const shouldOverrideConsent = window?.localStorage?.getItem('overrideConsent')
   if (shouldOverrideConsent) {
-    const ketchFullConfig = await ketch.getConfig()
     const trackers = new Trackers(ketch, ketchFullConfig)
     await trackers.enableAllConsent()
   } else {
@@ -52,6 +53,10 @@ export default async function init(): Promise<void> {
   }
 
   // Handle tags on the page which are conditioned on consent state
-  const tags = new Tags(ketch, TagsConfig)
+  const tags = new Tags(ketch, TagsConfig, ketchFullConfig)
   tags.execute()
+
+  // Delete all cookies matching regex pattern specific in the config, and which we don't have consent for
+  const cookieBlocker = new CookieBlocker(ketch, ketchFullConfig)
+  cookieBlocker.execute()
 }

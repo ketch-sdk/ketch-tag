@@ -1,7 +1,7 @@
 import Builder from './Builder'
 import { Ketch } from './Ketch'
 import Tags, { TagsConfig } from './Tags'
-import { Configuration, IdentityType } from '@ketch-sdk/ketch-types'
+import { Configuration, ConfigurationV2, Consent, IdentityType } from '@ketch-sdk/ketch-types'
 import fetchMock from 'jest-fetch-mock'
 
 describe('Tags', () => {
@@ -61,6 +61,80 @@ describe('Tags', () => {
     },
   }
 
+  // @ts-ignore
+  const configV2: ConfigurationV2 = {
+    organization: {
+      code: 'org',
+    },
+    property: {
+      code: 'app',
+    },
+    environment: {
+      code: 'env',
+    },
+    jurisdiction: {
+      code: 'ps',
+    },
+    rights: [
+      {
+        code: 'portability',
+        name: 'Portability',
+        description: 'Right to have all data provided to you.',
+        canonicalRightCode: 'get',
+      },
+      {
+        code: 'rtbf',
+        name: 'Data Deletion',
+        description: 'Right to be forgotten.',
+        canonicalRightCode: 'delete',
+      },
+    ],
+    purposes: [
+      // @ts-ignore
+      {
+        code: '0',
+        legalBasisCode: 'lb1',
+      },
+      // @ts-ignore
+      {
+        code: '1',
+        legalBasisCode: 'lb2',
+      },
+      // @ts-ignore
+      {
+        code: '2',
+        legalBasisCode: 'lb4',
+      },
+    ],
+    options: {
+      migration: '3',
+    },
+    identities: {
+      space1: {
+        type: IdentityType.IDENTITY_TYPE_WINDOW,
+        variable: 'id1',
+      },
+    },
+    tags: {
+      '1': {
+        purposeCodes: ['purpose-1'],
+      },
+      '2': {
+        purposeCodes: ['purpose-2', 'purpose-3'],
+      },
+      // Test GTM/Adobe tags which should not be wrapped
+      '2rX92N95ZoveKKtluFjW7E_121': {
+        purposeCodes: ['advertising'],
+      },
+      '2rX92N95ZoveKKtluFjW7E_14': {
+        purposeCodes: ['analytics'],
+      },
+      '2rX92N95ZoveKKtluFjW7E_20': {
+        purposeCodes: ['analytics'],
+      },
+    },
+  }
+
   let ketch: Ketch
   let tags: Tags
 
@@ -71,7 +145,7 @@ describe('Tags', () => {
     config.language = 'en'
     fetchMock.mockResponseOnce(async (): Promise<string> => JSON.stringify(config))
     ketch = await builder.build()
-    tags = new Tags(ketch, TagsConfig)
+    tags = new Tags(ketch, TagsConfig, configV2)
 
     // Mock the document.querySelectorAll method
     jest.spyOn(document, 'querySelectorAll').mockImplementation((_: string) => {
@@ -83,6 +157,9 @@ describe('Tags', () => {
       const scriptElement5 = document.createElement('script')
       const scriptElement6 = document.createElement('script')
       const scriptElement7 = document.createElement('script')
+      const scriptElement8 = document.createElement('script')
+      const scriptElement9 = document.createElement('script')
+      const scriptElement10 = document.createElement('script')
       const iframeElement1 = document.createElement('iframe')
       const iframeElement2 = document.createElement('iframe')
       const iframeElement3 = document.createElement('iframe')
@@ -122,6 +199,21 @@ describe('Tags', () => {
         console.log('This is an inline script');
       `
 
+      // Script with data-purposes attribute and type="text/plain"
+      scriptElement8.src = 'mock-script-1.js'
+      scriptElement8.setAttribute('data-ketch-id', '1')
+      scriptElement8.setAttribute('type', 'text/plain')
+
+      // Script with data-purposes attribute and type="text/plain"
+      scriptElement9.src = 'mock-script-2.js'
+      scriptElement9.setAttribute('data-ketch-id', '2')
+      scriptElement9.setAttribute('type', 'text/plain')
+
+      // Script with data-purposes attribute and type="text/plain"
+      scriptElement10.src = 'mock-script-3.js'
+      scriptElement10.setAttribute('data-ketch-id', '3')
+      scriptElement10.setAttribute('type', 'text/plain')
+
       // Iframe with data-src and data-purposes
       iframeElement1.setAttribute('data-src', 'www.youtube.com/embed/some-video')
       iframeElement1.setAttribute('data-purposes', 'purpose-1')
@@ -140,6 +232,9 @@ describe('Tags', () => {
         scriptElement5,
         scriptElement6,
         scriptElement7,
+        scriptElement8,
+        scriptElement9,
+        scriptElement10,
         iframeElement1,
         iframeElement2,
         iframeElement3,
@@ -190,6 +285,31 @@ describe('Tags', () => {
     expect(mappedElements[0].getAttribute('type')).toBe('text/plain')
   })
 
+  it('gets platform mapped script elements', async () => {
+    const { elementName, purposesAttribute, requiredAttributes, requiredAttributeValues, isPlatformMapped } =
+      TagsConfig[2]
+
+    const mappedElements = tags.getMappedElements(
+      elementName,
+      purposesAttribute,
+      requiredAttributes,
+      requiredAttributeValues,
+      isPlatformMapped,
+    )
+
+    // Verify mapped elements returned are the platform mapped scripts, having data-ketch-id as an attribute
+    expect(mappedElements.length).toBe(3)
+    expect(mappedElements[0].getAttribute('data-ketch-id')).toBe('1')
+    expect(mappedElements[1].getAttribute('data-ketch-id')).toBe('2')
+    expect(mappedElements[2].getAttribute('data-ketch-id')).toBe('3')
+    expect(mappedElements[0].getAttribute('src')).toBe('mock-script-1.js')
+    expect(mappedElements[1].getAttribute('src')).toBe('mock-script-2.js')
+    expect(mappedElements[2].getAttribute('src')).toBe('mock-script-3.js')
+    expect(mappedElements[0].getAttribute('type')).toBe('text/plain')
+    expect(mappedElements[1].getAttribute('type')).toBe('text/plain')
+    expect(mappedElements[2].getAttribute('type')).toBe('text/plain')
+  })
+
   it('gets mapped iframe elements', async () => {
     const { elementName, purposesAttribute, requiredAttributes, requiredAttributeValues } = TagsConfig[1]
 
@@ -204,6 +324,29 @@ describe('Tags', () => {
     expect(mappedElements.length).toBe(1)
     expect(mappedElements[0].getAttribute('data-src')).toBe('www.youtube.com/embed/some-video')
     expect(mappedElements[0].getAttribute('data-purposes')).toBe('purpose-1')
+  })
+
+  it('gets required purposes for platform mapped scripts', async () => {
+    const { elementName, purposesAttribute, requiredAttributes, requiredAttributeValues, isPlatformMapped } =
+      TagsConfig[2]
+
+    const mappedElements = tags.getMappedElements(
+      elementName,
+      purposesAttribute,
+      requiredAttributes,
+      requiredAttributeValues,
+      isPlatformMapped,
+    )
+
+    expect(mappedElements.length).toBe(3)
+
+    const tag1purposes = tags.getRequiredPurposes(mappedElements[0], purposesAttribute, isPlatformMapped)
+    const tag2purposes = tags.getRequiredPurposes(mappedElements[1], purposesAttribute, isPlatformMapped)
+    const tag3purposes = tags.getRequiredPurposes(mappedElements[2], purposesAttribute, isPlatformMapped)
+
+    expect(tag1purposes.length).toBe(1)
+    expect(tag2purposes.length).toBe(2)
+    expect(tag3purposes.length).toBe(0)
   })
 
   it('gets granted purposes', async () => {
@@ -269,6 +412,7 @@ describe('Tags', () => {
 
   it('enables only script elements for which we have consent', async () => {
     const enabledElements = await tags.execute()
+    expect(enabledElements.length).toBe(8)
     // Tests the case where only one purpose was provided in the data-purposes attribute
     // and we have consent for that one
     expect(enabledElements[0].getAttribute('src')).toBe('mock-script-1.js')
@@ -279,7 +423,17 @@ describe('Tags', () => {
     // and we have consent for both of them
     expect(enabledElements[2].getAttribute('src')).toBe('mock-script-6.js')
     expect(enabledElements[3].textContent?.trim()).toBe("console.log('This is an inline script');")
-    expect(enabledElements[4].getAttribute('src')).toBe('www.youtube.com/embed/some-video')
+
+    expect(enabledElements[4].getAttribute('data-ketch-id')).toBe('1')
+    expect(enabledElements[4].getAttribute('src')).toBe('mock-script-1.js')
+
+    expect(enabledElements[5].getAttribute('data-ketch-id')).toBe('2')
+    expect(enabledElements[5].getAttribute('src')).toBe('mock-script-2.js')
+
+    expect(enabledElements[6].getAttribute('data-ketch-id')).toBe('3')
+    expect(enabledElements[6].getAttribute('src')).toBe('mock-script-3.js')
+
+    expect(enabledElements[7].getAttribute('src')).toBe('www.youtube.com/embed/some-video')
   })
 
   it('re-executes with updated consent values', async () => {
@@ -289,5 +443,17 @@ describe('Tags', () => {
     // Set consent to trigger the listener in the Tags constructor
     ketch.setConsent({ purposes: { purpose1: true } })
     expect(executeSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('verifies no errors when consent is undefined', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)
+    tags.execute()
+  })
+
+  it('verifies no errors when consent is has no consent field', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({} as Consent)
+    tags.execute()
   })
 })
