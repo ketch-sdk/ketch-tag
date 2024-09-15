@@ -38,7 +38,11 @@ const test = {
 }
 
 describe('builder', () => {
-  beforeEach(fetchMock.resetMocks)
+  beforeEach(() => {
+    // Clear all mocks before each test to reset the state
+    jest.clearAllMocks()
+    fetchMock.resetMocks()
+  })
 
   const mockParametersGet = jest.mocked(parameters.get)
 
@@ -717,31 +721,7 @@ describe('builder', () => {
       const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeFalsy()
     })
-    it('sets up telemetry if service is present', async () => {
-      const config: Configuration = {
-        formTemplates: [],
-        organization: {
-          code: 'blah',
-        },
-        environment: {
-          code: 'production',
-        },
-        services: {
-          shoreline: 'https://shoreline.ketch.com',
-          telemetry: 'https://shoreline.ketch.com',
-        },
-        options: {
-          beaconPercentage: '1',
-        },
-      }
-      const builder = new Builder(config)
-      const api = new KetchWebAPI(getApiUrl(config))
-      const ketch = new Ketch(api, config)
-
-      const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
-      expect(resp).toBeTruthy()
-    })
-    it('collects config data as formData', async () => {
+    it('fires telemetry beacon once identity and on visibility hidden', async () => {
       const config: Configuration = {
         formTemplates: [],
         organization: {
@@ -768,18 +748,74 @@ describe('builder', () => {
           beaconPercentage: '1',
         },
       }
+      // Set up the builder and mock sendBeacon
       const builder = new Builder(config)
+      const api = new KetchWebAPI(getApiUrl(config))
+      const ketch = new Ketch(api, config)
 
-      const resp = builder.collectTelemetry(true, config, { region: 'US' }, { idcode: 'idvalue' })
+      navigator.sendBeacon = jest.fn()
+
+      await builder.setupTelemetry(ketch, config, { region: 'US' })
+
+      await ketch.setIdentities({ userId: 'user123' })
+      await ketch.setIdentities({ userId: 'user123', clientId: 'client123' })
+      await ketch.setIdentities({ userId: 'user123', clientId: 'client123', foo: 'bar' })
+
+      // Mock the document.visibilityState to simulate the change
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      })
+
+      // Dispatch the visibilitychange event
+      document.dispatchEvent(new Event('visibilitychange'))
+
+      // Assert that sendBeacon was called with the correct telemetry data for identities
+      expect(navigator.sendBeacon).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining(
+          // eslint-disable-next-line max-len
+          'https://shoreline.ketch.com?hasConsent=false&url=https%3A%2F%2Flocalhost.localdomain%2Findex.html&property=myProp&environment=myEnv&jurisdiction=myJurisdiction&tenant=blah&dver=12334&event_type=once_identities&ids=eyJ1c2VySWQiOiJ1c2VyMTIzIn0%3D&region=US',
+        ),
+      )
+
+      // Assert that sendBeacon was called with the correct telemetry data for visibility change
+      expect(navigator.sendBeacon).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining(
+          // eslint-disable-next-line max-len
+          'https://shoreline.ketch.com?hasConsent=false&url=https%3A%2F%2Flocalhost.localdomain%2Findex.html&property=myProp&environment=myEnv&jurisdiction=myJurisdiction&tenant=blah&dver=12334&event_type=visibility_hidden&ids=eyJ1c2VySWQiOiJ1c2VyMTIzIiwiY2xpZW50SWQiOiJjbGllbnQxMjMiLCJmb28iOiJiYXIifQ%3D%3D&region=US',
+        ),
+      )
+
+      // Ensure sendBeacon was called exactly twice
+      expect(navigator.sendBeacon).toHaveBeenCalledTimes(2)
+    })
+    it('sets up telemetry if service is present', async () => {
+      const config: Configuration = {
+        formTemplates: [],
+        organization: {
+          code: 'blah',
+        },
+        environment: {
+          code: 'production',
+        },
+        services: {
+          shoreline: 'https://shoreline.ketch.com',
+          telemetry: 'https://shoreline.ketch.com',
+        },
+        options: {
+          beaconPercentage: '1',
+        },
+      }
+      const builder = new Builder(config)
+      const api = new KetchWebAPI(getApiUrl(config))
+      const ketch = new Ketch(api, config)
+
+      navigator.sendBeacon = jest.fn()
+
+      const resp = await builder.setupTelemetry(ketch, config, { region: 'US' })
       expect(resp).toBeTruthy()
-      expect(resp.get('hasConsent')).toBeTruthy()
-      expect(resp.get('url')).toBeDefined()
-      expect(resp.get('property')).toBe('myProp')
-      expect(resp.get('environment')).toBe('myEnv')
-      expect(resp.get('jurisdiction')).toBe('myJurisdiction')
-      expect(resp.get('tenant')).toBe('blah')
-      expect(resp.get('dver')).toBe(`${12334}`)
-      expect(resp.get('region')).toBe('US')
     })
   })
 })

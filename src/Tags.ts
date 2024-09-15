@@ -3,6 +3,7 @@ import constants from './constants'
 import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import { addToKetchLog } from './Console'
 
 type MappedElementConfig = {
   /**
@@ -190,7 +191,8 @@ export default class Tags {
   // Return a promise containing the set of purposes codes for which we have consent
   getGrantedPurposes: () => Promise<Set<string>> = async () => {
     const l = wrapLogger(log, 'tags: getGrantedPurposes')
-    const { purposes } = await this._ketch.getConsent()
+    const consent = await this._ketch.getConsent()
+    const purposes = consent?.purposes || {}
     l.debug('got consent purposes', purposes)
     const grantedPurposes = new Set(Object.keys(purposes).filter(key => purposes[key] === true))
     return grantedPurposes
@@ -283,39 +285,30 @@ export default class Tags {
       )
     })
 
-    // Once enabling is complete, add utility functions to window object
-    if (!(window as any).KetchLog) {
-      ;(window as any).KetchLog = {}
-    }
-    if (!(window as any).KetchLog.getWrappedTags) {
-      ;(window as any).KetchLog.getWrappedTags = () => {
-        this._tagsConfig.forEach(async mappingConfig => {
-          // Get results for this mapping
-          const { elementName } = mappingConfig
-          const { enabledElements, disabledElements } = this._results[elementName]
+    // Once enabling is complete, add a window.KetchLog.getWrappedTags utility function
+    addToKetchLog('getWrappedTags', () => {
+      Object.entries(this._results).forEach(([elementName, { enabledElements, disabledElements }]) => {
+        // Log results
+        console.group(
+          `%cWrapped %c<${elementName}>%c Tags`,
+          '', // No styling for 'Wrapped'
+          'font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; color: #333;', // Styling for '<element>'
+          '', // No styling for ' Tags'
+        )
 
-          // Log results
-          console.group(
-            `%cWrapped %c<${elementName}>%c Tags`,
-            '', // No styling for 'Wrapped'
-            'font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; color: #333;', // Styling for '<element>'
-            '', // No styling for ' Tags'
-          )
+        // Blocked tags
+        console.groupCollapsed(`%cBlocked (${disabledElements.length})`, 'color: red')
+        disabledElements.forEach(element => console.log(element))
+        console.groupEnd()
 
-          // Blocked tags
-          console.groupCollapsed(`%cBlocked (${disabledElements.length})`, 'color: red')
-          disabledElements.forEach(element => console.log(element))
-          console.groupEnd()
+        // Allowed tags
+        console.groupCollapsed(`%cAllowed (${enabledElements.length})`, 'color: green')
+        enabledElements.forEach(element => console.log(element))
+        console.groupEnd()
 
-          // Allowed tags
-          console.groupCollapsed(`%cAllowed (${enabledElements.length})`, 'color: green')
-          enabledElements.forEach(element => console.log(element))
-          console.groupEnd()
-
-          console.groupEnd()
-        })
-      }
-    }
+        console.groupEnd()
+      })
+    })
 
     // Combine all enabled elements for each element type (script, iframe, etc.) into a list
     const allEnabledElements = Object.values(this._results).reduce((acc, current) => {
