@@ -266,6 +266,16 @@ describe('CookieBlocker', () => {
     expect(blockedCookies.length).toBe(0)
   })
 
+  it('re-executes with updated consent values', async () => {
+    // Spy on the execute method of the Tags instance
+    const executeSpy = jest.spyOn(cookieBlocker, 'execute')
+    cookieBlocker.execute()
+    // Set consent to trigger the listener in the Tags constructor
+    expect(executeSpy).toHaveBeenCalledTimes(1)
+    ketch.setConsent({ purposes: { purpose1: true } })
+    expect(executeSpy).toHaveBeenCalledTimes(2)
+  })
+
   it('verifies no errors when consent is undefined', async () => {
     // Mock consents
     jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)
