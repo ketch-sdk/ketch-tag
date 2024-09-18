@@ -441,6 +441,7 @@ describe('Tags', () => {
     const executeSpy = jest.spyOn(tags, 'execute')
     tags.execute()
     // Set consent to trigger the listener in the Tags constructor
+    expect(executeSpy).toHaveBeenCalledTimes(1)
     ketch.setConsent({ purposes: { purpose1: true } })
     expect(executeSpy).toHaveBeenCalledTimes(2)
   })

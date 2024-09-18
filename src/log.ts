@@ -1,7 +1,7 @@
 import { getLogger, getLogLevel, getParams, LogLevel } from '@ketch-sdk/ketch-logging'
 
 let passedLevel = getLogLevel(getParams(window.location.search, ['ketch_', 'swb_']))
-if (!passedLevel && process.env.NODE_ENV === 'development') {
+if (passedLevel === LogLevel.WARN && process.env.NODE_ENV === 'development') {
   passedLevel = LogLevel.DEBUG
 }
 

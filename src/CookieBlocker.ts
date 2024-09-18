@@ -3,14 +3,19 @@ import { Ketch } from './Ketch'
 import log from './log'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { addToKetchLog } from './Console'
+import constants from './constants'
 
 export default class CookieBlocker {
   private readonly _ketch: Ketch
   private readonly _config: ConfigurationV2
+  private _blockedCookies: Set<string> = new Set<string>()
 
   constructor(ketch: Ketch, config: Configuration | ConfigurationV2) {
     this._ketch = ketch
     this._config = config as ConfigurationV2
+
+    // Add a listener to retry whenever consent is updated
+    this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
   }
 
   // Return a promise containing the set of purposes codes for which we have consent
@@ -25,13 +30,12 @@ export default class CookieBlocker {
 
   execute: () => Promise<string[]> = async () => {
     const l = wrapLogger(log, 'CookieBlocker: execute')
-    const blockedCookies: string[] = []
 
     // Get all cookies
     const cookies = document.cookie.split(';')
     if (!cookies.length) {
       l.debug('no browser cookies')
-      return blockedCookies
+      return Array.from(this._blockedCookies)
     }
 
     // Get set of purposes codes which we have consent for
@@ -52,10 +56,10 @@ export default class CookieBlocker {
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
         const [name, _] = cookie.split('=')
-        if (regexPattern.test(name)) {
+        if (!this._blockedCookies.has(name) && regexPattern.test(name)) {
           // Delete the cookie by setting its expiration date to the past, 01 Jan 1970 is convention for deleting cookies
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-          blockedCookies.push(name)
+          this._blockedCookies.add(name)
           l.debug(`Deleted cookie: ${name}`)
         }
       })
@@ -64,11 +68,12 @@ export default class CookieBlocker {
     // Add window.KetchLog.getBlockedCookies utility function
     addToKetchLog('getBlockedCookies', () => {
       // Log results
-      console.group(`Blocked Cookies (${blockedCookies.length})`)
-      blockedCookies.forEach(cookie => console.log(cookie))
+      console.group(`Blocked Cookies (${this._blockedCookies.size}) 🍪`)
+      if (!this._blockedCookies.size) console.log('No blocked cookies')
+      this._blockedCookies.forEach(cookie => console.log(cookie))
       console.groupEnd()
     })
 
-    return blockedCookies
+    return Array.from(this._blockedCookies)
   }
 }
