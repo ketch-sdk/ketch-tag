@@ -135,12 +135,14 @@ describe('CookieBlocker', () => {
     },
     blockedCookies: {
       'cookie-1': {
-        pattern: 'cookie-1_a',
-        purposes: ['purpose-1'],
+        regex: 'cookie-1_a',
+        pattern: 'pattern',
+        purposeCodes: ['purpose-1'],
       },
       'cookie-2': {
-        pattern: 'cookie-2_.+',
-        purposes: ['purpose-2', 'purpose-3'],
+        regex: 'cookie-2_.+',
+        pattern: 'pattern',
+        purposeCodes: ['purpose-2', 'purpose-3'],
       },
     },
   }
@@ -262,6 +264,16 @@ describe('CookieBlocker', () => {
 
     // No cookies should be blocked because we have consent
     expect(blockedCookies.length).toBe(0)
+  })
+
+  it('re-executes with updated consent values', async () => {
+    // Spy on the execute method of the Tags instance
+    const executeSpy = jest.spyOn(cookieBlocker, 'execute')
+    cookieBlocker.execute()
+    // Set consent to trigger the listener in the Tags constructor
+    expect(executeSpy).toHaveBeenCalledTimes(1)
+    ketch.setConsent({ purposes: { purpose1: true } })
+    expect(executeSpy).toHaveBeenCalledTimes(2)
   })
 
   it('verifies no errors when consent is undefined', async () => {
