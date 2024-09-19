@@ -279,7 +279,7 @@ export default class Tags {
       )
       this._results[elementName] = {
         enabledElements: [...previousEnabledElements, ...enabledElements],
-        disabledElements: [...previousDisabledElements, ...disabledElements],
+        disabledElements: [...previousDisabledElements.filter(e => !disabledElements.includes(e)), ...disabledElements],
       }
       l.debug(
         `enabled ${elementName} elements:`,
