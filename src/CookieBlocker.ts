@@ -51,7 +51,7 @@ export default class CookieBlocker {
       }
 
       // Get RegExp from string
-      const regexPattern = new RegExp(regex) // Convert regex to regular expression type
+      const regexPattern = new RegExp(regex || '') // Convert regex to regular expression type
 
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
