@@ -19,9 +19,8 @@ const initializeKetchLog = () => {
 export const addToKetchLog = (methodName: string, method: (...args: any[]) => void) => {
   initializeKetchLog()
 
+  // Add method if not already there
   if (!window.KetchLog[methodName]) {
     window.KetchLog[methodName] = method
-  } else {
-    console.warn(`Method ${methodName} already exists on window.KetchLog`)
   }
 }
