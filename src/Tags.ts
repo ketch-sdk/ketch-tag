@@ -273,9 +273,13 @@ export default class Tags {
 
       // Update results
       const previousEnabledElements = this._results[elementName]?.enabledElements || []
+      const previousDisabledElements = (this._results[elementName]?.disabledElements || []).filter(
+        // Remove newly or previously enabled elements from previously disabled elements array
+        element => !previousEnabledElements.includes(element) && !enabledElements.includes(element),
+      )
       this._results[elementName] = {
         enabledElements: [...previousEnabledElements, ...enabledElements],
-        disabledElements,
+        disabledElements: [...previousDisabledElements, ...disabledElements],
       }
       l.debug(
         `enabled ${elementName} elements:`,
