@@ -95,7 +95,6 @@ export const buildTree = (allClickables: NodeList): ActionItemsTree | undefined 
     l.debug(sortedNodes.map(i => i.ketch.navParsed))
     return sortedNodes
   } else if (currentExperience === EXPERIENCES.MODAL) {
-    // TODO group by subexp and sort -- there is something about exp
     const sortedNodes = nodes.sort((a, b) => {
       if (!a.ketch.navParsed || !b.ketch.navParsed) {
         return 0

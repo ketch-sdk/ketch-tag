@@ -212,6 +212,15 @@ describe('keyboardHandler: handleSelection', () => {
     jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as unknown as KetchHTMLElement)
     expect(testExports.handleSelection).not.toThrow()
   })
+
+  it('should clear cache on selection', () => {
+    const spy = jest.spyOn(testExports, 'clearCachedNodes')
+    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({ click: jest.fn() } as unknown as KetchHTMLElement)
+
+    testExports.handleSelection()
+
+    expect(spy).toHaveBeenCalled()
+  })
 })
 
 describe('keyboardHandler: buildTree', () => {
@@ -310,31 +319,31 @@ describe('keyboardHandler: navigateBannerTree', () => {
     const ctx = tree[1]
 
     let result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[2].innerHTML)
+    expect(result.innerHTML).toEqual(tree[0].innerHTML)
 
     result = testExports.navigateBannerTree(tree, ArrowActions.RIGHT, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[0].innerHTML)
+    expect(result.innerHTML).toEqual(tree[2].innerHTML)
   })
 
   it('should navigate up-to-down low-nav-index to high-nav-index', () => {
     const ctx = tree[1]
 
     let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[2].innerHTML)
+    expect(result.innerHTML).toEqual(tree[0].innerHTML)
 
     result = testExports.navigateBannerTree(tree, ArrowActions.DOWN, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[0].innerHTML)
+    expect(result.innerHTML).toEqual(tree[2].innerHTML)
   })
 
   it('should return undefined (LTR) if there are no nodes to navigate', () => {
-    const ctx = tree[2]
+    const ctx = tree[0]
 
     const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
     expect(result).toBeUndefined()
   })
 
   it('should return undefined (UTD) if there are no nodes to navigate', () => {
-    const ctx = tree[2]
+    const ctx = tree[0]
 
     const result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
     expect(result).toBeUndefined()
