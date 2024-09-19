@@ -5,7 +5,7 @@ import * as utils from './utils'
 
 import {
   ArrowActions,
-  BannerActionTree,
+  ActionItemsTree,
   KetchHTMLElement,
   SupportedUserAgents,
   UserAgentHandlerMap,
@@ -233,7 +233,7 @@ describe('keyboardHandler: buildTree', () => {
       return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
     })
 
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
 
     expect(results).toBeDefined()
     expect(spy).toHaveBeenNthCalledWith(1, '1')
@@ -256,7 +256,7 @@ describe('keyboardHandler: buildTree', () => {
       return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
     })
 
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
 
     expect(Array.isArray(results)).toBeTruthy()
     expect(results.length === 2).toBeTruthy()
@@ -270,14 +270,14 @@ describe('keyboardHandler: buildTree', () => {
       return { experience: 'fresh-new-experience' }
     })
 
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
+    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
     expect(results).toBeUndefined()
   })
 })
 
 describe('keyboardHandler: navigateBannerTree', () => {
   const loggerName = '[navigateBannerTree]'
-  const tree: BannerActionTree = []
+  const tree: ActionItemsTree = []
   beforeAll(() => {
     const parser = new DOMParser()
     const doc = parser.parseFromString(

@@ -3,9 +3,10 @@ import { clearCachedDomNode, getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setC
 import { LANYARD_ID } from './constants'
 import {
   ArrowActions,
-  BannerActionTree,
+  ActionItemsTree,
   DataNav,
   EXPERIENCES,
+  focusVisibleClasses,
   KetchHTMLElement,
   SelectionObject,
   SupportedUserAgents,
@@ -61,11 +62,12 @@ export const clearCachedNodes = () => {
 export const handleSelection = () => {
   const node = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
   if (node && typeof node.click === 'function') {
+    clearCachedNodes()
     node.click()
   }
 }
 
-export const buildTree = (allClickables: NodeList): BannerActionTree | undefined => {
+export const buildTree = (allClickables: NodeList): ActionItemsTree | undefined => {
   const l = wrapLogger(log, 'buildTree')
   if (allClickables.length === 0) {
     return []
@@ -90,10 +92,18 @@ export const buildTree = (allClickables: NodeList): BannerActionTree | undefined
       }
       return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
     })
-    l.debug(sortedNodes)
+    l.debug(sortedNodes.map(i => i.ketch.navParsed))
     return sortedNodes
   } else if (currentExperience === EXPERIENCES.MODAL) {
-    return nodes
+    // TODO group by subexp and sort -- there is something about exp
+    const sortedNodes = nodes.sort((a, b) => {
+      if (!a.ketch.navParsed || !b.ketch.navParsed) {
+        return 0
+      }
+      return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
+    })
+    l.debug(sortedNodes)
+    return sortedNodes
   } else if (currentExperience === EXPERIENCES.PREFERENCES) {
     return nodes
   } else {
@@ -101,31 +111,34 @@ export const buildTree = (allClickables: NodeList): BannerActionTree | undefined
   }
 }
 
-export const navigateBannerTree = (tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) => {
+export const navigateBannerTree = (tree: ActionItemsTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) => {
   const l = wrapLogger(log, 'navigateBannerTree')
   const index = tree.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
   l.debug('Starting at: ', index)
   switch (arrowAction) {
     case ArrowActions.UP:
     case ArrowActions.LEFT:
-      if (index === tree.length - 1) {
+      if (index === 0) {
         l.debug('Cannot move past last node')
         return
       }
-      return tree[index + 1]
+      return tree[index - 1]
     case ArrowActions.RIGHT:
     case ArrowActions.DOWN:
-      if (index === 0) {
+      if (index === tree.length - 1) {
         l.debug('Cannot move beyond first node')
         return
       }
-      return tree[index - 1]
+      return tree[index + 1]
     default:
       l.debug('Unknown arrowAction: ', arrowAction)
       return
   }
 }
 
+// export const navigateModalTree = (tree: BannerActionTree, arrowAction: ArrowActions, ctxNode: KetchHTMLElement) => {
+//   return ctxNode
+// }
 export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | null => {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug('Navigating ', arrowAction)
@@ -141,7 +154,7 @@ export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | n
 
   const allClickables = getCachedDomNode(
     KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
-    lanyard.querySelectorAll('button, input'),
+    lanyard.querySelectorAll('[data-nav]'),
   ) as NodeList
   const tree = buildTree(allClickables)
   if (!tree) {
@@ -150,11 +163,23 @@ export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | n
   }
 
   const ctxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
-  const nextNode = !ctxNode ? tree[0] : navigateBannerTree(tree, arrowAction, ctxNode) || null
+  let nextNode
+  if (!ctxNode) {
+    nextNode = tree[0]
+  } else if (ctxNode.ketch.navParsed.experience === EXPERIENCES.BANNER) {
+    nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
+  } else if (ctxNode.ketch.navParsed.experience === EXPERIENCES.MODAL) {
+    nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
+  } else {
+    l.debug(`unhandled experience ${ctxNode.ketch.navParsed.experience}`)
+    nextNode = null
+  }
 
   if (nextNode) {
     l.debug('Updating cached context node: ', nextNode)
     setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
+  } else {
+    nextNode = null
   }
   return { prevNode: ctxNode, nextNode }
 }
@@ -188,13 +213,13 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
     } else {
       const { prevNode, nextNode } = nodes
       if (prevNode && nextNode) {
+        prevNode.blur()
         prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
-        prevNode.classList.remove('active')
-        prevNode.classList.remove('selected')
+        focusVisibleClasses.forEach(i => prevNode.classList.remove(i))
       }
       if (nextNode) {
-        nextNode.classList.add('active')
-        nextNode.classList.add('selected')
+        nextNode.focus()
+        focusVisibleClasses.forEach(i => nextNode.classList.add(i))
         nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
       }
     }
