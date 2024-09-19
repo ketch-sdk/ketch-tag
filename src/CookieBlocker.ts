@@ -55,7 +55,7 @@ export default class CookieBlocker {
 
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
-        const [name, _] = cookie.split('=')
+        const [name, _] = cookie.trim().split('=')
         /**
          * Delete cookie if not already deleted AND either:
          *   - We have a regex pattern and the cookie name matches that pattern, or

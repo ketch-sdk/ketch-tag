@@ -148,6 +148,13 @@ describe('CookieBlocker', () => {
       'cookie-4': {
         purposeCodes: ['purpose-2', 'purpose-3'],
       },
+      'cookie-5': {
+        regex: '^ab\\.storage\\.deviceId.*$',
+        purposeCodes: ['purpose-2', 'purpose-3'],
+      },
+      analytics_session_id: {
+        purposeCodes: ['purpose-2', 'purpose-3'],
+      },
     },
   }
 
@@ -184,7 +191,7 @@ describe('CookieBlocker', () => {
     expect(grantedPurposes.has('purpose-3')).toBe(false)
   })
 
-  it('deletes one cookie with regex only', async () => {
+  it('deletes one cookie with regex only - 1', async () => {
     // Mock consents
     jest.spyOn(ketch, 'getConsent').mockResolvedValue({
       purposes: {
@@ -200,6 +207,26 @@ describe('CookieBlocker', () => {
     const blockedCookies = await cookieBlocker.execute()
     expect(blockedCookies.length).toBe(1)
     expect(blockedCookies[0]).toBe('cookie-1_a')
+  })
+
+  it('deletes one cookie with regex only - 2', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': false,
+        'purpose-2': false,
+        'purpose-3': false,
+      },
+    })
+
+    // Mock cookies
+    jest
+      .spyOn(document, 'cookie', 'get')
+      .mockReturnValue(' ab.storage.deviceId.14cbcbd7-760e-49dc-a494-a4e8e89433ff=value;')
+
+    const blockedCookies = await cookieBlocker.execute()
+    expect(blockedCookies.length).toBe(1)
+    expect(blockedCookies[0]).toBe('ab.storage.deviceId.14cbcbd7-760e-49dc-a494-a4e8e89433ff')
   })
 
   it('deletes multiple cookies with regex only', async () => {
@@ -228,7 +255,7 @@ describe('CookieBlocker', () => {
     expect(blockedCookies[2]).toBe('cookie-2_c')
   })
 
-  it('deletes one cookie with exact match only', async () => {
+  it('deletes one cookie with exact match only - 1', async () => {
     // Mock consents
     jest.spyOn(ketch, 'getConsent').mockResolvedValue({
       purposes: {
@@ -244,6 +271,24 @@ describe('CookieBlocker', () => {
     const blockedCookies = await cookieBlocker.execute()
     expect(blockedCookies.length).toBe(1)
     expect(blockedCookies[0]).toBe('cookie-3')
+  })
+
+  it('deletes one cookie with exact match only - 2', async () => {
+    // Mock consents
+    jest.spyOn(ketch, 'getConsent').mockResolvedValue({
+      purposes: {
+        'purpose-1': false,
+        'purpose-2': false,
+        'purpose-3': false,
+      },
+    })
+
+    // Mock cookies
+    jest.spyOn(document, 'cookie', 'get').mockReturnValue(' analytics_session_id=1726747699422')
+
+    const blockedCookies = await cookieBlocker.execute()
+    expect(blockedCookies.length).toBe(1)
+    expect(blockedCookies[0]).toBe('analytics_session_id')
   })
 
   it('deletes multiple cookies with exact match only', async () => {
