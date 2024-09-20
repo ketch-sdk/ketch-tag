@@ -20,6 +20,11 @@ export const KEYBOARD_HANDLER_CACHE_KEYS = {
   CTX_KEY: '_ketch_currentKeyboardCtx',
   LANYARD_DOM: '_ketch_lanyardRootDom',
   FOCUSABLE_ELEMS: '_ketch_focusableElems',
+  // TODO scratch code - delete
+  // TOP_LEVEL_STACK: '_ketch_topLevelStack',
+  // EXPAND_STACK: '_ketch_expandStack',
+  // SWITCH_STACK: '_ketch_switchStack',
+  // SUB_EXPERIENCE_STACK: '_ketch_subExperienceStack',
 }
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
@@ -170,7 +175,7 @@ export function setCachedDomNode(key: string, node: HTMLElement) {
   }
 }
 
-export function clearCachedDomNode(key: string) {
+export function clearCacheEntry(key: string) {
   if (window) {
     window[key] = undefined
   }

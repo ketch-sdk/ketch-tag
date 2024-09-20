@@ -1,5 +1,11 @@
 export type ActionItemsTree = Array<KetchHTMLElement>
 
+export type ActionItemStack = {
+  topNodes: ActionItemsTree
+  expandNodes?: ActionItemsTree
+  switchNodes?: ActionItemsTree
+}
+
 export enum ArrowActions {
   LEFT = 'LEFT',
   RIGHT = 'RIGHT',
@@ -11,9 +17,10 @@ export enum ArrowActions {
 }
 
 export type DataNav = {
+  action?: string
   experience: string
   'nav-index': number
-  action?: string
+  subExperience?: string
 }
 
 export const EXPERIENCES = {
@@ -32,6 +39,14 @@ export interface KetchHTMLElement extends HTMLElement {
   ketch: any
 }
 
+export enum LanyardItemActions {
+  back = 'back',
+  close = 'close',
+  confirm = 'confirm',
+  expand = 'expand',
+  switch = 'switch',
+}
+
 export type SelectionObject = {
   prevNode: KetchHTMLElement | null
   nextNode: KetchHTMLElement | null
@@ -39,6 +54,7 @@ export type SelectionObject = {
 
 export enum SupportedUserAgents {
   TIZEN = 'TIZEN',
+  MACINTOSH = 'MACINTOSH',
 }
 
 const TizenKeys: Record<number, ArrowActions> = {
@@ -50,6 +66,16 @@ const TizenKeys: Record<number, ArrowActions> = {
   10009: ArrowActions.BACK,
 } as const
 
+const DesktopKeys: Record<number, ArrowActions> = {
+  37: ArrowActions.LEFT,
+  38: ArrowActions.UP,
+  39: ArrowActions.RIGHT,
+  40: ArrowActions.DOWN,
+  13: ArrowActions.OK,
+  27: ArrowActions.BACK,
+}
+
 export const UserAgentHandlerMap = {
   [SupportedUserAgents.TIZEN]: TizenKeys,
+  [SupportedUserAgents.MACINTOSH]: DesktopKeys,
 }

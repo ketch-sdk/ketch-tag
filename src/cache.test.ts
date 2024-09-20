@@ -2,7 +2,7 @@ import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest
 import LocalStorageMock from './__mocks__/localStorage'
 import {
   CACHED_CONSENT_KEY,
-  clearCachedDomNode,
+  clearCacheEntry,
   getCachedConsent,
   getCachedDomNode,
   PUBLIC_CONSENT_KEY_V1,
@@ -349,7 +349,7 @@ describe('clearCachedDomNode', () => {
     // @ts-ignore
     window[key] = 'someValue'
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     // @ts-ignore
     expect(window[key]).toBeUndefined()
@@ -360,7 +360,7 @@ describe('clearCachedDomNode', () => {
     localStorage.setItem(key, 'someValue')
     const spy = jest.spyOn(localStorage, 'removeItem')
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     expect(spy).toHaveBeenCalledWith(key)
   })
@@ -372,7 +372,7 @@ describe('clearCachedDomNode', () => {
 
     Object.defineProperty(global, 'window', { value: undefined })
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     global.window = og
     // @ts-ignore
@@ -385,7 +385,7 @@ describe('clearCachedDomNode', () => {
     const spy = jest.spyOn(localStorage, 'removeItem')
     Object.defineProperty(global, 'localStorage', { value: undefined })
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     global.localStorage = originalLocalStorage
     expect(spy).not.toHaveBeenCalled()

@@ -12,6 +12,7 @@ import {
 } from './keyboardHandler.types'
 import log from './log'
 import * as cache from './cache'
+import { LANYARD_ID } from './constants'
 
 jest.mock('./log')
 
@@ -23,7 +24,7 @@ describe('keyboardHandler: onKeyPress', () => {
     const unknownTizenKey = -1
     const fn = jest.fn()
     jest.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Tizen')
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
 
     onKeyPress({ keyCode: unknownTizenKey } as KeyboardEvent, fn)
 
@@ -36,7 +37,7 @@ describe('keyboardHandler: onKeyPress', () => {
     const unknownUserAgent = 'sagar'
     const fn = jest.fn()
     jest.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(unknownUserAgent)
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
 
     onKeyPress({ keyCode: 37 } as KeyboardEvent, fn)
 
@@ -47,7 +48,7 @@ describe('keyboardHandler: onKeyPress', () => {
 
   it('should return keyboard control on back keycode', () => {
     const fn = jest.fn()
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
     onKeyPress(ArrowActions.BACK, fn)
 
     expect(spy).toHaveBeenCalled()
@@ -177,7 +178,7 @@ describe('keyboardHandler: getArrowActionFromUserAgent', () => {
 describe('keyboardHandler: clearCachedNodes', () => {
   it('should call cache utility for every KEYBOARD_HANDLER_CACHE_KEY', () => {
     const spy = jest.fn()
-    jest.spyOn(cache, 'clearCachedDomNode').mockImplementation(spy)
+    jest.spyOn(cache, 'clearCacheEntry').mockImplementation(spy)
 
     testExports.clearCachedNodes()
     Object.values(KEYBOARD_HANDLER_CACHE_KEYS).forEach((v, i) => {
@@ -223,64 +224,23 @@ describe('keyboardHandler: handleSelection', () => {
   })
 })
 
-describe('keyboardHandler: buildTree', () => {
+describe('keyboardHandler: getBannerTree', () => {
   it('should return an empty list if no clickable items are passed', () => {
-    const a = [] as unknown as NodeList
-    expect(testExports.buildTree(a)).toEqual([])
-  })
-
-  it('should parse data-nav and build KetchHTMLElement', () => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(
-      `
-        <button data-nav="1">btn 1</button>
-        <button data-nav="2">btn 2</button>
-      `,
-      'text/html',
-    )
-    const spy = jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
-      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
-    })
-
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
-
-    expect(results).toBeDefined()
-    expect(spy).toHaveBeenNthCalledWith(1, '1')
-    expect(spy).toHaveBeenNthCalledWith(2, '2')
-    results.forEach(i => {
-      expect(i.ketch).toBeDefined()
-    })
+    const a = [] as unknown as KetchHTMLElement[]
+    expect(testExports.getBannerTree(a)).toEqual([])
   })
 
   it('should sort nodes by nav-index for Banner Experience', () => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(
-      `
-        <button data-nav="1">btn 1</button>
-        <button data-nav="2">btn 2</button>
-      `,
-      'text/html',
-    )
-    jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
-      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
-    })
+    const nodes = [
+      { experience: 'ketch-consent-banner', 'nav-index': 2 },
+      { experience: 'ketch-consent-banner', 'nav-index': 1 },
+    ] as unknown as KetchHTMLElement[]
 
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
+    const results = testExports.getBannerTree(nodes) as ActionItemsTree
 
     expect(Array.isArray(results)).toBeTruthy()
     expect(results.length === 2).toBeTruthy()
     expect(results[0].ketch.navParsed['nav-index']).toBeLessThan(results[1].ketch.navParsed['nav-index'])
-  })
-
-  it('should return undefined if the experience is not handled', () => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString('<button data-nav="1">btn 1</button>', 'text/html')
-    jest.spyOn(utils, 'decodeDataNav').mockImplementation(() => {
-      return { experience: 'fresh-new-experience' }
-    })
-
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as ActionItemsTree
-    expect(results).toBeUndefined()
   })
 })
 
@@ -355,5 +315,80 @@ describe('keyboardHandler: navigateBannerTree', () => {
     const result = testExports.navigateBannerTree(tree, ArrowActions.OK, ctx)
     expect(result).toBeUndefined()
     expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', ArrowActions.OK)
+  })
+})
+
+describe('keyboardHandler: handleNavigation', () => {
+  const loggerName = '[handleNavigation]'
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it('should check for lanyard root in cache', () => {
+    const spy = jest.spyOn(cache, 'getCachedDomNode')
+    const domSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null)
+
+    testExports.handleNavigation(ArrowActions.LEFT)
+
+    expect(domSpy).toHaveBeenCalledWith(LANYARD_ID)
+    expect(spy).toHaveBeenCalledWith(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, null)
+  })
+
+  it('should return null if lanyard root is absent', () => {
+    jest.spyOn(cache, 'getCachedDomNode').mockImplementation(() => null)
+
+    const r = testExports.handleNavigation(ArrowActions.LEFT)
+    expect(r).toBeNull()
+  })
+
+  it('should detect tampered storage and return null', () => {
+    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue('not html' as unknown as NodeList)
+
+    const r = testExports.handleNavigation(ArrowActions.LEFT)
+
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Storage inconsistent')
+    expect(r).toBeNull()
+  })
+
+  it('should parse data-nav and build KetchHTMLElement', () => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(
+      `
+        <div id="lanyard_root">
+          <button data-nav="1">btn 1</button>
+          <button data-nav="2">btn 2</button>
+        </div>
+      `,
+      'text/html',
+    )
+    jest.spyOn(document, 'getElementById').mockReturnValue(doc.getElementById(LANYARD_ID))
+    const decoderSpy = jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
+      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
+    })
+    const treeSpy = jest.spyOn(testExports, 'getBannerTree')
+
+    testExports.handleNavigation(ArrowActions.LEFT)
+
+    expect(decoderSpy).toHaveBeenNthCalledWith(1, '1')
+    expect(decoderSpy).toHaveBeenNthCalledWith(2, '2')
+    expect(treeSpy).toHaveBeenCalled()
+    const args = treeSpy.mock.calls[0][0]
+    args.forEach(i => {
+      expect(i.ketch).toBeDefined()
+    })
+  })
+
+  it('should return undefined if the experience is not handled', () => {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString('<div id="lanyard_root"><button data-nav="1">btn 1</button></div>', 'text/html')
+    jest.spyOn(document, 'getElementById').mockReturnValue(doc.getElementById(LANYARD_ID))
+    jest.spyOn(utils, 'decodeDataNav').mockReturnValue({ experience: 'fresh-new-experience' })
+
+    const results = testExports.handleNavigation(ArrowActions.LEFT)
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'unhandled experience fresh-new-experience')
+    expect(results).not.toBeNull()
+    // @ts-ignore
+    expect(results.nextNode).toBeNull()
   })
 })
