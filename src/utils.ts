@@ -1,6 +1,7 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import log from './log'
-import { DataNav, KetchHTMLElement } from './keyboardHandler.types'
+import { DataNav } from './keyboardHandler.types'
+import { getLanyardRoot } from './cache'
 
 export function safeJsonParse(str?: string) {
   const l = wrapLogger(log, 'safeJsonParse')
@@ -15,23 +16,38 @@ export function safeJsonParse(str?: string) {
   }
 }
 
-export function decodeDataNav(str: string) {
+export function decodeDataNav(str: string): DataNav | null {
   const l = wrapLogger(log, 'decodeDataNav')
   let decodedStr = ''
   try {
+    // eg. data-nav="eyJleHBlcmllbmNlIjoia2V0Y2gtY29uc2VudC1iYW5uZXIiLCJuYXYtaW5kZXgiOjJ9"
     decodedStr = window.atob(str)
   } catch (e) {
     l.debug(`Invalid encoding: ${str}`, e)
   }
-  return safeJsonParse(decodedStr)
+  const o = safeJsonParse(decodedStr)
+  if (Object.prototype.toString.call(o) !== '[object Object]') {
+    /**
+     * Weed out any non {} values
+     * Optimization - confirm if o is DataNav
+     */
+    return null
+  }
+  o.src = str
+  return o
 }
 
-export function convertToKetchHTMLElement(node: HTMLElement): KetchHTMLElement {
-  const i = node as KetchHTMLElement
-  if (!i.ketch) {
-    i.ketch = {}
+export function getDomNode(ctxNav: DataNav | null): HTMLElement | null {
+  const l = wrapLogger(log, 'convertToKetchHTMLElement')
+  if (!ctxNav || !ctxNav.src) {
+    l.debug('node missing src', ctxNav)
+    return null
   }
-  // eg. data-nav="eyJleHBlcmllbmNlIjoia2V0Y2gtY29uc2VudC1iYW5uZXIiLCJuYXYtaW5kZXgiOjJ9"
-  i.ketch.navParsed = decodeDataNav(i.dataset.nav || '') as DataNav
-  return i
+  const selector = `[data-nav="${ctxNav.src}"]`
+  const parentNode = getLanyardRoot()
+  if (!parentNode) {
+    l.debug('missing lanyard root')
+    return null
+  }
+  return parentNode.querySelector(selector)
 }

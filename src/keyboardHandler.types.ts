@@ -1,9 +1,7 @@
-export type ActionItemsTree = Array<KetchHTMLElement>
-
 export type ActionItemStack = {
-  topNodes: ActionItemsTree
-  expandNodes?: ActionItemsTree
-  switchNodes?: ActionItemsTree
+  topNodes: DataNav[]
+  expandNodes?: DataNav[]
+  switchNodes?: DataNav[]
 }
 
 export enum ArrowActions {
@@ -17,6 +15,7 @@ export enum ArrowActions {
 }
 
 export type DataNav = {
+  src: string
   action?: string
   experience: string
   'nav-index': number
@@ -29,14 +28,12 @@ export const EXPERIENCES = {
   PREFERENCES: 'ketch-preferences',
 } as const
 
-export const focusVisibleClasses = ['ketch-outline', 'ketch-outline-2', 'ketch-outline-offset-2', 'ketch-outline-black']
-
 /* KetchHTMLElements are HTML elements stuffed with
  * a tracer that lets you find it in a DOM tree
  * a DataNav - that lets ketch tag handle keyboard events for navigation
  */
 export interface KetchHTMLElement extends HTMLElement {
-  ketch: any
+  ketch: { navParsed: DataNav }
 }
 
 export enum LanyardItemActions {
@@ -48,8 +45,8 @@ export enum LanyardItemActions {
 }
 
 export type SelectionObject = {
-  prevNode: KetchHTMLElement | null
-  nextNode: KetchHTMLElement | null
+  prev: DataNav | null
+  next: DataNav | null
 }
 
 export enum SupportedUserAgents {

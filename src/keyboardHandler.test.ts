@@ -59,7 +59,7 @@ describe('keyboardHandler: onKeyPress', () => {
     const returnFn = jest.fn()
     const clickFn = jest.fn()
     const mockNode = { click: clickFn } as unknown as HTMLElement
-    const spy = jest.spyOn(cache, 'getCachedDomNode').mockReturnValue(mockNode)
+    const spy = jest.spyOn(cache, 'getCachedNavNode').mockReturnValue(mockNode)
 
     onKeyPress(ArrowActions.OK, returnFn)
 
@@ -189,7 +189,7 @@ describe('keyboardHandler: clearCachedNodes', () => {
 
 describe('keyboardHandler: handleSelection', () => {
   it('should get the currently selected node from the cache', () => {
-    const spy = jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as KetchHTMLElement)
+    const spy = jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({} as KetchHTMLElement)
 
     testExports.handleSelection()
 
@@ -198,7 +198,7 @@ describe('keyboardHandler: handleSelection', () => {
 
   it('should click on the currently selected node', () => {
     const spy = jest.fn()
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({ click: spy } as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({ click: spy } as unknown as KetchHTMLElement)
 
     testExports.handleSelection()
 
@@ -206,17 +206,17 @@ describe('keyboardHandler: handleSelection', () => {
   })
 
   it('should validate if node has a click function', () => {
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue(undefined as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue(undefined as unknown as KetchHTMLElement)
 
     expect(testExports.handleSelection).not.toThrow()
 
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({} as unknown as KetchHTMLElement)
     expect(testExports.handleSelection).not.toThrow()
   })
 
   it('should clear cache on selection', () => {
     const spy = jest.spyOn(testExports, 'clearCachedNodes')
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({ click: jest.fn() } as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({ click: jest.fn() } as unknown as KetchHTMLElement)
 
     testExports.handleSelection()
 
@@ -326,7 +326,7 @@ describe('keyboardHandler: handleNavigation', () => {
   })
 
   it('should check for lanyard root in cache', () => {
-    const spy = jest.spyOn(cache, 'getCachedDomNode')
+    const spy = jest.spyOn(cache, 'getCachedNavNode')
     const domSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null)
 
     testExports.handleNavigation(ArrowActions.LEFT)
@@ -336,14 +336,14 @@ describe('keyboardHandler: handleNavigation', () => {
   })
 
   it('should return null if lanyard root is absent', () => {
-    jest.spyOn(cache, 'getCachedDomNode').mockImplementation(() => null)
+    jest.spyOn(cache, 'getCachedNavNode').mockImplementation(() => null)
 
     const r = testExports.handleNavigation(ArrowActions.LEFT)
     expect(r).toBeNull()
   })
 
   it('should detect tampered storage and return null', () => {
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue('not html' as unknown as NodeList)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue('not html' as unknown as NodeList)
 
     const r = testExports.handleNavigation(ArrowActions.LEFT)
 
@@ -389,6 +389,6 @@ describe('keyboardHandler: handleNavigation', () => {
     expect(log.debug).toHaveBeenCalledWith(loggerName, 'unhandled experience fresh-new-experience')
     expect(results).not.toBeNull()
     // @ts-ignore
-    expect(results.nextNode).toBeNull()
+    expect(results.next).toBeNull()
   })
 })
