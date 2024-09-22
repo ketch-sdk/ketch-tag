@@ -1,20 +1,23 @@
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
-import { clearCacheEntry, getCachedDomNode, KEYBOARD_HANDLER_CACHE_KEYS, setCachedDomNode } from './cache'
-import { LANYARD_ID } from './constants'
+import {
+  clearCacheEntry,
+  getCachedNavNode,
+  getLanyardRoot,
+  KEYBOARD_HANDLER_CACHE_KEYS,
+  setCachedNavNode,
+} from './cache'
 import {
   ActionItemStack,
-  ActionItemsTree,
   ArrowActions,
+  DataNav,
   EXPERIENCES,
-  focusVisibleClasses,
-  KetchHTMLElement,
   LanyardItemActions,
   SelectionObject,
   SupportedUserAgents,
   UserAgentHandlerMap,
 } from './keyboardHandler.types'
 import log from './log'
-import { convertToKetchHTMLElement } from './utils'
+import { decodeDataNav, getDomNode } from './utils'
 
 export const getUserAgent = (): SupportedUserAgents | undefined => {
   const l = wrapLogger(log, 'getUserAgent')
@@ -55,60 +58,84 @@ export const getArrowActionFromUserAgent = (event: KeyboardEvent) => {
 }
 
 export const clearCachedNodes = () => {
-  /*
-   * Perf optimization - do not clear Lanyard root, unless hideExp
-   */
+  const l = wrapLogger(log, 'clearCachedNodes')
   Object.values(KEYBOARD_HANDLER_CACHE_KEYS).forEach(i => {
+    l.trace(`clearing ${i}`)
     clearCacheEntry(i)
   })
 }
 
-export const handleSelection = () => {
-  const node = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY) as KetchHTMLElement
+export const renderNavigation = (nodes: SelectionObject) => {
+  const l = wrapLogger(log, 'renderNavigation')
+
+  const lanyard = getLanyardRoot()
+  if (!lanyard) {
+    l.debug('missing lanyard root')
+    return
+  }
+
+  const { prev, next } = nodes
+
+  if (prev) {
+    const prevNode = lanyard.querySelector(`[data-nav="${prev.src}"]`)
+    if (!prevNode) {
+      l.debug(`node not found: ${prev.src} -- ${prev['nav-index']}`)
+    } else {
+      // TODO read
+      ;(prevNode as HTMLElement).blur()
+    }
+  }
+  if (next) {
+    const nextNode = lanyard.querySelector(`[data-nav="${next.src}"]`)
+    if (!nextNode) {
+      l.debug(`node not found: ${next.src} -- ${next['nav-index']}`)
+    } else {
+      ;(nextNode as HTMLElement).focus()
+    }
+  }
+}
+export const handleSelection = (clearCache = true) => {
+  const l = wrapLogger(log, 'handleSelection')
+  const ctxNav = getCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
+  const node = getDomNode(ctxNav)
   if (node && typeof node.click === 'function') {
-    clearCachedNodes()
+    if (clearCache) {
+      clearCachedNodes()
+    }
     node.click()
+  } else {
+    l.debug('Node missing or missing click fn', node)
   }
 }
 
-export const getModalStacks = (nodes: KetchHTMLElement[]): ActionItemStack => {
+export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
   const l = wrapLogger(log, 'getModalStacks')
   if (nodes.length === 0) {
     l.debug('no clickable nodes')
     return { topNodes: [] }
   }
-  const topNodes = nodes
-    .filter(i => i.ketch.navParsed.subExperience === undefined)
-    .sort((a, b) => {
-      if (!a.ketch.navParsed || !b.ketch.navParsed) {
-        return 0
-      }
-      return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
-    })
-  l.debug(
-    'top nodes:',
-    topNodes.map(i => i.ketch.navParsed),
-  )
+  const topNodes = nodes.filter(i => i.subExperience === undefined).sort((a, b) => a['nav-index'] - b['nav-index'])
+  l.trace('top nodes:', topNodes)
 
   const expandNodes = nodes
-    .filter(i => i.ketch.navParsed.subExperience && i.ketch.navParsed.action === LanyardItemActions.expand)
+    .filter(i => i.subExperience && i.action === LanyardItemActions.expand)
     .sort((a, b) => {
-      return a.ketch.navParsed.subExperience - b.ketch.navParsed.subExperience
+      if (a.subExperience === undefined || b.subExperience === undefined) {
+        return 0
+      }
+      return a.subExperience.localeCompare(b.subExperience)
     })
-  l.debug(
-    'expand nodes:',
-    expandNodes.map(i => i.ketch.navParsed),
-  )
+  l.trace('expand nodes:', expandNodes)
 
   const switchNodes = nodes
-    .filter(i => i.ketch.navParsed.subExperience && i.ketch.navParsed.action === LanyardItemActions.switch)
+    .filter(i => i.subExperience && i.action === LanyardItemActions.switch)
     .sort((a, b) => {
-      return a.ketch.navParsed.subExperience - b.ketch.navParsed.subExperience
+      if (a.subExperience === undefined || b.subExperience === undefined) {
+        return 0
+      }
+      return a.subExperience.localeCompare(b.subExperience)
     })
-  l.debug(
-    'switch nodes:',
-    switchNodes.map(i => i.ketch.navParsed),
-  )
+  l.trace('switch nodes:', switchNodes)
 
   return {
     expandNodes: expandNodes.length > 0 ? expandNodes : undefined,
@@ -120,19 +147,19 @@ export const getModalStacks = (nodes: KetchHTMLElement[]): ActionItemStack => {
 export const navigateModalStacks = (
   stacks: ActionItemStack,
   arrowAction: ArrowActions,
-  ctxNode: KetchHTMLElement | null,
-): KetchHTMLElement | undefined => {
+  ctxNode: DataNav | null,
+): DataNav | null => {
   const l = wrapLogger(log, 'navigateModalStacks')
   if (!stacks || !stacks.topNodes || !stacks.topNodes?.length) {
     l.debug('no top nodes found in the modal')
-    return undefined
+    return null
   }
   if (ctxNode === null) {
     l.debug(`Defaulting first selection to node: ${stacks.topNodes[0]}`)
     return stacks.topNodes[0]
   }
 
-  const ctxNodeAction = ctxNode.ketch.navParsed.action
+  const ctxNodeAction = ctxNode.action
   const activeStack =
     ctxNodeAction === LanyardItemActions.expand
       ? stacks.expandNodes
@@ -141,9 +168,10 @@ export const navigateModalStacks = (
       : stacks.topNodes
   if (!activeStack) {
     l.debug('Storage inconsistent')
-    return undefined
+    return null
   }
-  const index = activeStack.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
+  l.trace('activeStack:', activeStack)
+  const index = activeStack.findIndex(i => i.src === ctxNode.src)
   switch (arrowAction) {
     case ArrowActions.UP:
       if (index === 0) {
@@ -154,7 +182,7 @@ export const navigateModalStacks = (
           // Go to the last switch
           return stacks.switchNodes && stacks.switchNodes.length > 0
             ? stacks.switchNodes[stacks.switchNodes.length - 1]
-            : undefined
+            : null
         }
       } else {
         return activeStack[index - 1]
@@ -166,7 +194,7 @@ export const navigateModalStacks = (
           return stacks.topNodes[0]
         } else {
           // Move to first switch
-          return stacks.switchNodes && stacks.switchNodes.length > 0 ? stacks.switchNodes[0] : undefined
+          return stacks.switchNodes && stacks.switchNodes.length > 0 ? stacks.switchNodes[0] : null
         }
       } else {
         return activeStack[index + 1]
@@ -174,82 +202,81 @@ export const navigateModalStacks = (
     case ArrowActions.LEFT:
       if (ctxNodeAction === LanyardItemActions.switch) {
         // Move to expand button
-        return stacks.expandNodes && stacks.expandNodes.length > index ? stacks.expandNodes[index] : undefined
+        return stacks.expandNodes && stacks.expandNodes.length > index ? stacks.expandNodes[index] : null
       } else {
-        return undefined
+        return null
       }
     case ArrowActions.RIGHT:
       if (ctxNodeAction === LanyardItemActions.expand) {
         // Move to switch button
-        return stacks.switchNodes && stacks.switchNodes.length > index ? stacks.switchNodes[index] : undefined
+        return stacks.switchNodes && stacks.switchNodes.length > index ? stacks.switchNodes[index] : null
       } else {
-        return undefined
+        return null
       }
     case ArrowActions.OK:
       // TODO implement -> if ctx = div(action.drill?) then go to stack.switch[0]
-      return undefined
+      handleSelection(ctxNodeAction === (LanyardItemActions.confirm || LanyardItemActions.close))
+      return null
     case ArrowActions.BACK:
       // TODO implement -> if ctx = div(action.exp | switch) then go to stack.top[last]
       // => if modal has a back button then this should invoke that
-      return undefined
+      return null
     default:
-      return undefined
+      return null
   }
 }
-export const getBannerTree = (nodes: KetchHTMLElement[]): ActionItemsTree => {
+export const getBannerTree = (nodes: DataNav[]): DataNav[] => {
   const l = wrapLogger(log, 'getBannerTree')
   if (nodes.length === 0) {
     l.debug('no clickable nodes')
     return []
   }
 
-  const sortedNodes = nodes.sort((a, b) => {
-    if (!a.ketch.navParsed || !b.ketch.navParsed) {
-      return 0
-    }
-    return a.ketch.navParsed['nav-index'] - b.ketch.navParsed['nav-index']
-  })
-  l.debug(sortedNodes.map(i => i.ketch.navParsed))
+  const sortedNodes = nodes.sort((a, b) => a['nav-index'] - b['nav-index'])
+  l.debug(sortedNodes)
   return sortedNodes
 }
 
 export const navigateBannerTree = (
-  tree: ActionItemsTree,
+  tree: DataNav[],
   arrowAction: ArrowActions,
-  ctxNode: KetchHTMLElement | null,
-) => {
+  ctxNode: DataNav | null,
+): DataNav | null => {
   const l = wrapLogger(log, 'navigateBannerTree')
   if (ctxNode === null) {
     l.debug(`Defaulting first selection to node: ${tree[0]}`)
     return tree[0]
   }
-  const index = tree.findIndex(i => i.ketch.navParsed['nav-index'] === ctxNode.ketch.navParsed['nav-index'])
+  const index = tree.findIndex(i => i.src === ctxNode.src)
   l.debug('Starting at: ', index)
   switch (arrowAction) {
     case ArrowActions.UP:
     case ArrowActions.LEFT:
       if (index === 0) {
         l.debug('Cannot move past last node')
-        return
+        return null
       }
       return tree[index - 1]
     case ArrowActions.RIGHT:
     case ArrowActions.DOWN:
       if (index === tree.length - 1) {
         l.debug('Cannot move beyond first node')
-        return
+        return null
       }
       return tree[index + 1]
+    case ArrowActions.OK:
+      handleSelection(true)
+      return null
     default:
       l.debug('Unknown arrowAction: ', arrowAction)
-      return
+      return null
   }
 }
 
 export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | null => {
   const l = wrapLogger(log, 'handleNavigation')
   l.debug('Navigating ', arrowAction)
-  const lanyard = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, document.getElementById(LANYARD_ID))
+  const lanyard = getLanyardRoot()
 
   if (lanyard === null) {
     l.debug('Cannot find lanyard root')
@@ -259,48 +286,44 @@ export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | n
     return null
   }
 
-  const allClickables = getCachedDomNode(
-    KEYBOARD_HANDLER_CACHE_KEYS.FOCUSABLE_ELEMS,
-    lanyard.querySelectorAll('[data-nav]'),
-  ) as NodeList
+  const allClickables = lanyard.querySelectorAll('[data-nav]')
 
   if (!allClickables || allClickables.length === 0) {
     l.debug('No tagged DOM nodes found')
     return null
   }
 
-  const decodedNodes: KetchHTMLElement[] = [...allClickables]
-    .filter(i => i instanceof HTMLElement)
-    .map(i => convertToKetchHTMLElement(i as HTMLElement))
+  const decodedNodes: DataNav[] = []
+  allClickables.forEach(i => {
+    const parsedNav = decodeDataNav((i as HTMLElement).dataset.nav || '')
+    if (parsedNav !== null) {
+      decodedNodes.push(parsedNav)
+    }
+  })
 
-  let nextNode, ctxNode
-  const currentExperience = decodedNodes[0].ketch.navParsed.experience
-  const cachedCtxNode = getCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
-  if (cachedCtxNode instanceof NodeList) {
-    l.debug('Storage inconsistent - expected HTMLElement | null', cachedCtxNode)
-    ctxNode = null
-  } else {
-    ctxNode = cachedCtxNode instanceof HTMLElement ? convertToKetchHTMLElement(cachedCtxNode) : cachedCtxNode
+  if (decodedNodes.length !== allClickables.length) {
+    l.debug('inconsistent encoding of data-nav')
   }
+
+  let nextNav: DataNav | null = null
+  const currentExperience = decodedNodes[0].experience
+  const ctxNav = getCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
 
   if (currentExperience === EXPERIENCES.BANNER) {
     const tree = getBannerTree(decodedNodes)
-    nextNode = navigateBannerTree(tree, arrowAction, ctxNode)
+    nextNav = navigateBannerTree(tree, arrowAction, ctxNav)
   } else if (currentExperience === EXPERIENCES.MODAL) {
     const stacks = getModalStacks(decodedNodes)
-    nextNode = navigateModalStacks(stacks, arrowAction, ctxNode)
+    nextNav = navigateModalStacks(stacks, arrowAction, ctxNav)
   } else {
     l.debug(`unhandled experience ${currentExperience}`)
-    nextNode = null
   }
 
-  if (nextNode) {
-    l.debug('Updating cached context node: ', nextNode)
-    setCachedDomNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNode)
-  } else {
-    nextNode = null
+  if (nextNav) {
+    l.debug('Updating cached context node: ', nextNav)
+    setCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, nextNav)
   }
-  return { prevNode: ctxNode, nextNode }
+  return { prev: ctxNav, next: nextNav }
 }
 
 function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: () => void) {
@@ -316,11 +339,10 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
     clearCachedNodes()
     returnKeyboardControl()
   } else if (arrowAction === ArrowActions.BACK) {
+    // TODO ?
     l.debug('returning keyboard control')
     clearCachedNodes()
     returnKeyboardControl()
-  } else if (arrowAction === ArrowActions.OK) {
-    handleSelection()
   } else {
     const nodes = handleNavigation(arrowAction)
     if (!nodes) {
@@ -330,19 +352,16 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
       clearCachedNodes()
       returnKeyboardControl()
     } else {
-      const { prevNode, nextNode } = nodes
-      if (prevNode && nextNode) {
-        prevNode.blur()
-        prevNode.innerHTML = prevNode.innerHTML.replace(' 🔍', '')
-        focusVisibleClasses.forEach(i => prevNode.classList.remove(i))
-      }
-      if (nextNode) {
-        nextNode.focus()
-        focusVisibleClasses.forEach(i => nextNode.classList.add(i))
-        nextNode.innerHTML = nextNode.innerHTML + ' 🔍'
-      }
+      renderNavigation(nodes)
     }
   }
 }
 
 export default onKeyPress
+/*
+ * TODO
+ * Losing track of ctx node or all clickable nodes
+ * If switch is disabled then go to the expand
+ * handleSelection not working for sub tree
+ * test sub sub menus like cookies and vendors
+ */
