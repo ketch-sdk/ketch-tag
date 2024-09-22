@@ -28,14 +28,6 @@ export const EXPERIENCES = {
   PREFERENCES: 'ketch-preferences',
 } as const
 
-/* KetchHTMLElements are HTML elements stuffed with
- * a tracer that lets you find it in a DOM tree
- * a DataNav - that lets ketch tag handle keyboard events for navigation
- */
-export interface KetchHTMLElement extends HTMLElement {
-  ketch: { navParsed: DataNav }
-}
-
 export enum LanyardItemActions {
   back = 'back',
   close = 'close',
