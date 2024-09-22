@@ -4,10 +4,10 @@ import {
   CACHED_CONSENT_KEY,
   clearCacheEntry,
   getCachedConsent,
-  getCachedDomNode,
+  getCachedNavNode,
   PUBLIC_CONSENT_KEY_V1,
   setCachedConsent,
-  setCachedDomNode,
+  setCachedNavNode,
   setPublicConsent,
 } from './cache'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
@@ -235,7 +235,7 @@ describe('getCachedDomNode', () => {
     Object.defineProperty(global, 'localStorage', { value: undefined })
     expect(localStorage).toBeUndefined()
 
-    getCachedDomNode(dummyKey)
+    getCachedNavNode(dummyKey)
     expect(log.error).toHaveBeenCalledWith(loggerName, 'missing storage options')
 
     Object.defineProperty(global, 'window', { value: window })
@@ -250,7 +250,7 @@ describe('getCachedDomNode', () => {
       value: { [dummyKey]: dom.body.children[0] },
     })
 
-    const result = getCachedDomNode(dummyKey) as HTMLElement
+    const result = getCachedNavNode(dummyKey) as HTMLElement
     expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
   })
 
@@ -262,7 +262,7 @@ describe('getCachedDomNode', () => {
     Object.defineProperty(global, 'localStorage', { value: new LocalStorageMock() })
     localStorage.setItem(dummyKey, '[aria-label="Sample Node"]')
 
-    const result = getCachedDomNode(dummyKey) as HTMLElement
+    const result = getCachedNavNode(dummyKey) as HTMLElement
     expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
   })
 
@@ -271,7 +271,7 @@ describe('getCachedDomNode', () => {
     const parser = new DOMParser()
     const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
 
-    const result = getCachedDomNode(dummyKey, dom.children[0]) as HTMLElement
+    const result = getCachedNavNode(dummyKey, dom.children[0]) as HTMLElement
     expect(dom.children[0].innerHTML).toEqual(result.innerHTML)
     // @ts-ignore
     expect(dom.children[0].innerHTML).toEqual(global.window[dummyKey].innerHTML)
@@ -280,7 +280,7 @@ describe('getCachedDomNode', () => {
   it('should return null if value is missing in window and localStorage', () => {
     const dummyKey = 'dummy'
 
-    const result = getCachedDomNode(dummyKey)
+    const result = getCachedNavNode(dummyKey)
 
     expect(result).toBeNull()
   })
@@ -289,7 +289,7 @@ describe('getCachedDomNode', () => {
     const ls = global.localStorage
     Object.defineProperty(global, 'localStorage', { value: undefined, writable: true })
 
-    const result = getCachedDomNode(dummyKey)
+    const result = getCachedNavNode(dummyKey)
     expect(result).toBeNull()
     Object.defineProperty(global, 'localStorage', { value: ls, writable: true })
   })
@@ -308,11 +308,11 @@ describe('setCachedDomNode', () => {
     )
     expect(localStorage.getItem(dummyKey)).toBeNull()
 
-    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
+    setCachedNavNode(dummyKey, dom.body.children[1] as HTMLElement)
     expect(localStorage.getItem(dummyKey)).toBeNull()
 
     const elementHasNav = dom.body.children[0] as HTMLElement
-    setCachedDomNode(dummyKey, elementHasNav)
+    setCachedNavNode(dummyKey, elementHasNav)
     expect(localStorage.getItem(dummyKey)).toBe('[data-nav="test-val"]')
   })
   it('should always cache node on window', () => {
@@ -328,11 +328,11 @@ describe('setCachedDomNode', () => {
     // @ts-ignore
     window[dummyKey] = undefined
 
-    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
+    setCachedNavNode(dummyKey, dom.body.children[1] as HTMLElement)
     // @ts-ignore
     expect(window[dummyKey]).toBe(dom.body.children[1])
 
-    setCachedDomNode(dummyKey, dom.body.children[0] as HTMLElement)
+    setCachedNavNode(dummyKey, dom.body.children[0] as HTMLElement)
     // @ts-ignore
     expect(window[dummyKey]).toBe(dom.body.children[0])
   })
