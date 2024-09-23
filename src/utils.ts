@@ -3,7 +3,7 @@ import log from './log'
 import { DataNav } from './keyboardHandler.types'
 import { getLanyardRoot } from './cache'
 
-export function safeJsonParse(str?: string) {
+export function safeJsonParse(str?: string | null) {
   const l = wrapLogger(log, 'safeJsonParse')
   if (!str || str.trim() === '') {
     return {}

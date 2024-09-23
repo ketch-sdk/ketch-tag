@@ -17,7 +17,7 @@ import {
   UserAgentHandlerMap,
 } from './keyboardHandler.types'
 import log from './log'
-import { decodeDataNav, getDomNode } from './utils'
+import { decodeDataNav, getDomNode, safeJsonParse } from './utils'
 
 export const getUserAgent = (): SupportedUserAgents | undefined => {
   const l = wrapLogger(log, 'getUserAgent')
@@ -114,6 +114,11 @@ export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
     l.debug('no clickable nodes')
     return { topNodes: [] }
   }
+  let o = safeJsonParse(localStorage.getItem(KEYBOARD_HANDLER_CACHE_KEYS.MODAL_STACKS))
+  if (o) {
+    return o
+  }
+
   const topNodes = nodes.filter(i => i.subExperience === undefined).sort((a, b) => a['nav-index'] - b['nav-index'])
   l.trace('top nodes:', topNodes)
 
@@ -137,11 +142,13 @@ export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
     })
   l.trace('switch nodes:', switchNodes)
 
-  return {
+  o = {
     expandNodes: expandNodes.length > 0 ? expandNodes : undefined,
     switchNodes: switchNodes.length > 0 ? switchNodes : undefined,
     topNodes,
   }
+  localStorage.setItem(KEYBOARD_HANDLER_CACHE_KEYS.MODAL_STACKS, JSON.stringify(o))
+  return o
 }
 
 export const navigateModalStacks = (
