@@ -305,10 +305,23 @@ export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | n
     l.debug('inconsistent encoding of data-nav')
   }
 
+  // Handles back button
+  if (arrowAction === ArrowActions.BACK) {
+    const backNav = decodedNodes.find(i => i.action === LanyardItemActions.back)
+    if (backNav) {
+      const elem = lanyard.querySelector(`[data-nav="${backNav.src}"]`) as HTMLElement | null
+      if (elem && typeof elem.click === 'function') {
+        elem.click()
+      }
+    }
+    return null
+  }
+
   let nextNav: DataNav | null = null
   const currentExperience = decodedNodes[0].experience
   const ctxNav = getCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
 
+  /* Optimization: can cache trees */
   if (currentExperience === EXPERIENCES.BANNER) {
     const tree = getBannerTree(decodedNodes)
     nextNav = navigateBannerTree(tree, arrowAction, ctxNav)
@@ -338,15 +351,10 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
     l.debug('returning keyboard control')
     clearCachedNodes()
     returnKeyboardControl()
-  } else if (arrowAction === ArrowActions.BACK) {
-    // TODO ?
-    l.debug('returning keyboard control')
-    clearCachedNodes()
-    returnKeyboardControl()
   } else {
     const nodes = handleNavigation(arrowAction)
     if (!nodes) {
-      // Error or no next node
+      // Possibilities: 1. Error 2. no next node 3. No back button for back key
       /* Improvements: Add errorCodes and beam it to rollbar */
       l.debug('returning keyboard control')
       clearCachedNodes()
@@ -360,8 +368,7 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
 export default onKeyPress
 /*
  * TODO
- * Losing track of ctx node or all clickable nodes
- * If switch is disabled then go to the expand
  * handleSelection not working for sub tree
  * test sub sub menus like cookies and vendors
+ * If switch is disabled then go to the expand
  */

@@ -52,7 +52,7 @@ describe('keyboardHandler: onKeyPress', () => {
   it('should look for cached ctx node on selection', () => {
     const returnFn = jest.fn()
     const clickFn = jest.fn()
-    const mockNode = { click: clickFn } as unknown as HTMLElement
+    const mockNode = { src: 'test-1' } as unknown as DataNav
     const spy = jest.spyOn(cache, 'getCachedNavNode').mockReturnValue(mockNode)
 
     onKeyPress(ArrowActions.OK, returnFn)
@@ -338,9 +338,10 @@ describe('keyboardHandler: handleNavigation', () => {
       'text/html',
     )
     jest.spyOn(document, 'getElementById').mockReturnValue(doc.getElementById(LANYARD_ID))
-    const decoderSpy = jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
-      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
-    })
+    const decoderSpy = jest.spyOn(utils, 'decodeDataNav').mockReturnValue({
+      experience: 'ketch-consent-banner',
+      'nav-index': 1,
+    } as DataNav)
     const treeSpy = jest.spyOn(testExports, 'getBannerTree')
 
     testExports.handleNavigation(ArrowActions.LEFT)
