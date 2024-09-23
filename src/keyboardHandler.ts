@@ -115,7 +115,7 @@ export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
     return { topNodes: [] }
   }
   let o = safeJsonParse(localStorage.getItem(KEYBOARD_HANDLER_CACHE_KEYS.MODAL_STACKS))
-  if (o) {
+  if (o && o.topNodes) {
     return o
   }
 
