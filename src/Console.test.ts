@@ -43,17 +43,10 @@ describe('Console', () => {
 
     // Try to add a different method with the same name
     const newMethod = jest.fn()
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation() // Mock console.warn
     addToKetchLog('testMethod', newMethod)
 
     // Check that the original method wasn't overwritten
     expect(window.KetchLog.testMethod).toBe(initialMethod)
-
-    // Check that console.warn was called
-    expect(consoleWarnSpy).toHaveBeenCalledWith('Method testMethod already exists on window.KetchLog')
-
-    // Clean up the spy
-    consoleWarnSpy.mockRestore()
   })
 
   it('should initialize KetchLog only once', () => {

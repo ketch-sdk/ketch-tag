@@ -38,29 +38,37 @@ export default class CookieBlocker {
       return Array.from(this._blockedCookies)
     }
 
+    // Get cookie domain
+    const domain = window.location.hostname
+
     // Get set of purposes codes which we have consent for
     const grantedPurposes = await this.getGrantedPurposes()
     l.debug('granted purposes', grantedPurposes)
 
     // Loop over each blocked cookie from the config
-    Object.entries(this._config.blockedCookies || {}).forEach(([cookiekey, { purposeCodes, regex }]) => {
+    Object.entries(this._config.blockedCookies || {}).forEach(([cookieKey, { purposeCodes, regex }]) => {
       // Skip cookies which we have consent for
       if (purposeCodes.some(purposeCode => grantedPurposes.has(purposeCode))) {
-        l.debug(`not blocking ${cookiekey} as consent is granted for one of its purposes`)
+        l.debug(`not blocking ${cookieKey} as consent is granted for one of its purposes`)
         return
       }
 
       // Get RegExp from string
-      const regexPattern = new RegExp(regex) // Convert regex to regular expression type
+      const regexPattern = new RegExp(regex || '') // Convert regex to regular expression type
 
       // Delete all cookies that match the pattern
       cookies.forEach(cookie => {
-        const [name, _] = cookie.split('=')
-        if (!this._blockedCookies.has(name) && regexPattern.test(name)) {
+        const [name, _] = cookie.trim().split('=')
+        /**
+         * Delete cookie if not already deleted AND either:
+         *   - We have a regex pattern and the cookie name matches that pattern, or
+         *   - We don't have a regex pattern and the cookie name matches the cookie key exactly
+         */
+        if (!this._blockedCookies.has(name) && ((regex && regexPattern.test(name)) || (!regex && name === cookieKey))) {
           // Delete the cookie by setting its expiration date to the past, 01 Jan 1970 is convention for deleting cookies
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`
           this._blockedCookies.add(name)
-          l.debug(`Deleted cookie: ${name}`)
+          l.debug(`Deleted cookie: ${name} for domain: .${domain}`)
         }
       })
     })
