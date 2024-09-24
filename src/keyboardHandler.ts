@@ -280,11 +280,9 @@ export const navigateModalStacks = (
           nextNode = stacks.topNodes[stacks.topNodes.length - 1]
           break
         } else {
-          // Confirm is the last visually, but nav-index=0. So we want to go up to the switch above it
-          nextNode =
-            stacks.switchNodes && stacks.switchNodes.length > 0
-              ? stacks.switchNodes[stacks.switchNodes.length - 1]
-              : null
+          // Btn"Confirm" is the last visually, but nav-index=0. So we want to go up to the node above it
+          const nextStack = stacks.switchNodes || stacks.expandNodes
+          nextNode = nextStack && nextStack.length > 0 ? nextStack[nextStack.length - 1] : null
           break
         }
       } else {
@@ -293,13 +291,14 @@ export const navigateModalStacks = (
       }
     case ArrowActions.DOWN:
       if (index === activeStack.length - 1) {
-        if (ctxNodeAction) {
-          // Wrap around
+        if (ctxNodeAction === LanyardItemActions.expand || ctxNodeAction === LanyardItemActions.switch) {
+          // DOWN from last switch/expand goes to "btn confirm"
           nextNode = stacks.topNodes[0]
           break
         } else {
-          // Move to first switch
-          nextNode = stacks.switchNodes && stacks.switchNodes.length > 0 ? stacks.switchNodes[0] : null
+          // Move to first stack item
+          const nextStack = stacks.switchNodes || stacks.expandNodes
+          nextNode = nextStack && nextStack.length > 0 ? nextStack[0] : null
           break
         }
       } else {
@@ -477,8 +476,3 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
 }
 
 export default onKeyPress
-/*
- * TODO
- * Test coverage
- * cookies sub menu confirm and back nav
- */
