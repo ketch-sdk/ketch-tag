@@ -2,9 +2,11 @@ import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import {
   clearCacheEntry,
   getCachedNavNode,
+  getCacheEntry,
   getLanyardRoot,
   KEYBOARD_HANDLER_CACHE_KEYS,
   setCachedNavNode,
+  setCacheEntry,
 } from './cache'
 import {
   ActionItemStack,
@@ -17,7 +19,7 @@ import {
   UserAgentHandlerMap,
 } from './keyboardHandler.types'
 import log from './log'
-import { decodeDataNav, getDomNode } from './utils'
+import { decodeDataNav, getDomNode, safeJsonParse } from './utils'
 
 export const getUserAgent = (): SupportedUserAgents | undefined => {
   const l = wrapLogger(log, 'getUserAgent')
@@ -81,7 +83,6 @@ export const renderNavigation = (nodes: SelectionObject) => {
     if (!prevNode) {
       l.debug(`node not found: ${prev.src} -- ${prev['nav-index']}`)
     } else {
-      // TODO read
       ;(prevNode as HTMLElement).blur()
     }
   }
@@ -94,13 +95,53 @@ export const renderNavigation = (nodes: SelectionObject) => {
     }
   }
 }
-export const handleSelection = (clearCache = true) => {
+
+export const handleSubExperienceCaching = (ctxNav: DataNav, expandNodes: DataNav[]) => {
+  const existingSubExperience = getCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX)
+  if (!existingSubExperience && ctxNav.action === LanyardItemActions.expand) {
+    // Expanding the div in ctx
+    setCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX, ctxNav.subExperience as string)
+    return
+  } else if (ctxNav.action === LanyardItemActions.expand && existingSubExperience === ctxNav.subExperience) {
+    // The ctx div is collapsing. Evict cache
+    clearCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX)
+  } else if (ctxNav.action === LanyardItemActions.switch && existingSubExperience === ctxNav.subExperience) {
+    // The user read the details. Collapse the subExperience
+    // 1. programmatically collapse the previously expanded div
+    const prevExpandNav = expandNodes.find(
+      i => i.subExperience === existingSubExperience && i.action === LanyardItemActions.expand,
+    )
+    const prevExpandNode = prevExpandNav && getDomNode(prevExpandNav)
+    if (prevExpandNode && typeof prevExpandNode.click === 'function') {
+      prevExpandNode.click()
+    }
+    // Clear cache
+    clearCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX)
+  } else if (existingSubExperience !== ctxNav.subExperience && ctxNav.action === LanyardItemActions.expand) {
+    // Another stack item is being expanded
+    // 1. programmatically collapse the previously expanded div
+    const prevExpandNav = expandNodes.find(
+      i => i.subExperience === existingSubExperience && i.action === LanyardItemActions.expand,
+    )
+    const prevExpandNode = prevExpandNav && getDomNode(prevExpandNav)
+    if (prevExpandNode && typeof prevExpandNode.click === 'function') {
+      prevExpandNode.click()
+    }
+    // 2. update the cache
+    setCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX, ctxNav.subExperience as string)
+  }
+}
+
+export const handleSelection = (clearCache = true, expandNodes?: DataNav[]) => {
   const l = wrapLogger(log, 'handleSelection')
   const ctxNav = getCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY)
   const node = getDomNode(ctxNav)
-  if (node && typeof node.click === 'function') {
+  if (ctxNav && node && typeof node.click === 'function') {
     if (clearCache) {
       clearCachedNodes()
+    }
+    if (Array.isArray(expandNodes) && ctxNav.subExperience) {
+      handleSubExperienceCaching(ctxNav, expandNodes)
     }
     node.click()
   } else {
@@ -108,12 +149,17 @@ export const handleSelection = (clearCache = true) => {
   }
 }
 
-export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
-  const l = wrapLogger(log, 'getModalStacks')
+export const getStaticModalNodes = (nodes: DataNav[]): ActionItemStack => {
+  const l = wrapLogger(log, 'getStaticModalNodes')
   if (nodes.length === 0) {
     l.debug('no clickable nodes')
     return { topNodes: [] }
   }
+  const o = safeJsonParse(getCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.MODAL_STACKS))
+  if (o && Array.isArray(o.topNodes)) {
+    return o
+  }
+
   const topNodes = nodes.filter(i => i.subExperience === undefined).sort((a, b) => a['nav-index'] - b['nav-index'])
   l.trace('top nodes:', topNodes)
 
@@ -137,11 +183,60 @@ export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
     })
   l.trace('switch nodes:', switchNodes)
 
-  return {
+  const stack = {
     expandNodes: expandNodes.length > 0 ? expandNodes : undefined,
     switchNodes: switchNodes.length > 0 ? switchNodes : undefined,
     topNodes,
   }
+  setCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.MODAL_STACKS, JSON.stringify(stack))
+  return stack
+}
+
+export const getModalStacks = (nodes: DataNav[]): ActionItemStack => {
+  const l = wrapLogger(log, 'getModalStacks')
+  const stacks = getStaticModalNodes(nodes)
+
+  if (!Array.isArray(stacks.topNodes) || stacks.topNodes.length === 0) {
+    l.debug('Missing top nodes in the stack')
+  }
+  // 1. Account for the dynamic bits in cached response
+  const subExperienceCtx = getCacheEntry(KEYBOARD_HANDLER_CACHE_KEYS.SUB_EXPERIENCE_CTX)
+  if (subExperienceCtx) {
+    l.trace('existing subExperienceCtx:', subExperienceCtx)
+    if (!stacks.expandNodes || stacks.expandNodes.length === 0) {
+      l.debug(`missing expand nodes for ${subExperienceCtx}. Returning without subExperience`)
+      return stacks
+    }
+    const subExperience = nodes
+      .filter(i => i.subExperience === subExperienceCtx)
+      .sort((a, b) => a['nav-index'] - b['nav-index'])
+    l.trace(`found ${subExperience.length} nodes in ${subExperienceCtx}`)
+
+    // 2. In-place insertion in expandNodes for smooth nav between stack items
+    const index = stacks.expandNodes.findIndex(i => i.subExperience === subExperienceCtx)
+    if (index === -1) {
+      l.debug(`Expand nodes missing for ${subExperienceCtx}. Returning stacks without subExperience`)
+      return stacks
+    }
+    stacks.expandNodes = [
+      ...stacks.expandNodes.slice(0, index),
+      ...subExperience,
+      ...stacks.expandNodes.slice(index + 1),
+    ]
+    l.trace('updating expand nodes', stacks.expandNodes)
+  }
+
+  return stacks
+}
+
+export const handleDisabledSwitches = (nextNode: DataNav, expandNodes?: DataNav[]) => {
+  if (nextNode.action === LanyardItemActions.switch && nextNode.disabled) {
+    const siblingExpandNode = expandNodes?.find(i => i.subExperience === nextNode.subExperience)
+    if (siblingExpandNode) {
+      return siblingExpandNode
+    }
+  }
+  return nextNode
 }
 
 export const navigateModalStacks = (
@@ -160,70 +255,92 @@ export const navigateModalStacks = (
   }
 
   const ctxNodeAction = ctxNode.action
+
   const activeStack =
-    ctxNodeAction === LanyardItemActions.expand
-      ? stacks.expandNodes
-      : ctxNodeAction === LanyardItemActions.switch
+    ctxNodeAction === LanyardItemActions.switch
       ? stacks.switchNodes
+      : ctxNodeAction === LanyardItemActions.expand || ctxNode.subExperience
+      ? stacks.expandNodes
       : stacks.topNodes
   if (!activeStack) {
     l.debug('Storage inconsistent')
     return null
   }
   l.trace('activeStack:', activeStack)
+
   const index = activeStack.findIndex(i => i.src === ctxNode.src)
+  l.trace(`moving ${arrowAction} from index ${index}`)
+
+  let nextNode: DataNav | null | undefined = null
   switch (arrowAction) {
     case ArrowActions.UP:
       if (index === 0) {
-        if (ctxNodeAction) {
-          // Switch from "stack/list" to top order items
-          return stacks.topNodes[stacks.topNodes.length - 1]
+        if (ctxNodeAction === LanyardItemActions.expand || ctxNodeAction === LanyardItemActions.switch) {
+          // Move to the parent nodes
+          nextNode = stacks.topNodes[stacks.topNodes.length - 1]
+          break
         } else {
-          // Go to the last switch
-          return stacks.switchNodes && stacks.switchNodes.length > 0
-            ? stacks.switchNodes[stacks.switchNodes.length - 1]
-            : null
+          // Confirm is the last visually, but nav-index=0. So we want to go up to the switch above it
+          nextNode =
+            stacks.switchNodes && stacks.switchNodes.length > 0
+              ? stacks.switchNodes[stacks.switchNodes.length - 1]
+              : null
+          break
         }
       } else {
-        return activeStack[index - 1]
+        nextNode = activeStack[index - 1]
+        break
       }
     case ArrowActions.DOWN:
       if (index === activeStack.length - 1) {
         if (ctxNodeAction) {
           // Wrap around
-          return stacks.topNodes[0]
+          nextNode = stacks.topNodes[0]
+          break
         } else {
           // Move to first switch
-          return stacks.switchNodes && stacks.switchNodes.length > 0 ? stacks.switchNodes[0] : null
+          nextNode = stacks.switchNodes && stacks.switchNodes.length > 0 ? stacks.switchNodes[0] : null
+          break
         }
       } else {
-        return activeStack[index + 1]
+        nextNode = activeStack[index + 1]
+        break
       }
     case ArrowActions.LEFT:
       if (ctxNodeAction === LanyardItemActions.switch) {
         // Move to expand button
-        return stacks.expandNodes && stacks.expandNodes.length > index ? stacks.expandNodes[index] : null
-      } else {
-        return null
+        nextNode = stacks.expandNodes?.find(i => i.subExperience === ctxNode.subExperience)
       }
+      break
     case ArrowActions.RIGHT:
       if (ctxNodeAction === LanyardItemActions.expand) {
         // Move to switch button
-        return stacks.switchNodes && stacks.switchNodes.length > index ? stacks.switchNodes[index] : null
-      } else {
-        return null
+        nextNode = stacks.switchNodes?.find(i => i.subExperience === ctxNode.subExperience)
       }
+      break
     case ArrowActions.OK:
-      // TODO implement -> if ctx = div(action.drill?) then go to stack.switch[0]
-      handleSelection(ctxNodeAction === (LanyardItemActions.confirm || LanyardItemActions.close))
-      return null
+      const clearCache =
+        ctxNode.action === LanyardItemActions.confirm ||
+        ctxNode.action === LanyardItemActions.close ||
+        ctxNode.action === LanyardItemActions.back ||
+        Boolean(ctxNode.clearCache)
+
+      handleSelection(clearCache, stacks.expandNodes)
+      break
     case ArrowActions.BACK:
-      // TODO implement -> if ctx = div(action.exp | switch) then go to stack.top[last]
-      // => if modal has a back button then this should invoke that
-      return null
+      // User forced "action=back" using BACK key. Set the right context and treat as "OK" on a back button
+      const backNav = stacks.topNodes.find(i => i.action === LanyardItemActions.back)
+      if (backNav) {
+        setCachedNavNode(KEYBOARD_HANDLER_CACHE_KEYS.CTX_KEY, backNav)
+        handleSelection(true)
+      }
+      break
     default:
       return null
   }
+
+  // Handle disabled switches
+  return nextNode ? handleDisabledSwitches(nextNode, stacks.expandNodes) : null
 }
 export const getBannerTree = (nodes: DataNav[]): DataNav[] => {
   const l = wrapLogger(log, 'getBannerTree')
@@ -267,6 +384,10 @@ export const navigateBannerTree = (
     case ArrowActions.OK:
       handleSelection(true)
       return null
+    case ArrowActions.BACK:
+      // TODO - confirm if we want to lock the banner experience. Else, this would mean returning keyboard ctrl
+      l.trace('cannot back out of banner')
+      return null
     default:
       l.debug('Unknown arrowAction: ', arrowAction)
       return null
@@ -303,18 +424,8 @@ export const handleNavigation = (arrowAction: ArrowActions): SelectionObject | n
 
   if (decodedNodes.length !== allClickables.length) {
     l.debug('inconsistent encoding of data-nav')
-  }
-
-  // Handles back button
-  if (arrowAction === ArrowActions.BACK) {
-    const backNav = decodedNodes.find(i => i.action === LanyardItemActions.back)
-    if (backNav) {
-      const elem = lanyard.querySelector(`[data-nav="${backNav.src}"]`) as HTMLElement | null
-      if (elem && typeof elem.click === 'function') {
-        elem.click()
-      }
-    }
-    return null
+  } else {
+    window.decodedNodes = decodedNodes
   }
 
   let nextNav: DataNav | null = null
@@ -368,7 +479,6 @@ function onKeyPress(input: KeyboardEvent | ArrowActions, returnKeyboardControl: 
 export default onKeyPress
 /*
  * TODO
- * handleSelection not working for sub tree
- * test sub sub menus like cookies and vendors
- * If switch is disabled then go to the expand
+ * Test coverage
+ * cookies sub menu confirm and back nav
  */

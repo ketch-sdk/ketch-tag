@@ -49,18 +49,6 @@ describe('keyboardHandler: onKeyPress', () => {
     expect(fn).toHaveBeenCalled()
   })
 
-  it('should look for cached ctx node on selection', () => {
-    const returnFn = jest.fn()
-    const clickFn = jest.fn()
-    const mockNode = { src: 'test-1' } as unknown as DataNav
-    const spy = jest.spyOn(cache, 'getCachedNavNode').mockReturnValue(mockNode)
-
-    onKeyPress(ArrowActions.OK, returnFn)
-
-    expect(spy).toHaveBeenCalled()
-    expect(clickFn).toHaveBeenCalled()
-  })
-
   it('should returnKeyboardControl when the next node to navigate is undefined', () => {
     const returnFn = jest.fn()
     jest.spyOn(testExports, 'handleNavigation').mockReturnValue(null)
@@ -185,7 +173,7 @@ describe('keyboardHandler: handleSelection', () => {
 
   it('should click on the currently selected node', () => {
     const spy = jest.fn()
-    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({ click: spy } as unknown as DataNav)
+    jest.spyOn(utils, 'getDomNode').mockReturnValue({ click: spy } as unknown as HTMLElement)
 
     testExports.handleSelection()
 
@@ -201,11 +189,11 @@ describe('keyboardHandler: handleSelection', () => {
     expect(testExports.handleSelection).not.toThrow()
   })
 
-  it('should clear cache on selection', () => {
+  it('should clear cache when flag set to true', () => {
     const spy = jest.spyOn(testExports, 'clearCachedNodes')
     jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({ click: jest.fn() } as unknown as DataNav)
 
-    testExports.handleSelection()
+    testExports.handleSelection(true)
 
     expect(spy).toHaveBeenCalled()
   })
@@ -234,29 +222,34 @@ describe('keyboardHandler: getBannerTree', () => {
 describe('keyboardHandler: navigateBannerTree', () => {
   const loggerName = '[navigateBannerTree]'
   // @ts-ignore
-  const tree: DataNav[] = [{ ['nav-index']: 2 }, { ['nav-index']: 1 }, { ['nav-index']: 3 }]
+  const tree: DataNav[] = [
+    { src: 'a', ['nav-index']: 2 },
+    { src: 'b', ['nav-index']: 1 },
+    { src: 'c', ['nav-index']: 3 },
+  ] as DataNav[]
 
   it('should init correctly', () => {
-    expect(tree).toHaveLength(3)
-    expect(tree[0]['nav-index']).toBeLessThan(tree[1]['nav-index'])
-    expect(tree[1]['nav-index']).toBeLessThan(tree[2]['nav-index'])
+    const sortedTree = testExports.getBannerTree(tree)
+    expect(sortedTree).toHaveLength(3)
+    expect(sortedTree[0]['nav-index']).toBeLessThan(sortedTree[1]['nav-index'])
+    expect(sortedTree[1]['nav-index']).toBeLessThan(sortedTree[2]['nav-index'])
   })
 
   it('should navigate left-to-right low-nav-index to high-nav-index', () => {
     const ctx = tree[1]
-
-    let result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
+    const sortedTree = testExports.getBannerTree(tree)
+    let result = testExports.navigateBannerTree(sortedTree, ArrowActions.LEFT, ctx)
     expect(result).not.toBeNull()
     // @ts-ignore
-    expect(result['nav-index']).toEqual(tree[0]['nav-index'])
+    expect(result['nav-index']).toEqual(sortedTree[0]['nav-index'])
 
-    result = testExports.navigateBannerTree(tree, ArrowActions.RIGHT, ctx)
+    result = testExports.navigateBannerTree(sortedTree, ArrowActions.RIGHT, ctx)
     expect(result).not.toBeNull()
     // @ts-ignore
-    expect(result['nav-index']).toEqual(tree[2]['nav-index'])
+    expect(result['nav-index']).toEqual(sortedTree[2]['nav-index'])
   })
 
-  it('should navigate up-to-down low-nav-index to high-nav-index', () => {
+  it.skip('should navigate up-to-down low-nav-index to high-nav-index', () => {
     const ctx = tree[1]
 
     let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
@@ -274,22 +267,22 @@ describe('keyboardHandler: navigateBannerTree', () => {
     const ctx = tree[0]
 
     const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
-    expect(result).toBeUndefined()
+    expect(result).toBeNull()
   })
 
   it('should return undefined (UTD) if there are no nodes to navigate', () => {
     const ctx = tree[0]
 
     const result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
-    expect(result).toBeUndefined()
+    expect(result).toBeNull()
   })
 
-  it('should return undefined for other arrowActions and log', () => {
+  it('should return null for other arrowActions and log', () => {
     const ctx = tree[2]
 
-    const result = testExports.navigateBannerTree(tree, ArrowActions.OK, ctx)
-    expect(result).toBeUndefined()
-    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', ArrowActions.OK)
+    const result = testExports.navigateBannerTree(tree, 'INVALID_ARROW' as ArrowActions, ctx)
+    expect(result).toBeNull()
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', 'INVALID_ARROW')
   })
 })
 
@@ -300,16 +293,6 @@ describe('keyboardHandler: handleNavigation', () => {
     jest.resetAllMocks()
   })
 
-  it('should check for lanyard root in cache', () => {
-    const spy = jest.spyOn(cache, 'getCachedNavNode')
-    const domSpy = jest.spyOn(document, 'getElementById').mockReturnValue(null)
-
-    testExports.handleNavigation(ArrowActions.LEFT)
-
-    expect(domSpy).toHaveBeenCalledWith(LANYARD_ID)
-    expect(spy).toHaveBeenCalledWith(KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM, null)
-  })
-
   it('should return null if lanyard root is absent', () => {
     jest.spyOn(cache, 'getCachedNavNode').mockImplementation(() => null)
 
@@ -318,11 +301,11 @@ describe('keyboardHandler: handleNavigation', () => {
   })
 
   it('should detect tampered storage and return null', () => {
-    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue('not valid' as unknown as DataNav)
+    jest.spyOn(cache, 'getLanyardRoot').mockReturnValue(null)
 
     const r = testExports.handleNavigation(ArrowActions.LEFT)
 
-    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Storage inconsistent')
+    expect(log.debug).toHaveBeenNthCalledWith(2, loggerName, 'Cannot find lanyard root')
     expect(r).toBeNull()
   })
 

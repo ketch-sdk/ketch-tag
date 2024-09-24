@@ -1,6 +1,7 @@
 export type ActionItemStack = {
   topNodes: DataNav[]
   expandNodes?: DataNav[]
+  subExperience?: DataNav[]
   switchNodes?: DataNav[]
 }
 
@@ -17,6 +18,8 @@ export enum ArrowActions {
 export type DataNav = {
   src: string
   action?: string
+  clearCache?: boolean
+  disabled?: boolean
   experience: string
   'nav-index': number
   subExperience?: string

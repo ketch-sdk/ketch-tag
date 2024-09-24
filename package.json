@@ -10,12 +10,12 @@
     "build": "npm run build:lib && npm run build:web",
     "build:lib": "tsc -p .",
     "build:web": "webpack --config webpack.config.js --mode production",
-    "start": "npx webpack serve --devtool source-map --mode development",
-    "lint": "eslint src/**/*.ts",
-    "test": "jest --runInBand",
+    "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts",
     "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
     "format-check": "prettier --check '**/*.ts'",
-    "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts"
+    "lint": "eslint src/**/*.ts",
+    "start": "npx webpack serve --devtool source-map --mode development",
+    "test": "jest --runInBand"
   },
   "browserslist": {
     "production": [

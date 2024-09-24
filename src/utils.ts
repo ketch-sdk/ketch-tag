@@ -3,7 +3,7 @@ import log from './log'
 import { DataNav } from './keyboardHandler.types'
 import { getLanyardRoot } from './cache'
 
-export function safeJsonParse(str?: string) {
+export function safeJsonParse(str?: string | null) {
   const l = wrapLogger(log, 'safeJsonParse')
   if (!str || str.trim() === '') {
     return {}
@@ -24,6 +24,7 @@ export function decodeDataNav(str: string): DataNav | null {
     decodedStr = window.atob(str)
   } catch (e) {
     l.debug(`Invalid encoding: ${str}`, e)
+    return null
   }
   const o = safeJsonParse(decodedStr)
   if (Object.prototype.toString.call(o) !== '[object Object]') {

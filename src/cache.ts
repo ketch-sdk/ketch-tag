@@ -23,11 +23,8 @@ export const KEYBOARD_HANDLER_CACHE_KEYS = {
   CTX_KEY: '_ketch_currentKeyboardCtx',
   LANYARD_DOM: '_ketch_lanyardRootDom',
   FOCUSABLE_ELEMS: '_ketch_focusableElems',
-  // TODO scratch code - delete
-  // TOP_LEVEL_STACK: '_ketch_topLevelStack',
-  // EXPAND_STACK: '_ketch_expandStack',
-  // SWITCH_STACK: '_ketch_switchStack',
-  // SUB_EXPERIENCE_STACK: '_ketch_subExperienceStack',
+  MODAL_STACKS: '_ketch_modalStacks',
+  SUB_EXPERIENCE_CTX: '_ketch_subExperienceCtx',
 }
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
@@ -160,11 +157,11 @@ type Options = {
 export function getCachedNavNode(key: string, opts: Options = {}): DataNav | null {
   const l = wrapLogger(log, 'getCachedDomNode')
   if (!window && !localStorage) {
-    l.error('missing storage options')
+    l.debug('missing storage options')
     return null
   }
 
-  const selector: string = (window && window[key]) || (localStorage && localStorage.getItem(key))
+  const selector = getCacheEntry(key)
 
   if (selector) {
     return decodeDataNav(selector)
@@ -172,12 +169,7 @@ export function getCachedNavNode(key: string, opts: Options = {}): DataNav | nul
     l.debug('cache missing key: ', key)
     if (opts.ifNull) {
       l.debug('populating cache')
-      if (window) {
-        window[key] = opts.ifNull
-      }
-      if (localStorage) {
-        localStorage.setItem(key, opts.ifNull)
-      }
+      setCacheEntry(key, opts.ifNull)
       return decodeDataNav(opts.ifNull)
     }
     return null
@@ -191,12 +183,7 @@ export function setCachedNavNode(key: string, parsedNav: DataNav) {
     l.debug(`Missing data nav encoding. Cannot cache ${key}`)
     return
   }
-  if (localStorage) {
-    localStorage.setItem(key, selector)
-  }
-  if (window) {
-    window[key] = selector
-  }
+  setCacheEntry(key, selector)
 }
 
 export function clearCacheEntry(key: string) {
@@ -205,5 +192,17 @@ export function clearCacheEntry(key: string) {
   }
   if (localStorage) {
     localStorage.removeItem(key)
+  }
+}
+
+export function getCacheEntry(key: string): string | null {
+  return (window && window[key]) || (localStorage && localStorage.getItem(key))
+}
+export function setCacheEntry(key: string, value: string) {
+  if (localStorage) {
+    localStorage.setItem(key, value)
+  }
+  if (window) {
+    window[key] = value
   }
 }
