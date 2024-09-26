@@ -29,4 +29,11 @@ export const emptyConfig = {
   jurisdiction: {
     code: 'jurisdiction',
   },
+  experiences: {
+    layout: {
+      banner: {},
+      modal: {},
+      preference: {},
+    },
+  } as any,
 } as Configuration
