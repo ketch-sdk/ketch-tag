@@ -9,6 +9,9 @@ import {
   SetConsentResponse,
 } from '@ketch-sdk/ketch-types'
 import log from './log'
+import { DataNav } from './keyboardHandler.types'
+import { LANYARD_ID } from './constants'
+import { decodeDataNav } from './utils'
 
 export const CACHED_CONSENT_KEY = '_swb_consent_'
 export const PUBLIC_CONSENT_KEY_V1 = '_ketch_consent_v1_'
@@ -20,6 +23,8 @@ export const KEYBOARD_HANDLER_CACHE_KEYS = {
   CTX_KEY: '_ketch_currentKeyboardCtx',
   LANYARD_DOM: '_ketch_lanyardRootDom',
   FOCUSABLE_ELEMS: '_ketch_focusableElems',
+  MODAL_STACKS: '_ketch_modalStacks',
+  SUB_EXPERIENCE_CTX: '_ketch_subExperienceCtx',
 }
 
 const consentCacher = getDefaultCacher<SetConsentRequest | GetConsentRequest | GetConsentResponse>()
@@ -133,48 +138,71 @@ export async function setPublicConsent(
   }
 }
 
-export function getCachedDomNode(key: string, ifNull?: any): HTMLElement | NodeList | null {
+export function getLanyardRoot(): HTMLElement | null {
+  if (window && window[KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM]) {
+    return window[KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM]
+  } else {
+    const node = document.getElementById(LANYARD_ID)
+    if (window) {
+      window[KEYBOARD_HANDLER_CACHE_KEYS.LANYARD_DOM] = node
+    }
+    return node
+  }
+}
+
+type Options = {
+  parentNode?: HTMLElement | Document
+  ifNull?: string
+}
+export function getCachedNavNode(key: string, opts: Options = {}): DataNav | null {
   const l = wrapLogger(log, 'getCachedDomNode')
   if (!window && !localStorage) {
-    l.error('missing storage options')
+    l.debug('missing storage options')
     return null
   }
 
-  if (window) {
-    if (window[key]) {
-      return window[key]
-    } else if (window && ifNull) {
-      window[key] = ifNull
-      return ifNull
-    }
-  }
-  if (localStorage) {
-    const qs = localStorage.getItem(key)
-    if (!qs) {
-      l.debug('Missing key in ls: ', key)
-      return null
-    } else {
-      return document.querySelector(qs) as HTMLElement
-    }
-  }
-  return null
-}
+  const selector = getCacheEntry(key)
 
-export function setCachedDomNode(key: string, node: HTMLElement) {
-  if (node.dataset.nav && localStorage) {
-    const selector = `[data-nav="${node.dataset.nav}"]`
-    localStorage.setItem(key, selector)
-  }
-  if (window) {
-    window[key] = node
+  if (selector) {
+    return decodeDataNav(selector)
+  } else {
+    l.debug('cache missing key: ', key)
+    if (opts.ifNull) {
+      l.debug('populating cache')
+      setCacheEntry(key, opts.ifNull)
+      return decodeDataNav(opts.ifNull)
+    }
+    return null
   }
 }
 
-export function clearCachedDomNode(key: string) {
+export function setCachedNavNode(key: string, parsedNav: DataNav) {
+  const l = wrapLogger(log, 'setCachedNavNode')
+  const selector = parsedNav.src
+  if (!selector) {
+    l.debug(`Missing data nav encoding. Cannot cache ${key}`)
+    return
+  }
+  setCacheEntry(key, selector)
+}
+
+export function clearCacheEntry(key: string) {
   if (window) {
     window[key] = undefined
   }
   if (localStorage) {
     localStorage.removeItem(key)
+  }
+}
+
+export function getCacheEntry(key: string): string | null {
+  return (window && window[key]) || (localStorage && localStorage.getItem(key))
+}
+export function setCacheEntry(key: string, value: string) {
+  if (localStorage) {
+    localStorage.setItem(key, value)
+  }
+  if (window) {
+    window[key] = value
   }
 }

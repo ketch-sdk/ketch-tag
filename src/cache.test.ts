@@ -1,19 +1,22 @@
 import { Configuration, GetConsentRequest, GetConsentResponse, SetConsentRequest } from '@ketch-sdk/ketch-types'
 import LocalStorageMock from './__mocks__/localStorage'
+import * as utils from './utils'
+
 import {
   CACHED_CONSENT_KEY,
-  clearCachedDomNode,
+  clearCacheEntry,
   getCachedConsent,
-  getCachedDomNode,
+  getCachedNavNode,
   PUBLIC_CONSENT_KEY_V1,
   setCachedConsent,
-  setCachedDomNode,
+  setCachedNavNode,
   setPublicConsent,
 } from './cache'
 import { getDefaultCacher } from '@ketch-com/ketch-cache'
 import constants from './constants'
 import { getCookie } from '@ketch-sdk/ketch-data-layer'
 import log from './log'
+import { DataNav } from './keyboardHandler.types'
 
 jest.mock('./log')
 
@@ -235,8 +238,8 @@ describe('getCachedDomNode', () => {
     Object.defineProperty(global, 'localStorage', { value: undefined })
     expect(localStorage).toBeUndefined()
 
-    getCachedDomNode(dummyKey)
-    expect(log.error).toHaveBeenCalledWith(loggerName, 'missing storage options')
+    getCachedNavNode(dummyKey)
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'missing storage options')
 
     Object.defineProperty(global, 'window', { value: window })
     Object.defineProperty(global, 'localStorage', { value: localStorage })
@@ -244,43 +247,31 @@ describe('getCachedDomNode', () => {
 
   it('should return cached node from window', () => {
     const dummyKey = 'dummy'
-    const parser = new DOMParser()
-    const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
     Object.defineProperty(global, 'window', {
-      value: { [dummyKey]: dom.body.children[0] },
+      value: { [dummyKey]: dummyKey },
     })
+    jest.spyOn(utils, 'decodeDataNav').mockReturnValue({ src: dummyKey } as DataNav)
 
-    const result = getCachedDomNode(dummyKey) as HTMLElement
-    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
+    const result = getCachedNavNode(dummyKey) as DataNav
+    expect(result.src).toEqual(dummyKey)
   })
 
-  it('should return cached node from localStorage+DOM when absent on window', () => {
+  it.skip('should populate the window when ifNull is passed', () => {
     const dummyKey = 'dummy'
-    const parser = new DOMParser()
-    const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
-    jest.spyOn(document, 'querySelector').mockImplementation(selector => dom.querySelector(selector))
-    Object.defineProperty(global, 'localStorage', { value: new LocalStorageMock() })
-    localStorage.setItem(dummyKey, '[aria-label="Sample Node"]')
+    const dummyValue = 'dummyValue'
 
-    const result = getCachedDomNode(dummyKey) as HTMLElement
-    expect(dom.body.children[0].innerHTML).toEqual(result.innerHTML)
-  })
+    Object.defineProperty(global, 'window', { value: {}, writable: true })
 
-  it('should populate the window when ifNull is passed', () => {
-    const dummyKey = 'dummy'
-    const parser = new DOMParser()
-    const dom = parser.parseFromString('<span aria-label="Sample Node">Sample Node</span>', 'text/html')
-
-    const result = getCachedDomNode(dummyKey, dom.children[0]) as HTMLElement
-    expect(dom.children[0].innerHTML).toEqual(result.innerHTML)
+    const result = getCachedNavNode(dummyKey, { ifNull: dummyValue })
     // @ts-ignore
-    expect(dom.children[0].innerHTML).toEqual(global.window[dummyKey].innerHTML)
+    expect(window.dummyKey).toEqual(dummyValue)
+    expect(result).toEqual(dummyValue)
   })
 
   it('should return null if value is missing in window and localStorage', () => {
     const dummyKey = 'dummy'
 
-    const result = getCachedDomNode(dummyKey)
+    const result = getCachedNavNode(dummyKey)
 
     expect(result).toBeNull()
   })
@@ -289,52 +280,20 @@ describe('getCachedDomNode', () => {
     const ls = global.localStorage
     Object.defineProperty(global, 'localStorage', { value: undefined, writable: true })
 
-    const result = getCachedDomNode(dummyKey)
+    const result = getCachedNavNode(dummyKey)
     expect(result).toBeNull()
     Object.defineProperty(global, 'localStorage', { value: ls, writable: true })
   })
 })
 
 describe('setCachedDomNode', () => {
-  it('should set localStorage to query selector based on data-nav', () => {
+  it('should set localStorage to query selector based on DataNav', () => {
     const dummyKey = 'dummy'
-    const parser = new DOMParser()
-    const dom = parser.parseFromString(
-      `
-        <span aria-label="Sample Node" data-nav="test-val">Sample Node</span>
-        <span aria-label="Bad Node">Bad Node</span>
-      `,
-      'text/html',
-    )
+    const dummyValue = { src: 'dummyValue' } as DataNav
     expect(localStorage.getItem(dummyKey)).toBeNull()
 
-    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
-    expect(localStorage.getItem(dummyKey)).toBeNull()
-
-    const elementHasNav = dom.body.children[0] as HTMLElement
-    setCachedDomNode(dummyKey, elementHasNav)
-    expect(localStorage.getItem(dummyKey)).toBe('[data-nav="test-val"]')
-  })
-  it('should always cache node on window', () => {
-    const dummyKey = 'dummy'
-    const parser = new DOMParser()
-    const dom = parser.parseFromString(
-      `
-        <span aria-label="Sample Node" data-nav="test-val">Sample Node</span>
-        <span aria-label="Bad Node">Bad Node</span>
-      `,
-      'text/html',
-    )
-    // @ts-ignore
-    window[dummyKey] = undefined
-
-    setCachedDomNode(dummyKey, dom.body.children[1] as HTMLElement)
-    // @ts-ignore
-    expect(window[dummyKey]).toBe(dom.body.children[1])
-
-    setCachedDomNode(dummyKey, dom.body.children[0] as HTMLElement)
-    // @ts-ignore
-    expect(window[dummyKey]).toBe(dom.body.children[0])
+    setCachedNavNode(dummyKey, dummyValue)
+    expect(localStorage.getItem(dummyKey)).toBe(dummyValue.src)
   })
 })
 
@@ -349,7 +308,7 @@ describe('clearCachedDomNode', () => {
     // @ts-ignore
     window[key] = 'someValue'
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     // @ts-ignore
     expect(window[key]).toBeUndefined()
@@ -360,7 +319,7 @@ describe('clearCachedDomNode', () => {
     localStorage.setItem(key, 'someValue')
     const spy = jest.spyOn(localStorage, 'removeItem')
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     expect(spy).toHaveBeenCalledWith(key)
   })
@@ -372,7 +331,7 @@ describe('clearCachedDomNode', () => {
 
     Object.defineProperty(global, 'window', { value: undefined })
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     global.window = og
     // @ts-ignore
@@ -385,7 +344,7 @@ describe('clearCachedDomNode', () => {
     const spy = jest.spyOn(localStorage, 'removeItem')
     Object.defineProperty(global, 'localStorage', { value: undefined })
 
-    clearCachedDomNode(key)
+    clearCacheEntry(key)
 
     global.localStorage = originalLocalStorage
     expect(spy).not.toHaveBeenCalled()

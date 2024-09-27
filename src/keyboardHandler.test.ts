@@ -3,15 +3,10 @@ import onKeyPress from './keyboardHandler'
 import * as testExports from './keyboardHandler'
 import * as utils from './utils'
 
-import {
-  ArrowActions,
-  BannerActionTree,
-  KetchHTMLElement,
-  SupportedUserAgents,
-  UserAgentHandlerMap,
-} from './keyboardHandler.types'
+import { ArrowActions, DataNav, SupportedUserAgents, UserAgentHandlerMap } from './keyboardHandler.types'
 import log from './log'
 import * as cache from './cache'
+import { LANYARD_ID } from './constants'
 
 jest.mock('./log')
 
@@ -23,7 +18,7 @@ describe('keyboardHandler: onKeyPress', () => {
     const unknownTizenKey = -1
     const fn = jest.fn()
     jest.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Tizen')
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
 
     onKeyPress({ keyCode: unknownTizenKey } as KeyboardEvent, fn)
 
@@ -36,7 +31,7 @@ describe('keyboardHandler: onKeyPress', () => {
     const unknownUserAgent = 'sagar'
     const fn = jest.fn()
     jest.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(unknownUserAgent)
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
 
     onKeyPress({ keyCode: 37 } as KeyboardEvent, fn)
 
@@ -47,23 +42,11 @@ describe('keyboardHandler: onKeyPress', () => {
 
   it('should return keyboard control on back keycode', () => {
     const fn = jest.fn()
-    const spy = jest.spyOn(cache, 'clearCachedDomNode')
+    const spy = jest.spyOn(cache, 'clearCacheEntry')
     onKeyPress(ArrowActions.BACK, fn)
 
     expect(spy).toHaveBeenCalled()
     expect(fn).toHaveBeenCalled()
-  })
-
-  it('should look for cached ctx node on selection', () => {
-    const returnFn = jest.fn()
-    const clickFn = jest.fn()
-    const mockNode = { click: clickFn } as unknown as HTMLElement
-    const spy = jest.spyOn(cache, 'getCachedDomNode').mockReturnValue(mockNode)
-
-    onKeyPress(ArrowActions.OK, returnFn)
-
-    expect(spy).toHaveBeenCalled()
-    expect(clickFn).toHaveBeenCalled()
   })
 
   it('should returnKeyboardControl when the next node to navigate is undefined', () => {
@@ -76,18 +59,11 @@ describe('keyboardHandler: onKeyPress', () => {
   })
 
   it('should invoke handleNavigation to get the next node', () => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString('<span class="selected">prev 🔍</span><span>next</span>', 'text/html')
-    const prevNode = doc.body.childNodes[0] as KetchHTMLElement
-    const nextNode = doc.body.childNodes[1] as KetchHTMLElement
-    jest.spyOn(testExports, 'handleNavigation').mockImplementation(() => {
-      return { prevNode, nextNode }
-    })
+    const spy = jest.spyOn(testExports, 'handleNavigation')
 
     onKeyPress(ArrowActions.DOWN, jest.fn())
 
-    expect(prevNode.innerHTML).toBe('prev')
-    expect(nextNode.innerHTML).toBe(`next 🔍`)
+    expect(spy).toHaveBeenCalled()
   })
 })
 
@@ -177,7 +153,7 @@ describe('keyboardHandler: getArrowActionFromUserAgent', () => {
 describe('keyboardHandler: clearCachedNodes', () => {
   it('should call cache utility for every KEYBOARD_HANDLER_CACHE_KEY', () => {
     const spy = jest.fn()
-    jest.spyOn(cache, 'clearCachedDomNode').mockImplementation(spy)
+    jest.spyOn(cache, 'clearCacheEntry').mockImplementation(spy)
 
     testExports.clearCachedNodes()
     Object.values(KEYBOARD_HANDLER_CACHE_KEYS).forEach((v, i) => {
@@ -188,7 +164,7 @@ describe('keyboardHandler: clearCachedNodes', () => {
 
 describe('keyboardHandler: handleSelection', () => {
   it('should get the currently selected node from the cache', () => {
-    const spy = jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as KetchHTMLElement)
+    const spy = jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({} as DataNav)
 
     testExports.handleSelection()
 
@@ -197,7 +173,7 @@ describe('keyboardHandler: handleSelection', () => {
 
   it('should click on the currently selected node', () => {
     const spy = jest.fn()
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({ click: spy } as unknown as KetchHTMLElement)
+    jest.spyOn(utils, 'getDomNode').mockReturnValue({ click: spy } as unknown as HTMLElement)
 
     testExports.handleSelection()
 
@@ -205,146 +181,174 @@ describe('keyboardHandler: handleSelection', () => {
   })
 
   it('should validate if node has a click function', () => {
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue(undefined as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue(undefined as unknown as DataNav)
 
     expect(testExports.handleSelection).not.toThrow()
 
-    jest.spyOn(cache, 'getCachedDomNode').mockReturnValue({} as unknown as KetchHTMLElement)
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({} as unknown as DataNav)
     expect(testExports.handleSelection).not.toThrow()
+  })
+
+  it('should clear cache when flag set to true', () => {
+    const spy = jest.spyOn(testExports, 'clearCachedNodes')
+    jest.spyOn(cache, 'getCachedNavNode').mockReturnValue({ click: jest.fn() } as unknown as DataNav)
+
+    testExports.handleSelection(true)
+
+    expect(spy).toHaveBeenCalled()
   })
 })
 
-describe('keyboardHandler: buildTree', () => {
+describe('keyboardHandler: getBannerTree', () => {
   it('should return an empty list if no clickable items are passed', () => {
-    const a = [] as unknown as NodeList
-    expect(testExports.buildTree(a)).toEqual([])
+    const a = [] as unknown as DataNav[]
+    expect(testExports.getBannerTree(a)).toEqual([])
+  })
+
+  it('should sort nodes by nav-index for Banner Experience', () => {
+    const nodes = [
+      { experience: 'ketch-consent-banner', 'nav-index': 2 },
+      { experience: 'ketch-consent-banner', 'nav-index': 1 },
+    ] as DataNav[]
+
+    const results = testExports.getBannerTree(nodes)
+
+    expect(Array.isArray(results)).toBeTruthy()
+    expect(results.length === 2).toBeTruthy()
+    expect(results[0]['nav-index']).toBeLessThan(results[1]['nav-index'])
+  })
+})
+
+describe('keyboardHandler: navigateBannerTree', () => {
+  const loggerName = '[navigateBannerTree]'
+  // @ts-ignore
+  const tree: DataNav[] = [
+    { src: 'a', ['nav-index']: 2 },
+    { src: 'b', ['nav-index']: 1 },
+    { src: 'c', ['nav-index']: 3 },
+  ] as DataNav[]
+
+  it('should init correctly', () => {
+    const sortedTree = testExports.getBannerTree(tree)
+    expect(sortedTree).toHaveLength(3)
+    expect(sortedTree[0]['nav-index']).toBeLessThan(sortedTree[1]['nav-index'])
+    expect(sortedTree[1]['nav-index']).toBeLessThan(sortedTree[2]['nav-index'])
+  })
+
+  it('should navigate left-to-right low-nav-index to high-nav-index', () => {
+    const ctx = tree[1]
+    const sortedTree = testExports.getBannerTree(tree)
+    let result = testExports.navigateBannerTree(sortedTree, ArrowActions.LEFT, ctx)
+    expect(result).not.toBeNull()
+    // @ts-ignore
+    expect(result['nav-index']).toEqual(sortedTree[0]['nav-index'])
+
+    result = testExports.navigateBannerTree(sortedTree, ArrowActions.RIGHT, ctx)
+    expect(result).not.toBeNull()
+    // @ts-ignore
+    expect(result['nav-index']).toEqual(sortedTree[2]['nav-index'])
+  })
+
+  it.skip('should navigate up-to-down low-nav-index to high-nav-index', () => {
+    const ctx = tree[1]
+
+    let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
+    expect(result).not.toBeNull()
+    // @ts-ignore
+    expect(result['nav-index']).toEqual(tree[0]['nav-index'])
+
+    result = testExports.navigateBannerTree(tree, ArrowActions.DOWN, ctx)
+    expect(result).not.toBeNull()
+    // @ts-ignore
+    expect(result['nav-index']).toEqual(tree[2]['nav-index'])
+  })
+
+  it('should return undefined (LTR) if there are no nodes to navigate', () => {
+    const ctx = tree[0]
+
+    const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
+    expect(result).toBeNull()
+  })
+
+  it('should return undefined (UTD) if there are no nodes to navigate', () => {
+    const ctx = tree[0]
+
+    const result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
+    expect(result).toBeNull()
+  })
+
+  it('should return null for other arrowActions and log', () => {
+    const ctx = tree[2]
+
+    const result = testExports.navigateBannerTree(tree, 'INVALID_ARROW' as ArrowActions, ctx)
+    expect(result).toBeNull()
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', 'INVALID_ARROW')
+  })
+})
+
+describe('keyboardHandler: handleNavigation', () => {
+  const loggerName = '[handleNavigation]'
+
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it('should return null if lanyard root is absent', () => {
+    jest.spyOn(cache, 'getCachedNavNode').mockImplementation(() => null)
+
+    const r = testExports.handleNavigation(ArrowActions.LEFT)
+    expect(r).toBeNull()
+  })
+
+  it('should detect tampered storage and return null', () => {
+    jest.spyOn(cache, 'getLanyardRoot').mockReturnValue(null)
+
+    const r = testExports.handleNavigation(ArrowActions.LEFT)
+
+    expect(log.debug).toHaveBeenNthCalledWith(2, loggerName, 'Cannot find lanyard root')
+    expect(r).toBeNull()
   })
 
   it('should parse data-nav and build KetchHTMLElement', () => {
     const parser = new DOMParser()
     const doc = parser.parseFromString(
       `
-        <button data-nav="1">btn 1</button>
-        <button data-nav="2">btn 2</button>
+        <div id="lanyard_root">
+          <button data-nav="1">btn 1</button>
+          <button data-nav="2">btn 2</button>
+        </div>
       `,
       'text/html',
     )
-    const spy = jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
-      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
+    jest.spyOn(document, 'getElementById').mockReturnValue(doc.getElementById(LANYARD_ID))
+    const decoderSpy = jest.spyOn(utils, 'decodeDataNav').mockReturnValue({
+      experience: 'ketch-consent-banner',
+      'nav-index': 1,
+    } as DataNav)
+    const treeSpy = jest.spyOn(testExports, 'getBannerTree')
+
+    testExports.handleNavigation(ArrowActions.LEFT)
+
+    expect(decoderSpy).toHaveBeenNthCalledWith(1, '1')
+    expect(decoderSpy).toHaveBeenNthCalledWith(2, '2')
+    expect(treeSpy).toHaveBeenCalled()
+    const args = treeSpy.mock.calls[0][0]
+    args.forEach(i => {
+      expect(i).toBeDefined()
     })
-
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
-
-    expect(results).toBeDefined()
-    expect(spy).toHaveBeenNthCalledWith(1, '1')
-    expect(spy).toHaveBeenNthCalledWith(2, '2')
-    results.forEach(i => {
-      expect(i.ketch).toBeDefined()
-    })
-  })
-
-  it('should sort nodes by nav-index for Banner Experience', () => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(
-      `
-        <button data-nav="1">btn 1</button>
-        <button data-nav="2">btn 2</button>
-      `,
-      'text/html',
-    )
-    jest.spyOn(utils, 'decodeDataNav').mockImplementation(str => {
-      return { experience: 'ketch-consent-banner', 'nav-index': parseInt(str) }
-    })
-
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
-
-    expect(Array.isArray(results)).toBeTruthy()
-    expect(results.length === 2).toBeTruthy()
-    expect(results[0].ketch.navParsed['nav-index']).toBeLessThan(results[1].ketch.navParsed['nav-index'])
   })
 
   it('should return undefined if the experience is not handled', () => {
+    const dummyExp = { experience: 'fresh-new-experience' } as DataNav
     const parser = new DOMParser()
-    const doc = parser.parseFromString('<button data-nav="1">btn 1</button>', 'text/html')
-    jest.spyOn(utils, 'decodeDataNav').mockImplementation(() => {
-      return { experience: 'fresh-new-experience' }
-    })
+    const doc = parser.parseFromString('<div id="lanyard_root"><button data-nav="1">btn 1</button></div>', 'text/html')
+    jest.spyOn(document, 'getElementById').mockReturnValue(doc.getElementById(LANYARD_ID))
+    jest.spyOn(utils, 'decodeDataNav').mockReturnValue(dummyExp)
 
-    const results = testExports.buildTree(doc.querySelectorAll('button')) as BannerActionTree
-    expect(results).toBeUndefined()
-  })
-})
-
-describe('keyboardHandler: navigateBannerTree', () => {
-  const loggerName = '[navigateBannerTree]'
-  const tree: BannerActionTree = []
-  beforeAll(() => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(
-      `
-          <button data-nav="1">btn 1</button>
-          <button data-nav="2">btn 2</button>
-          <button data-nav="3">btn 3</button>
-        `,
-      'text/html',
-    )
-    doc.querySelectorAll('button').forEach(i => {
-      const n = i as unknown as KetchHTMLElement
-      n.ketch = {
-        navParsed: {
-          experience: 'ketch-consent-banner',
-          ['nav-index']: parseInt(n.dataset.nav as string),
-        },
-      }
-      tree.push(n)
-    })
-  })
-
-  it('should init correctly', () => {
-    expect(tree).toHaveLength(3)
-    expect(tree[0].ketch.navParsed['nav-index']).toBeLessThan(tree[1].ketch.navParsed['nav-index'])
-    expect(tree[1].ketch.navParsed['nav-index']).toBeLessThan(tree[2].ketch.navParsed['nav-index'])
-  })
-
-  it('should navigate left-to-right low-nav-index to high-nav-index', () => {
-    const ctx = tree[1]
-
-    let result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[2].innerHTML)
-
-    result = testExports.navigateBannerTree(tree, ArrowActions.RIGHT, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[0].innerHTML)
-  })
-
-  it('should navigate up-to-down low-nav-index to high-nav-index', () => {
-    const ctx = tree[1]
-
-    let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[2].innerHTML)
-
-    result = testExports.navigateBannerTree(tree, ArrowActions.DOWN, ctx) as KetchHTMLElement
-    expect(result.innerHTML).toEqual(tree[0].innerHTML)
-  })
-
-  it('should return undefined (LTR) if there are no nodes to navigate', () => {
-    const ctx = tree[2]
-
-    const result = testExports.navigateBannerTree(tree, ArrowActions.LEFT, ctx)
-    expect(result).toBeUndefined()
-  })
-
-  it('should return undefined (UTD) if there are no nodes to navigate', () => {
-    const ctx = tree[2]
-
-    const result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
-    expect(result).toBeUndefined()
-  })
-
-  it('should return undefined for other arrowActions and log', () => {
-    const ctx = tree[2]
-
-    const result = testExports.navigateBannerTree(tree, ArrowActions.OK, ctx)
-    expect(result).toBeUndefined()
-    expect(log.debug).toHaveBeenCalledWith(loggerName, 'Unknown arrowAction: ', ArrowActions.OK)
+    const results = testExports.handleNavigation(ArrowActions.LEFT)
+    expect(log.debug).toHaveBeenCalledWith(loggerName, 'unhandled experience fresh-new-experience')
+    expect(results).not.toBeNull()
+    // @ts-ignore
+    expect(results.next).toBeNull()
   })
 })

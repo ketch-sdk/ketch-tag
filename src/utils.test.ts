@@ -32,7 +32,7 @@ describe('safeJsonParse', () => {
 
 describe('decodeDataNav', () => {
   const encodedStr = 'eyJleHBlcmllbmNlIjoia2V0Y2gtY29uc2VudC1iYW5uZXIiLCJuYXYtaW5kZXgiOjJ9'
-  const decodedObj = { experience: 'ketch-consent-banner', 'nav-index': 2 }
+  const decodedObj = { experience: 'ketch-consent-banner', 'nav-index': 2, src: encodedStr }
 
   it('should decode base 64 and parse JSON', () => {
     expect(utils.decodeDataNav(encodedStr)).toEqual(decodedObj)
@@ -53,7 +53,7 @@ describe('decodeDataNav', () => {
     const invalidStr = '!!!invalid!!!'
     const loggerName = '[decodeDataNav]'
     const error = `Invalid encoding: ${invalidStr}`
-    expect(utils.decodeDataNav(invalidStr)).toEqual({})
+    expect(utils.decodeDataNav(invalidStr)).toBeNull()
     expect(log.debug).toHaveBeenCalledWith(loggerName, error, expect.anything())
   })
 })
