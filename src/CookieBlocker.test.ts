@@ -394,6 +394,17 @@ describe('CookieBlocker', () => {
     expect(executeSpy).toHaveBeenCalledTimes(2)
   })
 
+  it('re-executes when DOMContentLoaded fires', async () => {
+    // Spy on the execute method of the Tags instance
+    const executeSpy = jest.spyOn(cookieBlocker, 'execute')
+    expect(executeSpy).toHaveBeenCalledTimes(0)
+
+    // Simulate the DOMContentLoaded event
+    const event = new Event('DOMContentLoaded')
+    window.dispatchEvent(event)
+    expect(executeSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('verifies no errors when consent is undefined', async () => {
     // Mock consents
     jest.spyOn(ketch, 'getConsent').mockResolvedValue(undefined as unknown as Consent)

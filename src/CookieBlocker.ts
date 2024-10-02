@@ -16,6 +16,9 @@ export default class CookieBlocker {
 
     // Add a listener to retry whenever consent is updated
     this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
+
+    // Retry whenever all non-async or dyanmically loaded scripts finish executing
+    window.addEventListener('DOMContentLoaded', () => this.execute())
   }
 
   // Return a promise containing the set of purposes codes for which we have consent
