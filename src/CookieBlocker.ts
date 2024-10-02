@@ -16,6 +16,77 @@ export default class CookieBlocker {
 
     // Add a listener to retry whenever consent is updated
     this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
+
+    // Retry when page finished loading, note this will
+    window.addEventListener('load', () => this.execute())
+
+    this.monitorAsyncScripts()
+
+    this.monitorDynamicScripts()
+  }
+
+  // Function to monitor all async scripts already present in the DOM
+  monitorAsyncScripts: () => void = () => {
+    const asyncScripts: HTMLScriptElement[] = Array.from(document.querySelectorAll('script[async]'))
+
+    if (asyncScripts.length === 0) {
+      console.log('No async scripts found.')
+      return Promise.resolve()
+    }
+
+    const scriptPromises: Promise<void>[] = asyncScripts.map(script => {
+      return new Promise((resolve, reject) => {
+        // Attach event listeners to detect when the script finishes execution
+        script.onload = () => {
+          console.log(`${script.src} finished executing.`)
+          resolve()
+        }
+
+        script.onerror = () => {
+          console.error(`${script.src} failed to load.`)
+          reject(new Error(`Failed to load async script: ${script.src}`))
+        }
+      })
+    })
+
+    return Promise.all(scriptPromises)
+      .then(() => {
+        console.log('All async scripts have finished executing.')
+        this.execute()
+      })
+      .catch(error => {
+        console.error('An error occurred while monitoring scripts:', error)
+        this.execute()
+      })
+  }
+
+  monitorDynamicScripts: () => void = () => {
+    // Function to monitor dynamically added scripts (async, defer, or standard)
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node instanceof HTMLScriptElement) {
+            console.log(`New script detected: ${node.src || '[inline script]'}`)
+
+            // Attach event listeners to detect when the script finishes execution
+            node.onload = () => {
+              console.log(`Script ${node.src || '[inline script]'} finished executing.`)
+              this.execute()
+            }
+
+            node.onerror = () => {
+              console.error(`Failed to load script: ${node.src || '[inline script]'}`)
+              this.execute()
+            }
+          }
+        })
+      })
+    })
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    })
   }
 
   // Return a promise containing the set of purposes codes for which we have consent
