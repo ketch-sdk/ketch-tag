@@ -321,6 +321,15 @@ describe('Router', () => {
       return expect(showPreferenceExperience).toHaveBeenCalled()
     })
 
+    it('calls reinit', async () => {
+      const getConsent = jest.fn().mockResolvedValue(undefined)
+      const router = new Router({
+        getConsent,
+      } as any as Ketch)
+      await router.route('reinit')
+      return expect(getConsent).toHaveBeenCalled()
+    })
+
     it('calls registerPlugin', async () => {
       const registerPlugin = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
