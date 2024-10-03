@@ -322,12 +322,12 @@ describe('Router', () => {
     })
 
     it('calls reinit', async () => {
-      const getConsent = jest.fn().mockResolvedValue(undefined)
+      const resetConsent = jest.fn().mockResolvedValue(undefined)
       const router = new Router({
-        getConsent,
+        resetConsent,
       } as any as Ketch)
       await router.route('reinit')
-      return expect(getConsent).toHaveBeenCalled()
+      return expect(resetConsent).toHaveBeenCalled()
     })
 
     it('calls registerPlugin', async () => {

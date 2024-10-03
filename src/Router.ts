@@ -224,7 +224,7 @@ export default class Router {
   }
 
   reinit(): Promise<void> {
-    return this._ketch.getConsent().then(() => {})
+    return this._ketch.resetConsent().then(() => {})
   }
 
   handleKeyboardEvent(e: KeyboardEvent): void {
