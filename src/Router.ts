@@ -21,6 +21,7 @@ import isFunction from './isFunction'
 import constants from './constants'
 import { Ketch } from './Ketch'
 import { wrapLogger } from '@ketch-sdk/ketch-logging'
+import init from "./init";
 
 /**
  * Router routes calls from the `ketch()` / `semaphore.push` interface to the internal Ketch interface
@@ -224,7 +225,7 @@ export default class Router {
   }
 
   reinit(): Promise<void> {
-    return this._ketch.getConsent().then(() => {})
+    return init()
   }
 
   handleKeyboardEvent(e: KeyboardEvent): void {
