@@ -326,7 +326,7 @@ describe('Router', () => {
       const router = new Router({
         resetConsent,
       } as any as Ketch)
-      await router.route('resetConsent')
+      await router.route('reinit')
       return expect(resetConsent).toHaveBeenCalled()
     })
 
