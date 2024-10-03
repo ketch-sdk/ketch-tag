@@ -66,6 +66,7 @@
     "@ketch-com/ketch-proxy": "^1.0.6",
     "@ketch-sdk/ketch-data-layer": "^1.4.0",
     "@ketch-sdk/ketch-logging": "^1.2.1",
+    "@ketch-sdk/ketch-tag": "^1.38.2",
     "@ketch-sdk/ketch-web-api": "^1.6.6",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
