@@ -221,11 +221,12 @@ describe('keyboardHandler: getBannerTree', () => {
 
 describe('keyboardHandler: navigateBannerTree', () => {
   const loggerName = '[navigateBannerTree]'
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const tree: DataNav[] = [
-    { src: 'a', ['nav-index']: 2 },
-    { src: 'b', ['nav-index']: 1 },
-    { src: 'c', ['nav-index']: 3 },
+    { src: 'a', 'nav-index': 2 },
+    { src: 'b', 'nav-index': 1 },
+    { src: 'c', 'nav-index': 3 },
   ] as DataNav[]
 
   it('should init correctly', () => {
@@ -240,11 +241,13 @@ describe('keyboardHandler: navigateBannerTree', () => {
     const sortedTree = testExports.getBannerTree(tree)
     let result = testExports.navigateBannerTree(sortedTree, ArrowActions.LEFT, ctx)
     expect(result).not.toBeNull()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(result['nav-index']).toEqual(sortedTree[0]['nav-index'])
 
     result = testExports.navigateBannerTree(sortedTree, ArrowActions.RIGHT, ctx)
     expect(result).not.toBeNull()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(result['nav-index']).toEqual(sortedTree[2]['nav-index'])
   })
@@ -254,11 +257,13 @@ describe('keyboardHandler: navigateBannerTree', () => {
 
     let result = testExports.navigateBannerTree(tree, ArrowActions.UP, ctx)
     expect(result).not.toBeNull()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(result['nav-index']).toEqual(tree[0]['nav-index'])
 
     result = testExports.navigateBannerTree(tree, ArrowActions.DOWN, ctx)
     expect(result).not.toBeNull()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(result['nav-index']).toEqual(tree[2]['nav-index'])
   })
@@ -348,6 +353,7 @@ describe('keyboardHandler: handleNavigation', () => {
     const results = testExports.handleNavigation(ArrowActions.LEFT)
     expect(log.debug).toHaveBeenCalledWith(loggerName, 'unhandled experience fresh-new-experience')
     expect(results).not.toBeNull()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(results.next).toBeNull()
   })
