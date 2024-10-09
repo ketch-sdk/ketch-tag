@@ -834,6 +834,19 @@ export class Ketch extends EventEmitter {
   }
 
   /**
+   * Resets and gets the consent.
+   */
+  async resetConsent(): Promise<Consent> {
+    // restart identity watch
+    this._watcher.stop()
+    await this._watcher.start()
+    // clear consent value and set cache control to no-cache to pull from server
+    this._consent.reset()
+    this._config.options = { ...this._config.options, 'Cache-Control': 'no-cache' }
+    return this.getConsent()
+  }
+
+  /**
    * Gets the consent.
    */
   async getConsent(): Promise<Consent> {

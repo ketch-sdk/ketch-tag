@@ -209,7 +209,6 @@ export default class Tags {
     if (isPlatformMapped) {
       // Get purpose mappings from config - TODO:JB - Finish once config type is updated
       const id = element.getAttribute('data-ketch-id') || ''
-      console.log(id)
       return this._config.tags?.[id]?.purposeCodes || []
     } else {
       // Handle case where no purpose attribute defined in MappingConfig

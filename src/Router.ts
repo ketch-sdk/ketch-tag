@@ -223,6 +223,10 @@ export default class Router {
     return this._ketch.showPreferenceExperience(params).then(() => {})
   }
 
+  reinit(): Promise<void> {
+    return this._ketch.resetConsent().then(() => {})
+  }
+
   handleKeyboardEvent(e: KeyboardEvent): void {
     return this._ketch.handleKeyboardEvent(e)
   }
