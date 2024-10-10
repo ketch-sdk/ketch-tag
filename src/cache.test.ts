@@ -263,6 +263,7 @@ describe('getCachedDomNode', () => {
     Object.defineProperty(global, 'window', { value: {}, writable: true })
 
     const result = getCachedNavNode(dummyKey, { ifNull: dummyValue })
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(window.dummyKey).toEqual(dummyValue)
     expect(result).toEqual(dummyValue)
