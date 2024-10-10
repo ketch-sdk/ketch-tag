@@ -472,6 +472,15 @@ export class Ketch extends EventEmitter {
     // Call functions registered using onWillShowExperience
     this.emit(constants.WILL_SHOW_EXPERIENCE_EVENT, type)
 
+    // Don't set this._isExperienceDisplayed if there is no experience to show in the config
+    const experienceLayout = (this._config as ConfigurationV2).experiences?.layout
+    if (
+      !experienceLayout ||
+      (type === ExperienceType.Consent && !experienceLayout.banner && !experienceLayout.modal) ||
+      (type === ExperienceType.Preference && !experienceLayout.preference)
+    )
+      return
+
     // update isExperienceDisplayed flag when experience displayed
     this._isExperienceDisplayed = true
   }
@@ -822,6 +831,19 @@ export class Ketch extends EventEmitter {
     this._provisionalConsent = undefined
     l.trace('merged', c)
     return [c, shouldUpdateConsent]
+  }
+
+  /**
+   * Resets and gets the consent.
+   */
+  async resetConsent(): Promise<Consent> {
+    // restart identity watch
+    this._watcher.stop()
+    await this._watcher.start()
+    // clear consent value and set cache control to no-cache to pull from server
+    this._consent.reset()
+    this._config.options = { ...this._config.options, 'Cache-Control': 'no-cache' }
+    return this.getConsent()
   }
 
   /**

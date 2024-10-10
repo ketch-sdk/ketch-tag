@@ -10,12 +10,12 @@
     "build": "npm run build:lib && npm run build:web",
     "build:lib": "tsc -p .",
     "build:web": "webpack --config webpack.config.js --mode production",
-    "start": "npx webpack serve --devtool source-map --mode development",
-    "lint": "eslint src/**/*.ts",
-    "test": "jest --runInBand",
+    "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts",
     "format": "prettier --write \"**/*.{ts,tsx,yml,yaml}\"",
     "format-check": "prettier --check '**/*.ts'",
-    "docs": "typedoc --githubPages true --excludeExternals --excludeInternal src/index.ts"
+    "lint": "eslint src/**/*.ts",
+    "start": "npx webpack serve --devtool source-map --mode development",
+    "test": "jest --runInBand"
   },
   "browserslist": {
     "production": [
@@ -34,7 +34,7 @@
     "url": "https://github.com/ketch-sdk/ketch-tag/issues"
   },
   "devDependencies": {
-    "@ketch-sdk/ketch-types": "^1.38.7",
+    "@ketch-sdk/ketch-types": "^1.38.8",
     "@types/fetch-mock": "^7.3.5",
     "@types/jest": "^29.5.0",
     "@types/nano-equal": "^2.0.0",
@@ -42,6 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
     "eslint": "^8.38.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.2.1",

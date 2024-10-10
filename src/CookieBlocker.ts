@@ -16,6 +16,9 @@ export default class CookieBlocker {
 
     // Add a listener to retry whenever consent is updated
     this._ketch.on(constants.CONSENT_EVENT, () => this.execute())
+
+    // Retry whenever all non-async or dyanmically loaded scripts finish executing
+    window.addEventListener('DOMContentLoaded', () => this.execute())
   }
 
   // Return a promise containing the set of purposes codes for which we have consent
@@ -37,6 +40,9 @@ export default class CookieBlocker {
       l.debug('no browser cookies')
       return Array.from(this._blockedCookies)
     }
+
+    // Get cookie domain
+    const domain = window.location.hostname
 
     // Get set of purposes codes which we have consent for
     const grantedPurposes = await this.getGrantedPurposes()
@@ -63,9 +69,9 @@ export default class CookieBlocker {
          */
         if (!this._blockedCookies.has(name) && ((regex && regexPattern.test(name)) || (!regex && name === cookieKey))) {
           // Delete the cookie by setting its expiration date to the past, 01 Jan 1970 is convention for deleting cookies
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`
           this._blockedCookies.add(name)
-          l.debug(`Deleted cookie: ${name}`)
+          l.debug(`Deleted cookie: ${name} for domain: .${domain}`)
         }
       })
     })
