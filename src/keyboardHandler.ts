@@ -341,6 +341,7 @@ export const navigateModalStacks = (
   // Handle disabled switches
   return nextNode ? handleDisabledSwitches(nextNode, stacks.expandNodes) : null
 }
+
 export const getBannerTree = (nodes: DataNav[]): DataNav[] => {
   const l = wrapLogger(log, 'getBannerTree')
   if (nodes.length === 0) {

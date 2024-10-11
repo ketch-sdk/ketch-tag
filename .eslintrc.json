@@ -1,6 +1,7 @@
 {
   "extends": [
     "eslint:recommended",
+    "eslint-config-airbnb-base",
     "plugin:jest/recommended",
     "plugin:jest/style",
     "plugin:@typescript-eslint/recommended",
@@ -22,14 +23,64 @@
   },
   "plugins": ["@typescript-eslint/eslint-plugin", "jest"],
   "rules": {
+    "@typescript-eslint/no-shadow": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-expressions": "warn",
+    "brace-style": [
+      "warn",
+      "stroustrup",
+      {
+        "allowSingleLine": true
+      }
+    ],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
+    ],
+    "import/newline-after-import": ["error", { "count": 1 }],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": ["**/*.test.*", "*/__mocks__/*"],
+        "optionalDependencies": false,
+        "peerDependencies": false
+      }
+    ],
     "no-case-declarations": "off",
-    "no-disabled-tests": "off",
-    "no-empty-function": "off",
-    "@typescript-eslint/no-empty-function": "off",
     "valid-jsdoc": "off",
-    "max-len": ["error", 120],
-    "comma-dangle": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/ban-ts-comment": "off"
+    "no-else-return": [
+      "off"
+    ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 2
+      }
+    ],
+    "no-shadow": "off",
+    "no-underscore-dangle": [
+      "warn",
+      {
+        "enforceInMethodNames": false
+      }
+    ],
+    "padding-line-between-statements": [
+      "error",
+      {
+        "blankLine": "always",
+        "prev": "*",
+        "next": "export"
+      },
+      {
+        "blankLine": "never",
+        "prev": "*",
+        "next": "import"
+      }
+    ]
   }
 }

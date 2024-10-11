@@ -15,12 +15,14 @@ export enum ArrowActions {
   UNKNOWN = 'UNKNOWN',
 }
 
+type ValueOf<T> = T[keyof T]
+
 export type DataNav = {
   src: string
-  action?: string
+  action?: LanyardItemActions
   clearCache?: boolean
   disabled?: boolean
-  experience: string
+  experience: ValueOf<keyof typeof EXPERIENCES>
   'nav-index': number
   subExperience?: string
 }
