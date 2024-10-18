@@ -55,6 +55,6 @@ export function getDomNode(ctxNav: DataNav | null): HTMLElement | null {
 
 export function santizePaths(o: string): string {
   const l = wrapLogger(log, 'santizePaths')
-  l.debug(`is path ${o} sane: `, /[^a-zA-Z0-9_#]/.test(o))
-  return o.replace(/[^a-zA-Z0-9_#]/g, '')
+  l.debug(`is path ${o} sane: `, /[^a-zA-Z0-9_-]/.test(o))
+  return o.replace(/[^a-zA-Z0-9_-]/g, '')
 }
