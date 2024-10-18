@@ -1,21 +1,15 @@
-import {
-  Configuration,
-  Environment,
-  GetConsentRequest,
-  GetFullConfigurationRequest,
-  Identities,
-  IPInfo,
-} from '@ketch-sdk/ketch-types'
-import log from './log'
-import errors from './errors'
+import { Configuration, Environment, GetConsentRequest, Identities, IPInfo } from '@ketch-sdk/ketch-types'
+import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { KetchWebAPI } from '@ketch-sdk/ketch-web-api'
 import constants from './constants'
+import dataLayer from './dataLayer'
+import errors from './errors'
+import getApiUrl from './getApiUrl'
+import log from './log'
 import parameters from './parameters'
 import { Ketch } from './Ketch'
-import dataLayer from './dataLayer'
-import getApiUrl from './getApiUrl'
-import { wrapLogger } from '@ketch-sdk/ketch-logging'
 import { getCachedConsent } from './cache'
+import { santizePaths } from './utils'
 
 /**
  * Builder for building a Ketch object
@@ -46,7 +40,7 @@ export default class Builder {
       let lanyardScript = ''
       // Find the lanyard script
       if (this._config.scripts) {
-        for (let i = 0; i < this._config.scripts.length; i++) {
+        for (let i = 0; i < this._config.scripts.length; i += 1) {
           if (this._config.scripts[i].includes('lanyard')) {
             lanyardScript = this._config.scripts[i]
           }
@@ -70,7 +64,8 @@ export default class Builder {
         const n = document.getElementsByTagName('head')[0]
         const i = document.createElement('script')
         i.type = 'text/javascript'
-        i.defer = i.async = !0
+        i.defer = !0
+        i.async = !0
         i.src = lanyardScript
         n.appendChild(i)
       }
@@ -113,18 +108,17 @@ export default class Builder {
     }
     const jurisdiction = await this.buildJurisdiction(region)
 
-    l.info('loadConfig', env, jurisdiction, language)
-
-    const request: GetFullConfigurationRequest = {
-      organizationCode: this._config.organization.code,
-      propertyCode: this._config.property?.code || '',
-      environmentCode: env.code,
-      hash: env.hash || '',
-      languageCode: language,
-      jurisdictionCode: jurisdiction,
+    const sanitizedObject = {
+      organizationCode: santizePaths(this._config.organization.code),
+      propertyCode: santizePaths(this._config.property?.code || ''),
+      environmentCode: santizePaths(env.code),
+      language: santizePaths(language),
+      jurisdiction: santizePaths(jurisdiction),
     }
 
-    const cfg = await this._api.getFullConfiguration(request)
+    l.info('loadConfig', sanitizedObject)
+
+    const cfg = await this._api.getFullConfiguration(sanitizedObject)
 
     // TODO remove post experience cut over
     // This is uses the requested version of shoreline for experience cut over only if user experienceVersion param set
@@ -141,7 +135,7 @@ export default class Builder {
     await k.setRegionInfo(region)
     await k.setJurisdiction(jurisdiction)
 
-    await this.setupTelemetry(k, cfg, { region: region })
+    await this.setupTelemetry(k, cfg, { region })
 
     return k
   }
@@ -201,6 +195,7 @@ export default class Builder {
     return true
   }
 
+  // eslint-disable-next-line class-methods-use-this
   collectTelemetry(
     hasConsent: boolean,
     cfg: Configuration,
@@ -221,6 +216,7 @@ export default class Builder {
     data.append('dver', `${cfg.deployment?.version}`)
     data.append('event_type', type)
     data.append('ids', window.btoa(JSON.stringify(identities)))
+    // eslint-disable-next-line no-restricted-syntax
     for (const [k, v] of Object.entries(params)) {
       data.append(k, v)
     }
@@ -250,7 +246,7 @@ export default class Builder {
     // Try to locate the specifiedEnv
     const specifiedEnv = parameters.get(constants.ENV)
     if (specifiedEnv) {
-      for (let i = 0; i < this._config.environments.length; i++) {
+      for (let i = 0; i < this._config.environments.length; i += 1) {
         const e = this._config.environments[i]
 
         if (e && specifiedEnv && e.code === specifiedEnv) {
@@ -265,7 +261,7 @@ export default class Builder {
 
     // Try to locate based on pattern
     let environment = {} as Environment
-    for (let i = 0; i < this._config.environments.length; i++) {
+    for (let i = 0; i < this._config.environments.length; i += 1) {
       const e = this._config.environments[i]
       const pattern = atob(e.pattern || '')
 
@@ -285,7 +281,7 @@ export default class Builder {
     }
 
     // Finally, try to locate production
-    for (let i = 0; i < this._config.environments.length; i++) {
+    for (let i = 0; i < this._config.environments.length; i += 1) {
       const e = this._config.environments[i]
 
       if (e.code === constants.PRODUCTION) {
@@ -300,6 +296,7 @@ export default class Builder {
   /**
    * Convert case-insensitive browser languages to ISO Standard Language Codes i.e. "fr-CA"
    */
+  // eslint-disable-next-line class-methods-use-this
   formatLanguage(lang: string): string {
     const rootLanguage = lang.split('-')[0]
     const languageDialect = lang.split('-')[1]?.toUpperCase()
@@ -340,6 +337,7 @@ export default class Builder {
     const v = jurisdictionInfo.variable
 
     if (v) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const dl of dataLayer()) {
         const jurisdiction = dl[v]
         if (jurisdiction) {
@@ -368,6 +366,7 @@ export default class Builder {
   /**
    * Build the region info.
    */
+  // eslint-disable-next-line class-methods-use-this
   async buildRegionInfo(g: IPInfo): Promise<string> {
     const l = wrapLogger(log, 'buildRegionInfo')
     if ((g.countryCode === 'US' || g.countryCode === 'CA') && g.regionCode) {
@@ -396,5 +395,6 @@ export default class Builder {
   }
 
   private readonly _api: KetchWebAPI
+
   private readonly _config: Configuration
 }
