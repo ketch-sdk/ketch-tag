@@ -39,7 +39,9 @@
       "ignorePackages",
       {
         "js": "never",
-        "ts": "never"
+        "ts": "never",
+        "tsx": "never",
+        "jsx": "never"
       }
     ],
     "import/newline-after-import": ["error", { "count": 1 }],
@@ -82,5 +84,18 @@
         "next": "import"
       }
     ]
-  }
+  },
+ "settings": {
+   "import/core-modules": ["@ketch-sdk/ketch-types"],
+   "import/resolver": {
+     "node": {
+       "extensions": [
+         ".js",
+         ".jsx",
+         ".ts",
+         ".tsx"
+       ]
+     }
+   }
+ }
 }

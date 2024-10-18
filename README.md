@@ -7,7 +7,8 @@ Ketch web infrastructure tag!
 
 # Local DX
 
-1. `npm install`
+1. `nvm use v20`
+2. `npm install`
 2. `npm run build`
 3. `docker compose -f base.yml -f docker-compose.yml up --build`
 4. Navigate to [https://localhost:8080/ketchtag/test/?swb_debug](https://localhost:8080/ketchtag/test/?swb_debug)
